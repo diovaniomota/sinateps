@@ -1,0 +1,27 @@
+workflows:
+  my-workflow:
+    name: Codemagic Workflow
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get dependencies
+        script: |
+          flutter packages pub get
+      - name: Build Android App
+        script: |
+          flutter build apk --release
+      - name: Build iOS App
+        script: |
+          flutter build ios --release --no-codesign
+    artifacts:
+      - build/**/outputs/**/*.apk
+      - build/**/outputs/**/*.aab
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - *.log
+    publishing:
+      email:
+        recipients:
+          - user@example.com
