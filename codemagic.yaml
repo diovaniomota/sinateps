@@ -26,6 +26,7 @@ workflows:
       - name: Build Android App
         script: |
           flutter build apk --release
+          flutter build appbundle --release
       - name: Build iOS App
         script: |
           flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
