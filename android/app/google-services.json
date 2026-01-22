@@ -1,0 +1,124 @@
+{
+  "project_info": {
+    "project_number": "83524075646",
+    "project_id": "sinatep-d1f72",
+    "storage_bucket": "sinatep-d1f72.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:83524075646:android:1ffb3f802e870db468582f",
+        "android_client_info": {
+          "package_name": "com.dartsoft.sinatep"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAP74LRHnEqW6cAp6yUB-yMQzl-7DBrm98"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:83524075646:android:1e955ce3b91e4b5d68582f",
+        "android_client_info": {
+          "package_name": "com.dartsoft.sinatep1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAP74LRHnEqW6cAp6yUB-yMQzl-7DBrm98"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:83524075646:android:56037ee17889a66068582f",
+        "android_client_info": {
+          "package_name": "com.dartsoft.sinatepcursos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAP74LRHnEqW6cAp6yUB-yMQzl-7DBrm98"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:83524075646:android:8b4c1e386eda7f4768582f",
+        "android_client_info": {
+          "package_name": "com.mycompany.sinatepassinatura"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAP74LRHnEqW6cAp6yUB-yMQzl-7DBrm98"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:83524075646:android:f31214d4acb65abd68582f",
+        "android_client_info": {
+          "package_name": "com.mycompany.teste"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAP74LRHnEqW6cAp6yUB-yMQzl-7DBrm98"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:83524075646:android:dce46b0e8dedc53468582f",
+        "android_client_info": {
+          "package_name": "com.sinatep.dartsoft"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAP74LRHnEqW6cAp6yUB-yMQzl-7DBrm98"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

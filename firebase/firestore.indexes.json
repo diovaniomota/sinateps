@@ -1,0 +1,32 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "contrato",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "criador",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "criado_em",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "contrato",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "criador",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "assinado_em",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ]
+}

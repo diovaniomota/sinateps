@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calibrador de PDF - SINATEP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #4fc3f7;
+        }
+
+        .sidebar p {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+
+        .field-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .field-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .field-item:hover {
+            background: rgba(79, 195, 247, 0.3);
+        }
+
+        .field-item.active {
+            background: rgba(79, 195, 247, 0.5);
+            border: 2px solid #4fc3f7;
+        }
+
+        .field-item .coords {
+            font-size: 0.75rem;
+            color: #4fc3f7;
+            font-family: monospace;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            color: #4fc3f7;
+            margin: 15px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(79, 195, 247, 0.3);
+        }
+
+        .pdf-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: auto;
+            min-height: 0;
+        }
+
+        .pdf-scroll-wrapper {
+            flex: 1;
+            overflow: auto;
+            min-height: 0;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 195, 247, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+            color: #fff;
+        }
+
+        .btn-firebase {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: #fff;
+        }
+
+        .pdf-canvas-container {
+            position: relative;
+            background: #fff;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        #pdfCanvas {
+            display: block;
+        }
+
+        .draggable-field {
+            position: absolute;
+            background: rgba(79, 195, 247, 0.7);
+            border: 2px solid #4fc3f7;
+            padding: 2px 8px;
+            border-radius: 4px;
+            cursor: move;
+            font-size: 10px;
+            color: #000;
+            font-weight: 600;
+            white-space: nowrap;
+            user-select: none;
+            z-index: 10;
+        }
+
+        .draggable-field:hover {
+            background: rgba(79, 195, 247, 0.9);
+        }
+
+        .draggable-field.selected {
+            border-color: #ff5722;
+            background: rgba(255, 87, 34, 0.7);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 900px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(79, 195, 247, 0.3);
+            position: relative;
+        }
+
+        .modal-content h2 {
+            color: #4fc3f7;
+            margin-bottom: 15px;
+        }
+
+        .modal-content pre {
+            background: #0d0d1a;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .modal-content code {
+            color: #66bb6a;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .info-box {
+            background: rgba(79, 195, 247, 0.1);
+            border: 1px solid rgba(79, 195, 247, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+        }
+
+        .status-bar {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #4fc3f7;
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(79, 195, 247, 0.3);
+            border-top-color: #4fc3f7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>📐 Calibrador PDF</h1>
+            <p>Arraste os campos para as posições corretas</p>
+
+            <div class="info-box">
+                <strong>Dimensões do PDF:</strong><br>
+                <span id="pdfDimensions">Carregando...</span>
+            </div>
+
+            <div class="section-title">1. CONTRATANTE</div>
+            <div class="field-list" id="contratanteFields"></div>
+
+            <div class="section-title">2. ALUNO</div>
+            <div class="field-list" id="alunoFields"></div>
+
+            <div class="section-title">OPÇÃO DE CURSO</div>
+            <div class="field-list" id="cursoFields"></div>
+
+            <div class="section-title">PAGAMENTO</div>
+            <div class="field-list" id="pagamentoFields"></div>
+
+            <div class="section-title">OUTROS</div>
+            <div class="field-list" id="outrosFields"></div>
+        </div>
+
+        <div class="pdf-area">
+            <div class="toolbar">
+                <label class="btn btn-secondary" for="pdfUpload">
+                    📁 Carregar PDF
+                </label>
+                <input type="file" id="pdfUpload" accept=".pdf" style="display:none">
+
+                <button class="btn btn-primary" onclick="showImportModal()">📥 Importar Código</button>
+                <button class="btn btn-secondary" onclick="resetPositions()">🔄 Resetar</button>
+                <button class="btn btn-success" onclick="exportCode()">📋 Exportar Código</button>
+
+                <div class="status-bar" id="statusBar">Aguardando PDF...</div>
+            </div>
+
+            <div class="pdf-scroll-wrapper">
+                <div class="pdf-canvas-container" id="pdfContainer">
+                    <canvas id="pdfCanvas"></canvas>
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="codeModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+            <h2>📋 Código Gerado para index.js</h2>
+            <p style="margin-bottom:15px">Substitua o bloco de preenchimento de dados na função <code>criarPDF</code>:
+            </p>
+            <pre><code id="generatedCode"></code></pre>
+            <button class="btn btn-primary" onclick="copyCode()" style="margin-top: 15px;">📋 Copiar Código</button>
+        </div>
+    </div>
+
+    <!-- Modal de Importação -->
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeImportModal()">&times;</button>
+            <h2>📥 Importar Código</h2>
+            <p style="margin-bottom:15px">Cole o código do index.js com as coordenadas:</p>
+            <textarea id="importCode"
+                style="width:100%;height:300px;background:#0d0d1a;color:#66bb6a;border:1px solid #4fc3f7;border-radius:8px;padding:15px;font-family:monospace;font-size:12px;"
+                placeholder="Cole o código aqui..."></textarea>
+            <button class="btn btn-primary" onclick="importCode()" style="margin-top: 15px;">📥 Importar e
+                Aplicar</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // Dimensões reais do PDF (serão atualizadas quando carregar)
+        let PDF_WIDTH = 595;
+        let PDF_HEIGHT = 842;
+
+        // Definição dos campos com posições iniciais
+        const fields = {
+            contratante: [
+                { id: 'contratante', label: 'Nome Contratante', x: 118, y: 710, sample: 'João Silva' },
+                { id: 'documento', label: 'CPF', x: 53, y: 700, sample: '123.456.789-00' },
+                { id: 'rg', label: 'RG', x: 322, y: 701, sample: '12.345.678-9' },
+                { id: 'dn_dia', label: 'DN Dia', x: 484, y: 700, sample: '15' },
+                { id: 'dn_mes', label: 'DN Mês', x: 506, y: 700, sample: '03' },
+                { id: 'dn_ano', label: 'DN Ano', x: 532, y: 700, sample: '1990' },
+                { id: 'filiacao', label: 'Filiação', x: 60, y: 694, sample: 'Maria e José' },
+                { id: 'naturalidade', label: 'Naturalidade', x: 435, y: 694, sample: 'Brasileiro' },
+                { id: 'sexo_m', label: 'Sexo M (X)', x: 100, y: 685, sample: 'X' },
+                { id: 'sexo_f', label: 'Sexo F (X)', x: 158, y: 684, sample: 'X' },
+                { id: 'endereco', label: 'Endereço', x: 167, y: 680, sample: 'Rua das Flores' },
+                { id: 'numero', label: 'Número', x: 517, y: 680, sample: '456' },
+                { id: 'bairro', label: 'Bairro', x: 52, y: 672, sample: 'Centro' },
+                { id: 'cidade', label: 'Cidade', x: 62, y: 666, sample: 'Capinzal' },
+                { id: 'cep', label: 'CEP', x: 345, y: 666, sample: '89665-000' },
+                { id: 'uf', label: 'UF', x: 490, y: 666, sample: 'SC' },
+                { id: 'telefones', label: 'Telefones', x: 65, y: 659, sample: '(49) 99999-9999' },
+            ],
+            aluno: [
+                { id: 'aluno', label: 'Nome Aluno', x: 95, y: 638, sample: 'Pedro Santos' },
+                { id: 'alunoDocumento', label: 'CPF/RG Aluno', x: 77, y: 630, sample: '987.654.321-00' },
+                { id: 'alunoDN_dia', label: 'Aluno DN Dia', x: 305, y: 551, sample: '20' },
+                { id: 'alunoDN_mes', label: 'Aluno DN Mês', x: 325, y: 551, sample: '05' },
+                { id: 'alunoDN_ano', label: 'Aluno DN Ano', x: 350, y: 551, sample: '2005' },
+                { id: 'alunoNaturalidade', label: 'Aluno Naturalidade', x: 415, y: 551, sample: 'Brasileiro' },
+                { id: 'alunoTelefone', label: 'Aluno Telefone', x: 61, y: 624, sample: '(49) 98888-8888' },
+            ],
+            curso: [
+                { id: 'curso_1', label: 'Curso 1 (X)', x: 29, y: 591, sample: 'X' },
+                { id: 'curso_2', label: 'Curso 2 (X)', x: 29, y: 584, sample: 'X' },
+                { id: 'curso_3', label: 'Curso 3 (X)', x: 173, y: 592, sample: 'X' },
+                { id: 'curso_4', label: 'Curso 4 (X)', x: 172, y: 583, sample: 'X' },
+                { id: 'outro', label: 'Outro/Qual', x: 246, y: 586, sample: 'Outro curso' },
+                { id: 'indicacao', label: 'Indicação', x: 86, y: 578, sample: 'Amigo' },
+            ],
+            pagamento: [
+                { id: 'pag_36x', label: '36x (X)', x: 66, y: 478, sample: 'X' },
+                { id: 'pag_24x', label: '24x (X)', x: 65, y: 468, sample: 'X' },
+                { id: 'pag_18x', label: '18x (X)', x: 64, y: 458, sample: 'X' },
+                { id: 'pag_14x', label: '14x (X)', x: 65, y: 449, sample: 'X' },
+                { id: 'pag_8x', label: '8x (X)', x: 282, y: 478, sample: 'X' },
+                { id: 'pag_3x', label: '3x (X)', x: 282, y: 467, sample: 'X' },
+                { id: 'pag_vista', label: 'À Vista (X)', x: 282, y: 458, sample: 'X' },
+            ],
+            outros: [
+                { id: 'horas', label: 'Carga Horária', x: 115, y: 455, sample: '120' },
+                { id: 'inicio_dia', label: 'Início Dia', x: 125, y: 443, sample: '01' },
+                { id: 'inicio_mes', label: 'Início Mês', x: 150, y: 443, sample: '02' },
+                { id: 'contratada', label: 'Contratada', x: 445, y: 514, sample: 'SINATEP' },
+                { id: 'parcela_dia', label: 'Parcela Dia', x: 93, y: 384, sample: '10' },
+                { id: 'parcela_mes', label: 'Parcela Mês', x: 163, y: 384, sample: '02' },
+                { id: 'parcela_ano', label: 'Parcela Ano', x: 249, y: 385, sample: '2026' },
+                { id: 'desconto', label: 'Desconto R$', x: 285, y: 426, sample: '50,00' },
+                { id: 'data_dia', label: 'Data Dia', x: 78, y: 68, sample: '13' },
+                { id: 'data_mes', label: 'Data Mês', x: 128, y: 68, sample: '01' },
+                { id: 'data_ano', label: 'Data Ano', x: 183, y: 68, sample: '2026' },
+            ]
+        };
+
+        let selectedField = null;
+
+        function initFieldLists() {
+            createFieldList('contratanteFields', fields.contratante);
+            createFieldList('alunoFields', fields.aluno);
+            createFieldList('cursoFields', fields.curso);
+            createFieldList('pagamentoFields', fields.pagamento);
+            createFieldList('outrosFields', fields.outros);
+        }
+
+        function createFieldList(containerId, fieldList) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            fieldList.forEach(field => {
+                const item = document.createElement('div');
+                item.className = 'field-item';
+                item.dataset.fieldId = field.id;
+                item.innerHTML = `
+                    <span>${field.label}</span>
+                    <span class="coords" id="coords-${field.id}">x:${field.x} y:${field.y}</span>
+                `;
+                item.onclick = () => selectField(field.id);
+                container.appendChild(item);
+            });
+        }
+
+        function createDraggableFields() {
+            const container = document.getElementById('pdfContainer');
+            container.querySelectorAll('.draggable-field').forEach(el => el.remove());
+
+            Object.values(fields).flat().forEach(field => {
+                const el = document.createElement('div');
+                el.className = 'draggable-field';
+                el.id = `field-${field.id}`;
+                el.textContent = field.sample;
+
+                // Converter Y do PDF (base=0) para Y do CSS (topo=0)
+                // USANDO A ALTURA REAL DO PDF
+                el.style.left = `${field.x}px`;
+                el.style.top = `${PDF_HEIGHT - field.y}px`;
+
+                makeDraggable(el, field);
+                container.appendChild(el);
+            });
+        }
+
+        function makeDraggable(element, field) {
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+
+            element.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                element.classList.add('selected');
+                selectField(field.id);
+
+                startX = e.clientX;
+                startY = e.clientY;
+                initialX = element.offsetLeft;
+                initialY = element.offsetTop;
+
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+
+                const newX = Math.max(0, Math.min(PDF_WIDTH - 50, initialX + dx));
+                const newY = Math.max(0, Math.min(PDF_HEIGHT - 20, initialY + dy));
+
+                element.style.left = `${newX}px`;
+                element.style.top = `${newY}px`;
+
+                // Converter Y de volta para sistema PDF (USANDO ALTURA REAL)
+                field.x = Math.round(newX);
+                field.y = Math.round(PDF_HEIGHT - newY);
+
+                updateCoords(field.id, field.x, field.y);
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    element.classList.remove('selected');
+                }
+            });
+        }
+
+        function selectField(fieldId) {
+            document.querySelectorAll('.field-item.active').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.draggable-field.selected').forEach(el => el.classList.remove('selected'));
+
+            const listItem = document.querySelector(`.field-item[data-field-id="${fieldId}"]`);
+            const draggable = document.getElementById(`field-${fieldId}`);
+
+            if (listItem) listItem.classList.add('active');
+            if (draggable) draggable.classList.add('selected');
+
+            selectedField = fieldId;
+        }
+
+        function updateCoords(fieldId, x, y) {
+            const coordsEl = document.getElementById(`coords-${fieldId}`);
+            if (coordsEl) {
+                coordsEl.textContent = `x:${x} y:${y}`;
+            }
+        }
+
+        async function loadPDF(source) {
+            const loading = document.getElementById('loading');
+            loading.classList.add('show');
+            document.getElementById('statusBar').textContent = 'Carregando PDF...';
+
+            try {
+                let pdfData;
+                if (source instanceof ArrayBuffer) {
+                    pdfData = source;
+                } else {
+                    const response = await fetch(source);
+                    pdfData = await response.arrayBuffer();
+                }
+
+                const pdf = await pdfjsLib.getDocument(pdfData).promise;
+                const page = await pdf.getPage(1);
+
+                const viewport = page.getViewport({ scale: 1 });
+
+                // ATUALIZAR DIMENSÕES REAIS DO PDF
+                PDF_WIDTH = viewport.width;
+                PDF_HEIGHT = viewport.height;
+
+                document.getElementById('pdfDimensions').innerHTML =
+                    `<strong>${PDF_WIDTH.toFixed(0)} x ${PDF_HEIGHT.toFixed(0)}</strong> pontos`;
+
+                const canvas = document.getElementById('pdfCanvas');
+                const context = canvas.getContext('2d');
+
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+                // Ajustar container
+                const container = document.getElementById('pdfContainer');
+                container.style.width = `${viewport.width}px`;
+                container.style.height = `${viewport.height}px`;
+
+                // Recriar campos com novas dimensões
+                createDraggableFields();
+
+                document.getElementById('statusBar').textContent =
+                    `PDF carregado: ${PDF_WIDTH.toFixed(0)} x ${PDF_HEIGHT.toFixed(0)} pontos`;
+
+            } catch (error) {
+                console.error('Erro ao carregar PDF:', error);
+                document.getElementById('statusBar').textContent = 'Erro ao carregar PDF: ' + error.message;
+            } finally {
+                loading.classList.remove('show');
+            }
+        }
+
+        // Carregar PDF local
+        document.getElementById('pdfUpload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const arrayBuffer = await file.arrayBuffer();
+            await loadPDF(arrayBuffer);
+        });
+
+        function resetPositions() {
+            location.reload();
+        }
+
+        function exportCode() {
+            let code = `    // ============================================
+    // COORDENADAS CALIBRADAS - PDF: ${PDF_WIDTH.toFixed(0)} x ${PDF_HEIGHT.toFixed(0)}
+    // ============================================
+
+    // === CONTRATANTE ===
+    draw(info.contratante, ${fields.contratante[0].x}, ${fields.contratante[0].y});  // Nome Contratante
+    draw(info.documento, ${fields.contratante[1].x}, ${fields.contratante[1].y});     // CPF
+    draw(info.rg, ${fields.contratante[2].x}, ${fields.contratante[2].y});           // RG
+    if (info.dn) {
+      const [d, m, y] = info.dn.split("/");
+      if (d) draw(d, ${fields.contratante[3].x}, ${fields.contratante[3].y});        // DN Dia
+      if (m) draw(m, ${fields.contratante[4].x}, ${fields.contratante[4].y});        // DN Mês
+      if (y) draw(y, ${fields.contratante[5].x}, ${fields.contratante[5].y});        // DN Ano
+    }
+    draw(info.filiacao, ${fields.contratante[6].x}, ${fields.contratante[6].y});      // Filiação
+    draw(info.naturalidade, ${fields.contratante[7].x}, ${fields.contratante[7].y}); // Naturalidade
+    
+    if (info.sexo === "M") {
+      draw("X", ${fields.contratante[8].x}, ${fields.contratante[8].y});             // Sexo M
+    } else if (info.sexo === "F") {
+      draw("X", ${fields.contratante[9].x}, ${fields.contratante[9].y});             // Sexo F
+    }
+    
+    draw(info.endereco, ${fields.contratante[10].x}, ${fields.contratante[10].y});     // Endereço
+    draw(info.numero, ${fields.contratante[11].x}, ${fields.contratante[11].y});       // Número
+    draw(info.bairro, ${fields.contratante[12].x}, ${fields.contratante[12].y});        // Bairro
+    draw(info.cidade, ${fields.contratante[13].x}, ${fields.contratante[13].y});        // Cidade
+    draw(info.cep, ${fields.contratante[14].x}, ${fields.contratante[14].y});          // CEP
+    draw(info.uf, ${fields.contratante[15].x}, ${fields.contratante[15].y});           // UF
+    draw(info.telefones, ${fields.contratante[16].x}, ${fields.contratante[16].y});     // Telefones
+
+    // === ALUNO ===
+    draw(info.aluno, ${fields.aluno[0].x}, ${fields.aluno[0].y});         // Nome Aluno
+    draw(info.alunoDocumento, ${fields.aluno[1].x}, ${fields.aluno[1].y}); // CPF/RG Aluno
+    if (info.alunoDN) {
+      const [d, m, y] = info.alunoDN.split("/");
+      if (d) draw(d, ${fields.aluno[2].x}, ${fields.aluno[2].y});        // Aluno DN Dia
+      if (m) draw(m, ${fields.aluno[3].x}, ${fields.aluno[3].y});        // Aluno DN Mês
+      if (y) draw(y, ${fields.aluno[4].x}, ${fields.aluno[4].y});        // Aluno DN Ano
+    }
+    draw(info.alunoNaturalidade, ${fields.aluno[5].x}, ${fields.aluno[5].y});  // Aluno Naturalidade
+    draw(info.alunoTelefone, ${fields.aluno[6].x}, ${fields.aluno[6].y}); // Aluno Telefone
+
+    // === OPÇÃO DE CURSO ===
+    const opcaoCursoRaw = info.opcaoCurso !== undefined && info.opcaoCurso !== null ? String(info.opcaoCurso).trim() : "";
+    const opcaoCursoKeyMatch = opcaoCursoRaw.match(/^[1-4]/);
+    const opcaoCursoKey = opcaoCursoKeyMatch ? opcaoCursoKeyMatch[0] : opcaoCursoRaw;
+
+    switch (opcaoCursoKey) {
+      case "1": draw("X", ${fields.curso[0].x}, ${fields.curso[0].y}); break;   // Curso 1
+      case "2": draw("X", ${fields.curso[1].x}, ${fields.curso[1].y}); break;   // Curso 2
+      case "3": draw("X", ${fields.curso[2].x}, ${fields.curso[2].y}); break;   // Curso 3
+      case "4": draw("X", ${fields.curso[3].x}, ${fields.curso[3].y}); break;   // Curso 4
+    }
+
+    if (opcaoCursoKey === "4" && info.outro) {
+      draw(info.outro, ${fields.curso[4].x}, ${fields.curso[4].y});  // Outro/Qual
+    }
+
+    draw(info.indicacao, ${fields.curso[5].x}, ${fields.curso[5].y});  // Indicação
+
+    // === DISPOSIÇÕES INICIAIS ===
+    if (info.horas) {
+      draw(info.horas, ${fields.outros[0].x}, ${fields.outros[0].y});  // Carga Horária
+    }
+
+    if (info.inicioPrevisto) {
+      const parts = info.inicioPrevisto.split("/");
+      if (parts.length >= 1) draw(parts[0], ${fields.outros[1].x}, ${fields.outros[1].y});  // Início Dia
+      if (parts.length >= 2) draw(parts[1], ${fields.outros[2].x}, ${fields.outros[2].y});  // Início Mês
+    }
+    draw(info.contratada, ${fields.outros[3].x}, ${fields.outros[3].y});  // Contratada
+
+    // === PAGAMENTO (Checkboxes) ===
+    if (info.opcaoCurso === "3") {
+      switch (info.pagamento) {
+        case "18": draw("X", ${fields.pagamento[2].x}, ${fields.pagamento[2].y}); break;
+        case "12": draw("X", ${fields.pagamento[6].x}, ${fields.pagamento[6].y}); break;
+        case "8":  draw("X", ${fields.pagamento[4].x}, ${fields.pagamento[4].y}); break;
+        case "5":  draw("X", ${fields.pagamento[5].x}, ${fields.pagamento[5].y}); break;
+        case "3":  draw("X", ${fields.pagamento[5].x}, ${fields.pagamento[5].y}); break;
+        case "0":  draw("X", ${fields.pagamento[6].x}, ${fields.pagamento[6].y}); break;
+      }
+    } else {
+      switch (info.pagamento) {
+        case "36": draw("X", ${fields.pagamento[0].x}, ${fields.pagamento[0].y}); break;   // 36x
+        case "24": draw("X", ${fields.pagamento[1].x}, ${fields.pagamento[1].y}); break;   // 24x
+        case "18": draw("X", ${fields.pagamento[2].x}, ${fields.pagamento[2].y}); break;   // 18x
+        case "14": draw("X", ${fields.pagamento[3].x}, ${fields.pagamento[3].y}); break;   // 14x
+        case "8":  draw("X", ${fields.pagamento[4].x}, ${fields.pagamento[4].y}); break;   // 8x
+        case "3":  draw("X", ${fields.pagamento[5].x}, ${fields.pagamento[5].y}); break;   // 3x
+        case "12": draw("X", ${fields.pagamento[6].x}, ${fields.pagamento[6].y}); break;   // À Vista
+      }
+    }
+
+    // === PRIMEIRA PARCELA E DESCONTO ===
+    if (info.primeiraParcela) {
+      const [d, m, y] = info.primeiraParcela.split("/");
+      if (d) draw(d, ${fields.outros[4].x}, ${fields.outros[4].y});   // Parcela Dia
+      if (m) draw(m, ${fields.outros[5].x}, ${fields.outros[5].y});   // Parcela Mês
+      if (y) draw(y, ${fields.outros[6].x}, ${fields.outros[6].y});   // Parcela Ano
+    }
+
+    draw(info.descontoRS, ${fields.outros[7].x}, ${fields.outros[7].y});  // Desconto R$
+
+    // === DATA FINAL (RODAPÉ) ===
+    const dataFinal = info.criado_str ? info.criado_str.split("/") : [];
+    if (dataFinal.length === 3) {
+      draw(dataFinal[0], ${fields.outros[8].x}, ${fields.outros[8].y});    // Data Dia
+      draw(dataFinal[1], ${fields.outros[9].x}, ${fields.outros[9].y});    // Data Mês
+      draw(dataFinal[2], ${fields.outros[10].x}, ${fields.outros[10].y});   // Data Ano
+    } else {
+      const today = new Date();
+      draw(String(today.getDate()), ${fields.outros[8].x}, ${fields.outros[8].y});
+      draw(String(today.getMonth() + 1), ${fields.outros[9].x}, ${fields.outros[9].y});
+      draw(String(today.getFullYear()), ${fields.outros[10].x}, ${fields.outros[10].y});
+    }`;
+
+            document.getElementById('generatedCode').textContent = code;
+            document.getElementById('codeModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('codeModal').classList.remove('show');
+        }
+
+        function copyCode() {
+            const code = document.getElementById('generatedCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Código copiado para a área de transferência!');
+            });
+        }
+
+        // === FUNÇÕES DE IMPORTAÇÃO ===
+        function showImportModal() {
+            document.getElementById('importModal').classList.add('show');
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.remove('show');
+        }
+
+        function importCode() {
+            const code = document.getElementById('importCode').value;
+
+            // Mapeamento de padrões para IDs de campos
+            const mappings = [
+                // CONTRATANTE
+                { pattern: /draw\(info\.contratante,\s*(\d+),\s*(\d+)\)/, id: 'contratante' },
+                { pattern: /draw\(info\.documento,\s*(\d+),\s*(\d+)\)/, id: 'documento' },
+                { pattern: /draw\(info\.rg,\s*(\d+),\s*(\d+)\)/, id: 'rg' },
+                { pattern: /if \(d\) draw\(d,\s*(\d+),\s*(\d+)\);\s*\/\/\s*DN Dia/, id: 'dn_dia' },
+                { pattern: /if \(m\) draw\(m,\s*(\d+),\s*(\d+)\);\s*\/\/\s*DN M/, id: 'dn_mes' },
+                { pattern: /if \(y\) draw\(y,\s*(\d+),\s*(\d+)\);\s*\/\/\s*DN Ano/, id: 'dn_ano' },
+                { pattern: /draw\(info\.filiacao,\s*(\d+),\s*(\d+)\)/, id: 'filiacao' },
+                { pattern: /draw\(info\.naturalidade,\s*(\d+),\s*(\d+)\)/, id: 'naturalidade' },
+                { pattern: /draw\("X",\s*(\d+),\s*(\d+)\);\s*\/\/\s*Sexo M/, id: 'sexo_m' },
+                { pattern: /draw\("X",\s*(\d+),\s*(\d+)\);\s*\/\/\s*Sexo F/, id: 'sexo_f' },
+                { pattern: /draw\(info\.endereco,\s*(\d+),\s*(\d+)\)/, id: 'endereco' },
+                { pattern: /draw\(info\.numero,\s*(\d+),\s*(\d+)\)/, id: 'numero' },
+                { pattern: /draw\(info\.bairro,\s*(\d+),\s*(\d+)\)/, id: 'bairro' },
+                { pattern: /draw\(info\.cidade,\s*(\d+),\s*(\d+)\)/, id: 'cidade' },
+                { pattern: /draw\(info\.cep,\s*(\d+),\s*(\d+)\)/, id: 'cep' },
+                { pattern: /draw\(info\.uf,\s*(\d+),\s*(\d+)\)/, id: 'uf' },
+                { pattern: /draw\(info\.telefones,\s*(\d+),\s*(\d+)\)/, id: 'telefones' },
+
+                // ALUNO
+                { pattern: /draw\(info\.aluno,\s*(\d+),\s*(\d+)\)/, id: 'aluno' },
+                { pattern: /draw\(info\.alunoDocumento,\s*(\d+),\s*(\d+)\)/, id: 'alunoDocumento' },
+                { pattern: /if \(d\) draw\(d,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Aluno DN Dia/, id: 'alunoDN_dia' },
+                { pattern: /if \(m\) draw\(m,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Aluno DN M/, id: 'alunoDN_mes' },
+                { pattern: /if \(y\) draw\(y,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Aluno DN Ano/, id: 'alunoDN_ano' },
+                { pattern: /draw\(info\.alunoNaturalidade,\s*(\d+),\s*(\d+)\)/, id: 'alunoNaturalidade' },
+                { pattern: /draw\(info\.alunoTelefone,\s*(\d+),\s*(\d+)\)/, id: 'alunoTelefone' },
+
+                // CURSOS
+                { pattern: /case "1": draw\("X",\s*(\d+),\s*(\d+)\)/, id: 'curso_1' },
+                { pattern: /case "2": draw\("X",\s*(\d+),\s*(\d+)\)/, id: 'curso_2' },
+                { pattern: /case "3": draw\("X",\s*(\d+),\s*(\d+)\)/, id: 'curso_3' },
+                { pattern: /case "4": draw\("X",\s*(\d+),\s*(\d+)\)/, id: 'curso_4' },
+                { pattern: /draw\(info\.outro,\s*(\d+),\s*(\d+)\)/, id: 'outro' },
+                { pattern: /draw\(info\.indicacao,\s*(\d+),\s*(\d+)\)/, id: 'indicacao' },
+
+                // OUTROS
+                { pattern: /draw\(info\.horas,\s*(\d+),\s*(\d+)\)/, id: 'horas' },
+                { pattern: /draw\(info\.contratada,\s*(\d+),\s*(\d+)\)/, id: 'contratada' },
+                { pattern: /draw\(info\.descontoRS,\s*(\d+),\s*(\d+)\)/, id: 'desconto' },
+            ];
+
+            // Parsear padrões de pagamento
+            const pagPatterns = [
+                { pattern: /case "36": draw\("X",\s*(\d+),\s*(\d+)\)/, id: 'pag_36x' },
+                { pattern: /case "24": draw\("X",\s*(\d+),\s*(\d+)\)/, id: 'pag_24x' },
+                { pattern: /case "18": draw\("X",\s*(\d+),\s*(\d+)\).*\/\/\s*18x/, id: 'pag_18x' },
+                { pattern: /case "14": draw\("X",\s*(\d+),\s*(\d+)\)/, id: 'pag_14x' },
+                { pattern: /case "8":\s*draw\("X",\s*(\d+),\s*(\d+)\).*\/\/\s*8x/, id: 'pag_8x' },
+                { pattern: /case "3":\s*draw\("X",\s*(\d+),\s*(\d+)\).*\/\/\s*3x/, id: 'pag_3x' },
+                { pattern: /case "12": draw\("X",\s*(\d+),\s*(\d+)\).*\/\/.*Vista/, id: 'pag_vista' },
+            ];
+
+            // Parsear datas
+            const datePatterns = [
+                { pattern: /if \(d\) draw\(d,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Parcela Dia/, id: 'parcela_dia' },
+                { pattern: /if \(m\) draw\(m,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Parcela M/, id: 'parcela_mes' },
+                { pattern: /if \(y\) draw\(y,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Parcela Ano/, id: 'parcela_ano' },
+                { pattern: /if \(d\) draw\(d,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Início Dia/, id: 'inicio_dia' },
+                { pattern: /if \(.*\) draw\(.*,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Início M/, id: 'inicio_mes' },
+                { pattern: /draw\(dataFinal\[0\],\s*(\d+),\s*(\d+)\)/, id: 'data_dia' },
+                { pattern: /draw\(dataFinal\[1\],\s*(\d+),\s*(\d+)\)/, id: 'data_mes' },
+                { pattern: /draw\(dataFinal\[2\],\s*(\d+),\s*(\d+)\)/, id: 'data_ano' },
+            ];
+
+            let updatedCount = 0;
+            const allPatterns = [...mappings, ...pagPatterns, ...datePatterns];
+
+            allPatterns.forEach(({ pattern, id }) => {
+                const match = code.match(pattern);
+                if (match) {
+                    const x = parseInt(match[1]);
+                    const y = parseInt(match[2]);
+
+                    // Encontrar e atualizar o campo
+                    const allFields = Object.values(fields).flat();
+                    const field = allFields.find(f => f.id === id);
+                    if (field) {
+                        field.x = x;
+                        field.y = y;
+                        updateCoords(id, x, y);
+                        updatedCount++;
+                    }
+                }
+            });
+
+            // Recriar campos arrastáveis com novas posições
+            createDraggableFields();
+            initFieldLists();
+
+            closeImportModal();
+            alert(`Importação concluída! ${updatedCount} campos atualizados.`);
+        }
+
+        // Inicializar
+        initFieldLists();
+        createDraggableFields();
+        document.getElementById('statusBar').textContent = 'Clique "Carregar PDF" para começar';
+    </script>
+</body>
+
+</html>
