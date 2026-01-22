@@ -6,6 +6,18 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
+      - name: Initialize keychain
+        script: |
+          keychain initialize
+      - name: Fetch signing files
+        script: |
+          app-store-connect fetch-signing-files "$(xcode-project detect-bundle-id)" --type IOS_APP_STORE --create
+      - name: Set up signing certificate
+        script: |
+          keychain add-certificates
+      - name: Set up code signing settings
+        script: |
+          xcode-project use-profiles
       - name: Get dependencies
         script: |
           flutter packages pub get
@@ -14,7 +26,7 @@ workflows:
           flutter build apk --release
       - name: Build iOS App
         script: |
-          flutter build ios --release --no-codesign
+          flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/**/outputs/**/*.apk
       - build/**/outputs/**/*.aab
@@ -25,3 +37,6 @@ workflows:
       email:
         recipients:
           - user@example.com
+      app_store_connect:
+        auth: integration
+
