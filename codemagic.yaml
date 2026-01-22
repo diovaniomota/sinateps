@@ -20,7 +20,7 @@ workflows:
       - build/**/outputs/**/*.aab
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-      - *.log
+      - "*.log"
     publishing:
       email:
         recipients:
