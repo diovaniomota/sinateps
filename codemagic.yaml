@@ -1,6 +1,8 @@
 workflows:
   my-workflow:
     name: Codemagic Workflow
+    integrations:
+      app_store_connect: Codemagic Key
     environment:
       flutter: stable
       xcode: latest
@@ -39,4 +41,3 @@ workflows:
           - user@example.com
       app_store_connect:
         auth: integration
-
