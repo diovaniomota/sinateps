@@ -1,4 +1,4 @@
-package com.dartsoft.sinatep1
+package com.dartsoft.sinatep
 
 import io.flutter.embedding.android.FlutterActivity
 

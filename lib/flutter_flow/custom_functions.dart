@@ -38,3 +38,35 @@ String funRetornaHoras(DateTime current) {
   // Retorna a data formatada
   return formattedDate;
 }
+
+String autentiqueFeedbackMessage(
+  String? deliveryMethodUsed,
+  bool fallbackUsed,
+  String? emailAluno,
+  String? whatsappAluno,
+) {
+  final email = (emailAluno ?? '').trim();
+  final whatsapp = (whatsappAluno ?? '').trim();
+
+  if (fallbackUsed && email.isNotEmpty) {
+    return 'WhatsApp nao aceito pela Autentique. O contrato foi enviado por email para $email.';
+  }
+
+  if (deliveryMethodUsed == 'whatsapp' && whatsapp.isNotEmpty) {
+    return 'Contrato criado na Autentique. O envio foi solicitado via WhatsApp para $whatsapp.';
+  }
+
+  if (deliveryMethodUsed == 'email' && email.isNotEmpty) {
+    return 'Contrato criado na Autentique. O envio foi solicitado por email para $email.';
+  }
+
+  return 'Contrato criado na Autentique com sucesso.';
+}
+
+String prettyJson(dynamic value) {
+  try {
+    return const JsonEncoder.withIndent('  ').convert(value);
+  } catch (_) {
+    return value?.toString() ?? '';
+  }
+}

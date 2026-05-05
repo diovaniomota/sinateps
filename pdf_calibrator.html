@@ -2,664 +2,1430 @@
 <html lang="pt-BR">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calibrador de PDF - SINATEP</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calibrador de PDF - SINATEP</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef2f0;
+      --surface: #ffffff;
+      --surface-soft: #f7f9f8;
+      --ink: #1d2529;
+      --muted: #607076;
+      --line: #d9e1df;
+      --accent: #0f766e;
+      --accent-strong: #0b5f59;
+      --accent-soft: #d9f0ec;
+      --warn: #b45309;
+      --danger: #b42318;
+      --shadow: 0 16px 45px rgba(33, 47, 43, 0.16);
+      --zoom: 1;
+    }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            color: #fff;
-        }
+    * {
+      box-sizing: border-box;
+    }
 
-        .container {
-            display: flex;
-            height: 100vh;
-        }
+    html,
+    body {
+      height: 100%;
+    }
 
-        .sidebar {
-            width: 320px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            overflow-y: auto;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      font-size: 14px;
+    }
 
-        .sidebar h1 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            color: #4fc3f7;
-        }
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
 
-        .sidebar p {
-            font-size: 0.85rem;
-            color: #aaa;
-            margin-bottom: 20px;
-        }
+    button {
+      border: 0;
+    }
 
-        .field-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+    .app {
+      display: grid;
+      grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+      height: 100vh;
+      min-height: 640px;
+    }
 
-        .field-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border-right: 1px solid var(--line);
+      background: var(--surface);
+    }
 
-        .field-item:hover {
-            background: rgba(79, 195, 247, 0.3);
-        }
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 64px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      font-weight: 800;
+      letter-spacing: 0;
+    }
 
-        .field-item.active {
-            background: rgba(79, 195, 247, 0.5);
-            border: 2px solid #4fc3f7;
-        }
+    .brand small {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
 
-        .field-item .coords {
-            font-size: 0.75rem;
-            color: #4fc3f7;
-            font-family: monospace;
-        }
+    .filters {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-soft);
+    }
 
-        .section-title {
-            font-size: 0.9rem;
-            color: #4fc3f7;
-            margin: 15px 0 10px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid rgba(79, 195, 247, 0.3);
-        }
+    .field-search,
+    .select,
+    .control,
+    .textarea {
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+      outline: 0;
+    }
 
-        .pdf-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            overflow: auto;
-            min-height: 0;
-        }
+    .field-search,
+    .select,
+    .control {
+      padding: 8px 10px;
+    }
 
-        .pdf-scroll-wrapper {
-            flex: 1;
-            overflow: auto;
-            min-height: 0;
-        }
+    .field-search:focus,
+    .select:focus,
+    .control:focus,
+    .textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+    }
 
-        .toolbar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
+    .field-list {
+      overflow: auto;
+      padding: 10px;
+      min-height: 0;
+    }
 
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
+    .group-title {
+      margin: 14px 4px 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
-            color: #1a1a2e;
-        }
+    .field-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 42px;
+      margin-bottom: 6px;
+      padding: 8px 10px;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+      text-align: left;
+    }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(79, 195, 247, 0.4);
-        }
+    .field-row:hover {
+      background: var(--surface-soft);
+      border-color: var(--line);
+    }
 
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
+    .field-row.active {
+      background: var(--accent-soft);
+      border-color: rgba(15, 118, 110, 0.35);
+    }
 
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
+    .field-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 700;
+    }
 
-        .btn-success {
-            background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
-            color: #fff;
-        }
+    .coords {
+      color: var(--accent-strong);
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 12px;
+      white-space: nowrap;
+    }
 
-        .btn-firebase {
-            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-            color: #fff;
-        }
+    .workspace {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-width: 0;
+      min-height: 0;
+    }
 
-        .pdf-canvas-container {
-            position: relative;
-            background: #fff;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            border-radius: 8px;
-            overflow: hidden;
-            margin: 0 auto;
-        }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 64px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(10px);
+    }
 
-        #pdfCanvas {
-            display: block;
-        }
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
 
-        .draggable-field {
-            position: absolute;
-            background: rgba(79, 195, 247, 0.7);
-            border: 2px solid #4fc3f7;
-            padding: 2px 8px;
-            border-radius: 4px;
-            cursor: move;
-            font-size: 10px;
-            color: #000;
-            font-weight: 600;
-            white-space: nowrap;
-            user-select: none;
-            z-index: 10;
-        }
+    .button,
+    .file-button,
+    .icon-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 750;
+      line-height: 1;
+      white-space: nowrap;
+    }
 
-        .draggable-field:hover {
-            background: rgba(79, 195, 247, 0.9);
-        }
+    .button,
+    .file-button {
+      padding: 0 12px;
+    }
 
-        .draggable-field.selected {
-            border-color: #ff5722;
-            background: rgba(255, 87, 34, 0.7);
-        }
+    .icon-button {
+      width: 36px;
+      padding: 0;
+    }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
+    .button:hover,
+    .file-button:hover,
+    .icon-button:hover {
+      border-color: #b9c6c3;
+      background: var(--surface-soft);
+    }
 
-        .modal.show {
-            display: flex;
-        }
+    .button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
 
-        .modal-content {
-            background: #1a1a2e;
-            padding: 30px;
-            border-radius: 16px;
-            max-width: 900px;
-            max-height: 80vh;
-            overflow-y: auto;
-            border: 1px solid rgba(79, 195, 247, 0.3);
-            position: relative;
-        }
+    .button.primary:hover {
+      border-color: var(--accent-strong);
+      background: var(--accent-strong);
+    }
 
-        .modal-content h2 {
-            color: #4fc3f7;
-            margin-bottom: 15px;
-        }
+    .button.is-on {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
 
-        .modal-content pre {
-            background: #0d0d1a;
-            padding: 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            font-size: 11px;
-            line-height: 1.4;
-        }
+    .mini-select {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      padding: 0 8px;
+      color: var(--ink);
+      font-weight: 700;
+    }
 
-        .modal-content code {
-            color: #66bb6a;
-        }
+    .page-chip,
+    .status-chip {
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface-soft);
+      padding: 0 10px;
+      color: var(--muted);
+      font-weight: 750;
+      white-space: nowrap;
+    }
 
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 24px;
-            cursor: pointer;
-        }
+    .stage-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 310px;
+      min-height: 0;
+    }
 
-        .info-box {
-            background: rgba(79, 195, 247, 0.1);
-            border: 1px solid rgba(79, 195, 247, 0.3);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            font-size: 0.85rem;
-        }
+    .canvas-scroll {
+      position: relative;
+      overflow: auto;
+      min-width: 0;
+      min-height: 0;
+      padding: 24px;
+      background:
+        linear-gradient(90deg, rgba(31, 41, 37, 0.05) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(31, 41, 37, 0.05) 1px, transparent 1px),
+        var(--bg);
+      background-size: 24px 24px;
+    }
 
-        .status-bar {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 8px 15px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            color: #4fc3f7;
-        }
+    .stage {
+      position: relative;
+      width: 612px;
+      height: 1008px;
+      margin: 0 auto;
+      background: #fff;
+      box-shadow: var(--shadow);
+      transform-origin: top left;
+    }
 
-        .loading {
-            display: none;
-            align-items: center;
-            justify-content: center;
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 100;
-        }
+    #pdfCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+    }
 
-        .loading.show {
-            display: flex;
-        }
+    .grid-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      background-image:
+        linear-gradient(rgba(15, 118, 110, 0.18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 118, 110, 0.18) 1px, transparent 1px),
+        linear-gradient(rgba(180, 83, 9, 0.26) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(180, 83, 9, 0.26) 1px, transparent 1px);
+      background-size:
+        calc(10px * var(--zoom)) calc(10px * var(--zoom)),
+        calc(10px * var(--zoom)) calc(10px * var(--zoom)),
+        calc(50px * var(--zoom)) calc(50px * var(--zoom)),
+        calc(50px * var(--zoom)) calc(50px * var(--zoom));
+    }
 
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(79, 195, 247, 0.3);
-            border-top-color: #4fc3f7;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+    .grid-layer.visible {
+      opacity: 1;
+    }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
+    .field-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .overlay-item {
+      position: absolute;
+      width: 0;
+      height: 0;
+      pointer-events: auto;
+      z-index: 5;
+    }
+
+    .overlay-item.hidden-page {
+      display: none;
+    }
+
+    .field-badge {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      display: inline-flex;
+      align-items: center;
+      min-height: 18px;
+      max-width: min(360px, calc(100vw - 420px));
+      border: 1px solid rgba(15, 118, 110, 0.72);
+      border-radius: 5px;
+      background: rgba(217, 240, 236, 0.82);
+      color: #062c2a;
+      cursor: grab;
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: calc(10px * var(--zoom));
+      line-height: 1;
+      padding: calc(2px * var(--zoom)) calc(5px * var(--zoom));
+      white-space: nowrap;
+      user-select: none;
+      box-shadow: 0 4px 14px rgba(15, 118, 110, 0.16);
+    }
+
+    .overlay-item.active {
+      z-index: 20;
+    }
+
+    .overlay-item.active .field-badge {
+      border-color: var(--warn);
+      background: rgba(255, 237, 213, 0.92);
+      color: #6a3506;
+      box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.18);
+    }
+
+    .field-badge:active {
+      cursor: grabbing;
+    }
+
+    .field-anchor {
+      position: absolute;
+      left: -4px;
+      bottom: -4px;
+      width: 8px;
+      height: 8px;
+      border: 2px solid var(--danger);
+      border-radius: 50%;
+      background: #fff;
+      pointer-events: none;
+    }
+
+    .image-box {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      display: grid;
+      place-items: center;
+      border: 2px dashed rgba(180, 83, 9, 0.78);
+      background: rgba(255, 237, 213, 0.68);
+      color: #7c3f07;
+      cursor: grab;
+      font-weight: 800;
+      min-width: 40px;
+      min-height: 28px;
+      user-select: none;
+    }
+
+    .empty-state,
+    .loading-state {
+      position: absolute;
+      inset: 0;
+      display: none;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.78);
+      color: var(--muted);
+      font-weight: 800;
+      text-align: center;
+      z-index: 50;
+    }
+
+    .empty-state.visible,
+    .loading-state.visible {
+      display: grid;
+    }
+
+    .inspector {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border-left: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .panel {
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .selected-title {
+      min-height: 22px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 850;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field-control {
+      display: grid;
+      gap: 5px;
+    }
+
+    .field-control.wide {
+      grid-column: 1 / -1;
+    }
+
+    .field-control label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .nudge-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 42px);
+      grid-template-rows: repeat(3, 36px);
+      justify-content: center;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .nudge-grid .icon-button:nth-child(1) {
+      grid-column: 2;
+    }
+
+    .nudge-grid .icon-button:nth-child(2) {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .nudge-grid .icon-button:nth-child(3) {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    .nudge-grid .icon-button:nth-child(4) {
+      grid-column: 2;
+      grid-row: 3;
+    }
+
+    .meta-table {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .meta-table div {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 6px;
+    }
+
+    .meta-table strong {
+      color: var(--ink);
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(22, 31, 29, 0.48);
+      z-index: 200;
+    }
+
+    .dialog-backdrop.visible {
+      display: flex;
+    }
+
+    .dialog {
+      width: min(980px, 100%);
+      max-height: min(760px, calc(100vh - 48px));
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .dialog-head,
+    .dialog-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .dialog-actions {
+      border-top: 1px solid var(--line);
+      border-bottom: 0;
+      justify-content: flex-end;
+    }
+
+    .dialog-title {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .dialog-body {
+      min-height: 0;
+      padding: 16px;
+      overflow: auto;
+    }
+
+    .textarea {
+      min-height: 440px;
+      padding: 12px;
+      resize: vertical;
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre;
+    }
+
+    .hidden-input {
+      display: none;
+    }
+
+    @media (max-width: 1050px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(260px, 38vh) minmax(0, 1fr);
+      }
+
+      .sidebar {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .stage-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) auto;
+      }
+
+      .inspector {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .inspector .panel {
+        padding: 12px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .app {
+        min-height: 100vh;
+      }
+
+      .brand,
+      .topbar {
+        min-height: auto;
+      }
+
+      .canvas-scroll {
+        padding: 14px;
+      }
+
+      .toolbar-group {
+        width: 100%;
+      }
+
+      .button,
+      .file-button,
+      .mini-select,
+      .page-chip,
+      .status-chip {
+        flex: 1 1 auto;
+      }
+    }
+  </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="sidebar">
-            <h1>📐 Calibrador PDF</h1>
-            <p>Arraste os campos para as posições corretas</p>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <span>SINATEP Calibrador</span>
+        <small id="fieldCount">0 campos</small>
+      </div>
 
-            <div class="info-box">
-                <strong>Dimensões do PDF:</strong><br>
-                <span id="pdfDimensions">Carregando...</span>
+      <div class="filters">
+        <input class="field-search" id="fieldSearch" type="search" placeholder="Buscar campo">
+        <select class="select" id="groupFilter" aria-label="Grupo">
+          <option value="all">Todos os grupos</option>
+        </select>
+      </div>
+
+      <div class="field-list" id="fieldList"></div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="toolbar-group">
+          <label class="file-button" for="pdfUpload" title="Carregar PDF">
+            <span aria-hidden="true">+</span>
+            <span>Abrir PDF</span>
+          </label>
+          <input class="hidden-input" id="pdfUpload" type="file" accept="application/pdf,.pdf">
+          <button class="button" id="loadDefaultButton" type="button">Modelo 2026</button>
+          <button class="icon-button" id="prevPageButton" type="button" title="Página anterior" aria-label="Página anterior">‹</button>
+          <span class="page-chip" id="pageInfo">1 / 1</span>
+          <button class="icon-button" id="nextPageButton" type="button" title="Próxima página" aria-label="Próxima página">›</button>
+        </div>
+
+        <div class="toolbar-group">
+          <select class="mini-select" id="zoomSelect" aria-label="Zoom">
+            <option value="0.5">50%</option>
+            <option value="0.75">75%</option>
+            <option value="0.9">90%</option>
+            <option value="1" selected>100%</option>
+            <option value="1.25">125%</option>
+            <option value="1.5">150%</option>
+          </select>
+          <select class="mini-select" id="snapSelect" aria-label="Precisão">
+            <option value="0.5">0,5 pt</option>
+            <option value="1" selected>1 pt</option>
+            <option value="5">5 pt</option>
+            <option value="10">10 pt</option>
+          </select>
+          <button class="button is-on" id="gridButton" type="button" aria-pressed="true">Grade</button>
+          <button class="button" id="importButton" type="button">Importar</button>
+          <button class="button" id="jsonButton" type="button">JSON</button>
+          <button class="button primary" id="codeButton" type="button">Código</button>
+        </div>
+      </header>
+
+      <section class="stage-layout">
+        <div class="canvas-scroll" id="canvasScroll">
+          <div class="stage" id="pdfStage">
+            <canvas id="pdfCanvas"></canvas>
+            <div class="grid-layer visible" id="gridLayer"></div>
+            <div class="field-layer" id="fieldLayer"></div>
+            <div class="empty-state" id="emptyState">Abra um PDF para calibrar</div>
+            <div class="loading-state" id="loadingState">Carregando PDF</div>
+          </div>
+        </div>
+
+        <aside class="inspector">
+          <div class="panel">
+            <div class="panel-title">
+              <span>Selecionado</span>
+              <span class="selected-title" id="selectedTitle">Nenhum campo</span>
             </div>
 
-            <div class="section-title">1. CONTRATANTE</div>
-            <div class="field-list" id="contratanteFields"></div>
-
-            <div class="section-title">2. ALUNO</div>
-            <div class="field-list" id="alunoFields"></div>
-
-            <div class="section-title">OPÇÃO DE CURSO</div>
-            <div class="field-list" id="cursoFields"></div>
-
-            <div class="section-title">PAGAMENTO</div>
-            <div class="field-list" id="pagamentoFields"></div>
-
-            <div class="section-title">OUTROS</div>
-            <div class="field-list" id="outrosFields"></div>
-        </div>
-
-        <div class="pdf-area">
-            <div class="toolbar">
-                <label class="btn btn-secondary" for="pdfUpload">
-                    📁 Carregar PDF
-                </label>
-                <input type="file" id="pdfUpload" accept=".pdf" style="display:none">
-
-                <button class="btn btn-primary" onclick="showImportModal()">📥 Importar Código</button>
-                <button class="btn btn-secondary" onclick="resetPositions()">🔄 Resetar</button>
-                <button class="btn btn-success" onclick="exportCode()">📋 Exportar Código</button>
-
-                <div class="status-bar" id="statusBar">Aguardando PDF...</div>
+            <div class="form-grid">
+              <div class="field-control">
+                <label for="fieldPage">Página</label>
+                <input class="control" id="fieldPage" type="number" min="1" step="1">
+              </div>
+              <div class="field-control">
+                <label for="fieldFontSize">Fonte</label>
+                <input class="control" id="fieldFontSize" type="number" min="4" step="0.5">
+              </div>
+              <div class="field-control">
+                <label for="fieldX">X</label>
+                <input class="control" id="fieldX" type="number" step="0.5">
+              </div>
+              <div class="field-control">
+                <label for="fieldY">Y</label>
+                <input class="control" id="fieldY" type="number" step="0.5">
+              </div>
+              <div class="field-control">
+                <label for="fieldWidth">Largura</label>
+                <input class="control" id="fieldWidth" type="number" step="1">
+              </div>
+              <div class="field-control">
+                <label for="fieldHeight">Altura</label>
+                <input class="control" id="fieldHeight" type="number" step="1">
+              </div>
+              <div class="field-control wide">
+                <label for="fieldSample">Amostra</label>
+                <input class="control" id="fieldSample" type="text">
+              </div>
             </div>
 
-            <div class="pdf-scroll-wrapper">
-                <div class="pdf-canvas-container" id="pdfContainer">
-                    <canvas id="pdfCanvas"></canvas>
-                    <div class="loading" id="loading">
-                        <div class="spinner"></div>
-                    </div>
-                </div>
+            <div class="nudge-grid" aria-label="Mover campo">
+              <button class="icon-button" type="button" data-nudge="up" title="Mover para cima">↑</button>
+              <button class="icon-button" type="button" data-nudge="left" title="Mover para esquerda">←</button>
+              <button class="icon-button" type="button" data-nudge="right" title="Mover para direita">→</button>
+              <button class="icon-button" type="button" data-nudge="down" title="Mover para baixo">↓</button>
             </div>
-        </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">PDF</div>
+            <div class="meta-table">
+              <div><span>Arquivo</span><strong id="pdfName">-</strong></div>
+              <div><span>Tamanho</span><strong id="pdfSize">612 x 1008</strong></div>
+              <div><span>Zoom</span><strong id="zoomMeta">100%</strong></div>
+              <div><span>Status</span><strong id="statusMeta">Pronto</strong></div>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <div class="dialog-backdrop" id="dialogBackdrop" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+    <div class="dialog">
+      <div class="dialog-head">
+        <h2 class="dialog-title" id="dialogTitle">Exportar</h2>
+        <button class="icon-button" id="closeDialogButton" type="button" aria-label="Fechar">×</button>
+      </div>
+      <div class="dialog-body">
+        <textarea class="textarea" id="dialogText" spellcheck="false"></textarea>
+      </div>
+      <div class="dialog-actions">
+        <button class="button" id="applyImportButton" type="button">Aplicar</button>
+        <button class="button primary" id="copyDialogButton" type="button">Copiar</button>
+      </div>
     </div>
+  </div>
 
-    <div class="modal" id="codeModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeModal()">&times;</button>
-            <h2>📋 Código Gerado para index.js</h2>
-            <p style="margin-bottom:15px">Substitua o bloco de preenchimento de dados na função <code>criarPDF</code>:
-            </p>
-            <pre><code id="generatedCode"></code></pre>
-            <button class="btn btn-primary" onclick="copyCode()" style="margin-top: 15px;">📋 Copiar Código</button>
-        </div>
-    </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-    <!-- Modal de Importação -->
-    <div class="modal" id="importModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeImportModal()">&times;</button>
-            <h2>📥 Importar Código</h2>
-            <p style="margin-bottom:15px">Cole o código do index.js com as coordenadas:</p>
-            <textarea id="importCode"
-                style="width:100%;height:300px;background:#0d0d1a;color:#66bb6a;border:1px solid #4fc3f7;border-radius:8px;padding:15px;font-family:monospace;font-size:12px;"
-                placeholder="Cole o código aqui..."></textarea>
-            <button class="btn btn-primary" onclick="importCode()" style="margin-top: 15px;">📥 Importar e
-                Aplicar</button>
-        </div>
-    </div>
+    const DEFAULT_PDF = "assets/pdfs/Contrato%202026.pdf";
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const groups = [
+      {
+        id: "contratante",
+        label: "Contratante",
+        fields: [
+          { id: "contratante", label: "Nome contratante", sample: "JOAO SILVA", expr: "info.contratante", comment: "Nome Contratante", x: 122, y: 757 },
+          { id: "documento", label: "CPF contratante", sample: "123.456.789-00", expr: "info.documento", comment: "CPF", x: 59, y: 746 },
+          { id: "rg", label: "RG", sample: "12.345.678-9", expr: "info.rg", comment: "RG", x: 326, y: 747 },
+          { id: "dn_dia", label: "Nascimento dia", sample: "15", expr: "d", comment: "DN Dia", x: 491, y: 744 },
+          { id: "dn_mes", label: "Nascimento mês", sample: "03", expr: "m", comment: "DN Mês", x: 513, y: 744 },
+          { id: "dn_ano", label: "Nascimento ano", sample: "1990", expr: "y", comment: "DN Ano", x: 538, y: 744 },
+          { id: "filiacao", label: "Filiação", sample: "MARIA E JOSE", expr: "info.filiacao", comment: "Filiação", x: 107, y: 733 },
+          { id: "naturalidade", label: "Naturalidade", sample: "BRASILEIRO", expr: "info.naturalidade", comment: "Naturalidade", x: 461, y: 727 },
+          { id: "sexo_m", label: "Sexo masculino", sample: "X", expr: "\"X\"", comment: "Sexo M", x: 108, y: 720 },
+          { id: "sexo_f", label: "Sexo feminino", sample: "X", expr: "\"X\"", comment: "Sexo F", x: 160, y: 698 },
+          { id: "endereco", label: "Endereço", sample: "RUA DAS FLORES", expr: "info.endereco", comment: "Endereço", x: 176, y: 711 },
+          { id: "numero", label: "Número", sample: "456", expr: "info.numero", comment: "Número", x: 527, y: 710 },
+          { id: "bairro", label: "Bairro", sample: "CENTRO", expr: "info.bairro", comment: "Bairro", x: 65, y: 700 },
+          { id: "cidade", label: "Cidade", sample: "CAPINZAL", expr: "info.cidade", comment: "Cidade", x: 71, y: 688 },
+          { id: "cep", label: "CEP", sample: "89665-000", expr: "info.cep", comment: "CEP", x: 357, y: 686 },
+          { id: "uf", label: "UF", sample: "SC", expr: "info.uf", comment: "UF", x: 491, y: 686 },
+          { id: "telefones", label: "Telefones", sample: "(49) 99999-9999", expr: "info.telefones", comment: "Telefones", x: 81, y: 676 }
+        ]
+      },
+      {
+        id: "aluno",
+        label: "Aluno",
+        fields: [
+          { id: "aluno", label: "Nome aluno", sample: "PEDRO SANTOS", expr: "info.aluno", comment: "Nome Aluno", x: 103, y: 640 },
+          { id: "alunoDocumento", label: "CPF/RG aluno", sample: "987.654.321-00", expr: "info.alunoDocumento", comment: "CPF/RG Aluno", x: 89, y: 627 },
+          { id: "alunoDN_dia", label: "Aluno nascimento dia", sample: "20", expr: "d", comment: "Aluno DN Dia", x: 474, y: 639 },
+          { id: "alunoDN_mes", label: "Aluno nascimento mês", sample: "05", expr: "m", comment: "Aluno DN Mês", x: 500, y: 639 },
+          { id: "alunoDN_ano", label: "Aluno nascimento ano", sample: "2005", expr: "y", comment: "Aluno DN Ano", x: 526, y: 639 },
+          { id: "alunoNaturalidade", label: "Aluno naturalidade", sample: "BRASILEIRO", expr: "info.alunoNaturalidade", comment: "Aluno Naturalidade", x: 467, y: 627 },
+          { id: "alunoTelefone", label: "Aluno telefone", sample: "(49) 98888-8888", expr: "info.alunoTelefone", comment: "Aluno Telefone", x: 70, y: 614 }
+        ]
+      },
+      {
+        id: "curso",
+        label: "Opção de curso",
+        fields: [
+          { id: "curso_1", label: "Curso 1", sample: "X", expr: "\"X\"", comment: "Curso 1", x: 38, y: 562 },
+          { id: "curso_2", label: "Curso 2", sample: "X", expr: "\"X\"", comment: "Curso 2", x: 38, y: 552 },
+          { id: "curso_3", label: "Curso 3", sample: "X", expr: "\"X\"", comment: "Curso 3", x: 183, y: 561 },
+          { id: "curso_4", label: "Curso 4", sample: "X", expr: "\"X\"", comment: "Curso 4", x: 183, y: 552 },
+          { id: "outro", label: "Outro curso", sample: "CURSO LIVRE", expr: "info.outro", comment: "Outro/Qual", x: 255, y: 555 },
+          { id: "indicacao", label: "Indicação", sample: "AMIGO", expr: "info.indicacao", comment: "Indicação", x: 96, y: 538 }
+        ]
+      },
+      {
+        id: "disposicoes",
+        label: "Disposições iniciais",
+        fields: [
+          { id: "horas", label: "Carga horária", sample: "120", expr: "info.horas", comment: "Carga Horária", x: 510, y: 445 },
+          { id: "inicio_dia", label: "Início dia", sample: "01", expr: "parts[0]", comment: "Início Dia", x: 268, y: 434 },
+          { id: "inicio_mes", label: "Início mês", sample: "02", expr: "parts[1]", comment: "Início Mês", x: 295, y: 434 },
+          { id: "contratada", label: "Contratada", sample: "SINATEP", expr: "info.contratada", comment: "Contratada", x: 456, y: 433 }
+        ]
+      },
+      {
+        id: "pagamento",
+        label: "Pagamento",
+        fields: [
+          { id: "pag_36x", label: "36x", sample: "X", expr: "\"X\"", comment: "36x", x: 76, y: 371 },
+          { id: "pag_24x", label: "24x", sample: "X", expr: "\"X\"", comment: "24x", x: 76, y: 356 },
+          { id: "pag_18x", label: "18x", sample: "X", expr: "\"X\"", comment: "18x", x: 76, y: 339 },
+          { id: "pag_14x", label: "14x", sample: "X", expr: "\"X\"", comment: "14x", x: 76, y: 323 },
+          { id: "pag_8x", label: "8x", sample: "X", expr: "\"X\"", comment: "8x", x: 292, y: 371 },
+          { id: "pag_3x", label: "3x", sample: "X", expr: "\"X\"", comment: "3x", x: 292, y: 354 },
+          { id: "pag_12x", label: "À vista/cartão", sample: "X", expr: "\"X\"", comment: "À vista/cartão", x: 292, y: 341 }
+        ]
+      },
+      {
+        id: "parcela",
+        label: "Parcela e desconto",
+        fields: [
+          { id: "parcela_dia", label: "Parcela dia", sample: "10", expr: "d", comment: "Parcela Dia", x: 184, y: 300 },
+          { id: "parcela_mes", label: "Parcela mês", sample: "02", expr: "m", comment: "Parcela Mês", x: 210, y: 300 },
+          { id: "parcela_ano", label: "Parcela ano", sample: "2026", expr: "y", comment: "Parcela Ano", x: 228, y: 300 },
+          { id: "desconto", label: "Desconto", sample: "50,00", expr: "info.descontoRS", comment: "Desconto R$", x: 292, y: 281 }
+        ]
+      },
+      {
+        id: "rodape",
+        label: "Rodapé",
+        fields: [
+          { id: "data_dia", label: "Data dia", sample: "13", expr: "dataFinal[0]", comment: "Data Dia", x: 97, y: 210 },
+          { id: "data_mes", label: "Data mês", sample: "01", expr: "dataFinal[1]", comment: "Data Mês", x: 160, y: 210 },
+          { id: "data_ano", label: "Data ano", sample: "2026", expr: "dataFinal[2]", comment: "Data Ano", x: 248, y: 211 }
+        ]
+      },
+      {
+        id: "imagem",
+        label: "Imagem",
+        fields: [
+          { id: "fotoCliente", label: "Foto cliente", sample: "FOTO", type: "image", comment: "Foto Cliente", x: 50, y: 500, width: 100, height: 100 }
+        ]
+      }
+    ];
 
-        // Dimensões reais do PDF (serão atualizadas quando carregar)
-        let PDF_WIDTH = 595;
-        let PDF_HEIGHT = 842;
+    const fields = groups.flatMap(group => group.fields.map(field => ({
+      page: 1,
+      type: "text",
+      fontSize: 10,
+      width: 0,
+      height: 0,
+      groupId: group.id,
+      groupLabel: group.label,
+      ...field
+    })));
 
-        // Definição dos campos com posições iniciais
-        const fields = {
-            contratante: [
-                { id: 'contratante', label: 'Nome Contratante', x: 118, y: 710, sample: 'João Silva' },
-                { id: 'documento', label: 'CPF', x: 53, y: 700, sample: '123.456.789-00' },
-                { id: 'rg', label: 'RG', x: 322, y: 701, sample: '12.345.678-9' },
-                { id: 'dn_dia', label: 'DN Dia', x: 484, y: 700, sample: '15' },
-                { id: 'dn_mes', label: 'DN Mês', x: 506, y: 700, sample: '03' },
-                { id: 'dn_ano', label: 'DN Ano', x: 532, y: 700, sample: '1990' },
-                { id: 'filiacao', label: 'Filiação', x: 60, y: 694, sample: 'Maria e José' },
-                { id: 'naturalidade', label: 'Naturalidade', x: 435, y: 694, sample: 'Brasileiro' },
-                { id: 'sexo_m', label: 'Sexo M (X)', x: 100, y: 685, sample: 'X' },
-                { id: 'sexo_f', label: 'Sexo F (X)', x: 158, y: 684, sample: 'X' },
-                { id: 'endereco', label: 'Endereço', x: 167, y: 680, sample: 'Rua das Flores' },
-                { id: 'numero', label: 'Número', x: 517, y: 680, sample: '456' },
-                { id: 'bairro', label: 'Bairro', x: 52, y: 672, sample: 'Centro' },
-                { id: 'cidade', label: 'Cidade', x: 62, y: 666, sample: 'Capinzal' },
-                { id: 'cep', label: 'CEP', x: 345, y: 666, sample: '89665-000' },
-                { id: 'uf', label: 'UF', x: 490, y: 666, sample: 'SC' },
-                { id: 'telefones', label: 'Telefones', x: 65, y: 659, sample: '(49) 99999-9999' },
-            ],
-            aluno: [
-                { id: 'aluno', label: 'Nome Aluno', x: 95, y: 638, sample: 'Pedro Santos' },
-                { id: 'alunoDocumento', label: 'CPF/RG Aluno', x: 77, y: 630, sample: '987.654.321-00' },
-                { id: 'alunoDN_dia', label: 'Aluno DN Dia', x: 305, y: 551, sample: '20' },
-                { id: 'alunoDN_mes', label: 'Aluno DN Mês', x: 325, y: 551, sample: '05' },
-                { id: 'alunoDN_ano', label: 'Aluno DN Ano', x: 350, y: 551, sample: '2005' },
-                { id: 'alunoNaturalidade', label: 'Aluno Naturalidade', x: 415, y: 551, sample: 'Brasileiro' },
-                { id: 'alunoTelefone', label: 'Aluno Telefone', x: 61, y: 624, sample: '(49) 98888-8888' },
-            ],
-            curso: [
-                { id: 'curso_1', label: 'Curso 1 (X)', x: 29, y: 591, sample: 'X' },
-                { id: 'curso_2', label: 'Curso 2 (X)', x: 29, y: 584, sample: 'X' },
-                { id: 'curso_3', label: 'Curso 3 (X)', x: 173, y: 592, sample: 'X' },
-                { id: 'curso_4', label: 'Curso 4 (X)', x: 172, y: 583, sample: 'X' },
-                { id: 'outro', label: 'Outro/Qual', x: 246, y: 586, sample: 'Outro curso' },
-                { id: 'indicacao', label: 'Indicação', x: 86, y: 578, sample: 'Amigo' },
-            ],
-            pagamento: [
-                { id: 'pag_36x', label: '36x (X)', x: 66, y: 478, sample: 'X' },
-                { id: 'pag_24x', label: '24x (X)', x: 65, y: 468, sample: 'X' },
-                { id: 'pag_18x', label: '18x (X)', x: 64, y: 458, sample: 'X' },
-                { id: 'pag_14x', label: '14x (X)', x: 65, y: 449, sample: 'X' },
-                { id: 'pag_8x', label: '8x (X)', x: 282, y: 478, sample: 'X' },
-                { id: 'pag_3x', label: '3x (X)', x: 282, y: 467, sample: 'X' },
-                { id: 'pag_vista', label: 'À Vista (X)', x: 282, y: 458, sample: 'X' },
-            ],
-            outros: [
-                { id: 'horas', label: 'Carga Horária', x: 115, y: 455, sample: '120' },
-                { id: 'inicio_dia', label: 'Início Dia', x: 125, y: 443, sample: '01' },
-                { id: 'inicio_mes', label: 'Início Mês', x: 150, y: 443, sample: '02' },
-                { id: 'contratada', label: 'Contratada', x: 445, y: 514, sample: 'SINATEP' },
-                { id: 'parcela_dia', label: 'Parcela Dia', x: 93, y: 384, sample: '10' },
-                { id: 'parcela_mes', label: 'Parcela Mês', x: 163, y: 384, sample: '02' },
-                { id: 'parcela_ano', label: 'Parcela Ano', x: 249, y: 385, sample: '2026' },
-                { id: 'desconto', label: 'Desconto R$', x: 285, y: 426, sample: '50,00' },
-                { id: 'data_dia', label: 'Data Dia', x: 78, y: 68, sample: '13' },
-                { id: 'data_mes', label: 'Data Mês', x: 128, y: 68, sample: '01' },
-                { id: 'data_ano', label: 'Data Ano', x: 183, y: 68, sample: '2026' },
-            ]
-        };
+    const fieldById = new Map(fields.map(field => [field.id, field]));
+    const state = {
+      pdfDoc: null,
+      pdfName: "-",
+      pageNumber: 1,
+      pageCount: 1,
+      pageSizes: new Map([[1, { width: 612, height: 1008 }]]),
+      zoom: 1,
+      snap: 1,
+      activeId: fields[0].id,
+      gridVisible: true,
+      dialogMode: "export"
+    };
 
-        let selectedField = null;
+    const els = {
+      fieldList: document.getElementById("fieldList"),
+      fieldCount: document.getElementById("fieldCount"),
+      fieldSearch: document.getElementById("fieldSearch"),
+      groupFilter: document.getElementById("groupFilter"),
+      pdfUpload: document.getElementById("pdfUpload"),
+      loadDefaultButton: document.getElementById("loadDefaultButton"),
+      prevPageButton: document.getElementById("prevPageButton"),
+      nextPageButton: document.getElementById("nextPageButton"),
+      pageInfo: document.getElementById("pageInfo"),
+      zoomSelect: document.getElementById("zoomSelect"),
+      snapSelect: document.getElementById("snapSelect"),
+      gridButton: document.getElementById("gridButton"),
+      importButton: document.getElementById("importButton"),
+      jsonButton: document.getElementById("jsonButton"),
+      codeButton: document.getElementById("codeButton"),
+      pdfStage: document.getElementById("pdfStage"),
+      pdfCanvas: document.getElementById("pdfCanvas"),
+      gridLayer: document.getElementById("gridLayer"),
+      fieldLayer: document.getElementById("fieldLayer"),
+      emptyState: document.getElementById("emptyState"),
+      loadingState: document.getElementById("loadingState"),
+      selectedTitle: document.getElementById("selectedTitle"),
+      fieldPage: document.getElementById("fieldPage"),
+      fieldFontSize: document.getElementById("fieldFontSize"),
+      fieldX: document.getElementById("fieldX"),
+      fieldY: document.getElementById("fieldY"),
+      fieldWidth: document.getElementById("fieldWidth"),
+      fieldHeight: document.getElementById("fieldHeight"),
+      fieldSample: document.getElementById("fieldSample"),
+      pdfName: document.getElementById("pdfName"),
+      pdfSize: document.getElementById("pdfSize"),
+      zoomMeta: document.getElementById("zoomMeta"),
+      statusMeta: document.getElementById("statusMeta"),
+      dialogBackdrop: document.getElementById("dialogBackdrop"),
+      dialogTitle: document.getElementById("dialogTitle"),
+      dialogText: document.getElementById("dialogText"),
+      closeDialogButton: document.getElementById("closeDialogButton"),
+      copyDialogButton: document.getElementById("copyDialogButton"),
+      applyImportButton: document.getElementById("applyImportButton")
+    };
 
-        function initFieldLists() {
-            createFieldList('contratanteFields', fields.contratante);
-            createFieldList('alunoFields', fields.aluno);
-            createFieldList('cursoFields', fields.curso);
-            createFieldList('pagamentoFields', fields.pagamento);
-            createFieldList('outrosFields', fields.outros);
-        }
+    function formatNumber(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return "0";
+      return Number.isInteger(number) ? String(number) : number.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+    }
 
-        function createFieldList(containerId, fieldList) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-            fieldList.forEach(field => {
-                const item = document.createElement('div');
-                item.className = 'field-item';
-                item.dataset.fieldId = field.id;
-                item.innerHTML = `
-                    <span>${field.label}</span>
-                    <span class="coords" id="coords-${field.id}">x:${field.x} y:${field.y}</span>
-                `;
-                item.onclick = () => selectField(field.id);
-                container.appendChild(item);
-            });
-        }
+    function snap(value) {
+      const step = Number(state.snap) || 1;
+      return Math.round(value / step) * step;
+    }
 
-        function createDraggableFields() {
-            const container = document.getElementById('pdfContainer');
-            container.querySelectorAll('.draggable-field').forEach(el => el.remove());
+    function currentPageSize() {
+      return state.pageSizes.get(state.pageNumber) || { width: 612, height: 1008 };
+    }
 
-            Object.values(fields).flat().forEach(field => {
-                const el = document.createElement('div');
-                el.className = 'draggable-field';
-                el.id = `field-${field.id}`;
-                el.textContent = field.sample;
+    function fieldPageSize(field) {
+      return state.pageSizes.get(field.page) || currentPageSize();
+    }
 
-                // Converter Y do PDF (base=0) para Y do CSS (topo=0)
-                // USANDO A ALTURA REAL DO PDF
-                el.style.left = `${field.x}px`;
-                el.style.top = `${PDF_HEIGHT - field.y}px`;
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
 
-                makeDraggable(el, field);
-                container.appendChild(el);
-            });
-        }
+    function setStatus(value) {
+      els.statusMeta.textContent = value;
+    }
 
-        function makeDraggable(element, field) {
-            let isDragging = false;
-            let startX, startY, initialX, initialY;
+    function initFilters() {
+      groups.forEach(group => {
+        const option = document.createElement("option");
+        option.value = group.id;
+        option.textContent = group.label;
+        els.groupFilter.appendChild(option);
+      });
+      els.fieldCount.textContent = `${fields.length} campos`;
+    }
 
-            element.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                element.classList.add('selected');
-                selectField(field.id);
+    function renderFieldList() {
+      const query = els.fieldSearch.value.trim().toLowerCase();
+      const groupFilter = els.groupFilter.value;
+      els.fieldList.innerHTML = "";
 
-                startX = e.clientX;
-                startY = e.clientY;
-                initialX = element.offsetLeft;
-                initialY = element.offsetTop;
+      groups.forEach(group => {
+        if (groupFilter !== "all" && group.id !== groupFilter) return;
 
-                e.preventDefault();
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-
-                const newX = Math.max(0, Math.min(PDF_WIDTH - 50, initialX + dx));
-                const newY = Math.max(0, Math.min(PDF_HEIGHT - 20, initialY + dy));
-
-                element.style.left = `${newX}px`;
-                element.style.top = `${newY}px`;
-
-                // Converter Y de volta para sistema PDF (USANDO ALTURA REAL)
-                field.x = Math.round(newX);
-                field.y = Math.round(PDF_HEIGHT - newY);
-
-                updateCoords(field.id, field.x, field.y);
-            });
-
-            document.addEventListener('mouseup', () => {
-                if (isDragging) {
-                    isDragging = false;
-                    element.classList.remove('selected');
-                }
-            });
-        }
-
-        function selectField(fieldId) {
-            document.querySelectorAll('.field-item.active').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.draggable-field.selected').forEach(el => el.classList.remove('selected'));
-
-            const listItem = document.querySelector(`.field-item[data-field-id="${fieldId}"]`);
-            const draggable = document.getElementById(`field-${fieldId}`);
-
-            if (listItem) listItem.classList.add('active');
-            if (draggable) draggable.classList.add('selected');
-
-            selectedField = fieldId;
-        }
-
-        function updateCoords(fieldId, x, y) {
-            const coordsEl = document.getElementById(`coords-${fieldId}`);
-            if (coordsEl) {
-                coordsEl.textContent = `x:${x} y:${y}`;
-            }
-        }
-
-        async function loadPDF(source) {
-            const loading = document.getElementById('loading');
-            loading.classList.add('show');
-            document.getElementById('statusBar').textContent = 'Carregando PDF...';
-
-            try {
-                let pdfData;
-                if (source instanceof ArrayBuffer) {
-                    pdfData = source;
-                } else {
-                    const response = await fetch(source);
-                    pdfData = await response.arrayBuffer();
-                }
-
-                const pdf = await pdfjsLib.getDocument(pdfData).promise;
-                const page = await pdf.getPage(1);
-
-                const viewport = page.getViewport({ scale: 1 });
-
-                // ATUALIZAR DIMENSÕES REAIS DO PDF
-                PDF_WIDTH = viewport.width;
-                PDF_HEIGHT = viewport.height;
-
-                document.getElementById('pdfDimensions').innerHTML =
-                    `<strong>${PDF_WIDTH.toFixed(0)} x ${PDF_HEIGHT.toFixed(0)}</strong> pontos`;
-
-                const canvas = document.getElementById('pdfCanvas');
-                const context = canvas.getContext('2d');
-
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-
-                await page.render({
-                    canvasContext: context,
-                    viewport: viewport
-                }).promise;
-
-                // Ajustar container
-                const container = document.getElementById('pdfContainer');
-                container.style.width = `${viewport.width}px`;
-                container.style.height = `${viewport.height}px`;
-
-                // Recriar campos com novas dimensões
-                createDraggableFields();
-
-                document.getElementById('statusBar').textContent =
-                    `PDF carregado: ${PDF_WIDTH.toFixed(0)} x ${PDF_HEIGHT.toFixed(0)} pontos`;
-
-            } catch (error) {
-                console.error('Erro ao carregar PDF:', error);
-                document.getElementById('statusBar').textContent = 'Erro ao carregar PDF: ' + error.message;
-            } finally {
-                loading.classList.remove('show');
-            }
-        }
-
-        // Carregar PDF local
-        document.getElementById('pdfUpload').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const arrayBuffer = await file.arrayBuffer();
-            await loadPDF(arrayBuffer);
+        const visibleFields = group.fields
+          .map(field => fieldById.get(field.id))
+          .filter(Boolean)
+          .filter(field => {
+          const haystack = `${field.label} ${field.id}`.toLowerCase();
+          return !query || haystack.includes(query);
         });
 
-        function resetPositions() {
-            location.reload();
+        if (!visibleFields.length) return;
+
+        const title = document.createElement("div");
+        title.className = "group-title";
+        title.textContent = group.label;
+        els.fieldList.appendChild(title);
+
+        visibleFields.forEach(field => {
+          const row = document.createElement("button");
+          row.type = "button";
+          row.className = `field-row${field.id === state.activeId ? " active" : ""}`;
+          row.dataset.fieldId = field.id;
+          row.innerHTML = `
+            <span class="field-name">${escapeHtml(field.label)}</span>
+            <span class="coords" id="coords-${field.id}">${formatNumber(field.x)}, ${formatNumber(field.y)}</span>
+          `;
+          row.addEventListener("click", () => selectField(field.id, true));
+          els.fieldList.appendChild(row);
+        });
+      });
+    }
+
+    function renderFieldLayer() {
+      els.fieldLayer.innerHTML = "";
+      fields.forEach(field => {
+        const pageSize = fieldPageSize(field);
+        const item = document.createElement("div");
+        item.className = `overlay-item${field.id === state.activeId ? " active" : ""}${field.page !== state.pageNumber ? " hidden-page" : ""}`;
+        item.dataset.fieldId = field.id;
+        item.style.left = `${field.x * state.zoom}px`;
+        item.style.top = `${(pageSize.height - field.y) * state.zoom}px`;
+
+        if (field.type === "image") {
+          const box = document.createElement("div");
+          box.className = "image-box";
+          box.textContent = field.sample || field.label;
+          box.style.width = `${(field.width || 100) * state.zoom}px`;
+          box.style.height = `${(field.height || 100) * state.zoom}px`;
+          box.style.fontSize = `${Math.max(10, 11 * state.zoom)}px`;
+          item.appendChild(box);
+        } else {
+          const badge = document.createElement("div");
+          badge.className = "field-badge";
+          badge.textContent = field.sample || field.label;
+          badge.style.fontSize = `${Math.max(8, (field.fontSize || 10) * state.zoom)}px`;
+          item.appendChild(badge);
         }
 
-        function exportCode() {
-            let code = `    // ============================================
-    // COORDENADAS CALIBRADAS - PDF: ${PDF_WIDTH.toFixed(0)} x ${PDF_HEIGHT.toFixed(0)}
+        const anchor = document.createElement("span");
+        anchor.className = "field-anchor";
+        item.appendChild(anchor);
+
+        item.addEventListener("pointerdown", event => startDrag(event, field));
+        item.addEventListener("click", event => {
+          event.stopPropagation();
+          selectField(field.id, false);
+        });
+
+        els.fieldLayer.appendChild(item);
+      });
+    }
+
+    function updateFieldPositionsOnly() {
+      fields.forEach(field => {
+        const item = els.fieldLayer.querySelector(`[data-field-id="${field.id}"]`);
+        if (!item) return;
+        const pageSize = fieldPageSize(field);
+        item.style.left = `${field.x * state.zoom}px`;
+        item.style.top = `${(pageSize.height - field.y) * state.zoom}px`;
+        item.classList.toggle("active", field.id === state.activeId);
+        item.classList.toggle("hidden-page", field.page !== state.pageNumber);
+
+        const imageBox = item.querySelector(".image-box");
+        if (imageBox) {
+          imageBox.style.width = `${(field.width || 100) * state.zoom}px`;
+          imageBox.style.height = `${(field.height || 100) * state.zoom}px`;
+        }
+        const badge = item.querySelector(".field-badge");
+        if (badge) {
+          badge.style.fontSize = `${Math.max(8, (field.fontSize || 10) * state.zoom)}px`;
+          badge.textContent = field.sample || field.label;
+        }
+      });
+
+      document.querySelectorAll(".field-row").forEach(row => {
+        row.classList.toggle("active", row.dataset.fieldId === state.activeId);
+      });
+
+      fields.forEach(field => {
+        const coords = document.getElementById(`coords-${field.id}`);
+        if (coords) coords.textContent = `${formatNumber(field.x)}, ${formatNumber(field.y)}`;
+      });
+    }
+
+    function renderInspector() {
+      const field = fieldById.get(state.activeId);
+      const hasField = Boolean(field);
+      els.selectedTitle.textContent = hasField ? field.label : "Nenhum campo";
+
+      [els.fieldPage, els.fieldFontSize, els.fieldX, els.fieldY, els.fieldWidth, els.fieldHeight, els.fieldSample]
+        .forEach(input => input.disabled = !hasField);
+
+      if (!hasField) return;
+
+      els.fieldPage.max = state.pageCount;
+      els.fieldPage.value = field.page;
+      els.fieldFontSize.value = field.fontSize || 10;
+      els.fieldX.value = formatNumber(field.x);
+      els.fieldY.value = formatNumber(field.y);
+      els.fieldWidth.value = field.type === "image" ? formatNumber(field.width || 100) : "";
+      els.fieldHeight.value = field.type === "image" ? formatNumber(field.height || 100) : "";
+      els.fieldWidth.disabled = field.type !== "image";
+      els.fieldHeight.disabled = field.type !== "image";
+      els.fieldSample.value = field.sample || "";
+    }
+
+    function renderMeta() {
+      const pageSize = currentPageSize();
+      els.pageInfo.textContent = `${state.pageNumber} / ${state.pageCount}`;
+      els.pdfName.textContent = state.pdfName;
+      els.pdfSize.textContent = `${formatNumber(pageSize.width)} x ${formatNumber(pageSize.height)}`;
+      els.zoomMeta.textContent = `${Math.round(state.zoom * 100)}%`;
+      els.prevPageButton.disabled = state.pageNumber <= 1;
+      els.nextPageButton.disabled = state.pageNumber >= state.pageCount;
+      els.zoomSelect.value = String(state.zoom);
+      els.snapSelect.value = String(state.snap);
+      els.gridLayer.classList.toggle("visible", state.gridVisible);
+      els.gridButton.classList.toggle("is-on", state.gridVisible);
+      els.gridButton.setAttribute("aria-pressed", String(state.gridVisible));
+      document.documentElement.style.setProperty("--zoom", state.zoom);
+    }
+
+    function selectField(id, jumpToPage) {
+      const field = fieldById.get(id);
+      if (!field) return;
+      state.activeId = id;
+      if (jumpToPage && field.page !== state.pageNumber) {
+        state.pageNumber = field.page;
+        renderPage();
+      } else {
+        updateFieldPositionsOnly();
+        renderInspector();
+        renderFieldList();
+      }
+    }
+
+    async function loadPdfFromArrayBuffer(arrayBuffer, name) {
+      els.loadingState.classList.add("visible");
+      els.emptyState.classList.remove("visible");
+      setStatus("Carregando");
+
+      try {
+        state.pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        state.pdfName = name;
+        state.pageCount = state.pdfDoc.numPages;
+        state.pageNumber = 1;
+        state.pageSizes.clear();
+
+        for (let pageIndex = 1; pageIndex <= state.pageCount; pageIndex += 1) {
+          const page = await state.pdfDoc.getPage(pageIndex);
+          const viewport = page.getViewport({ scale: 1 });
+          state.pageSizes.set(pageIndex, { width: viewport.width, height: viewport.height });
+        }
+
+        fields.forEach(field => {
+          if (field.page > state.pageCount) field.page = state.pageCount;
+        });
+
+        await renderPage();
+        setStatus("Pronto");
+      } catch (error) {
+        console.error(error);
+        setStatus("Erro");
+        els.emptyState.textContent = `Erro ao carregar PDF: ${error.message}`;
+        els.emptyState.classList.add("visible");
+      } finally {
+        els.loadingState.classList.remove("visible");
+      }
+    }
+
+    async function loadPdfFromUrl(url, name) {
+      els.loadingState.classList.add("visible");
+      setStatus("Carregando");
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const buffer = await response.arrayBuffer();
+        await loadPdfFromArrayBuffer(buffer, name);
+      } catch (error) {
+        console.warn(error);
+        els.loadingState.classList.remove("visible");
+        els.emptyState.textContent = "Abra um PDF manualmente";
+        els.emptyState.classList.add("visible");
+        setStatus("Aguardando PDF");
+      }
+    }
+
+    async function renderPage() {
+      if (!state.pdfDoc) {
+        renderFieldLayer();
+        renderInspector();
+        renderFieldList();
+        renderMeta();
+        return;
+      }
+
+      els.loadingState.classList.add("visible");
+      const page = await state.pdfDoc.getPage(state.pageNumber);
+      const viewport = page.getViewport({ scale: state.zoom });
+      const pageSize = currentPageSize();
+      const canvas = els.pdfCanvas;
+      const context = canvas.getContext("2d");
+
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      canvas.style.width = `${viewport.width}px`;
+      canvas.style.height = `${viewport.height}px`;
+      els.pdfStage.style.width = `${pageSize.width * state.zoom}px`;
+      els.pdfStage.style.height = `${pageSize.height * state.zoom}px`;
+
+      await page.render({ canvasContext: context, viewport }).promise;
+      els.loadingState.classList.remove("visible");
+      els.emptyState.classList.remove("visible");
+
+      renderFieldLayer();
+      renderInspector();
+      renderFieldList();
+      renderMeta();
+    }
+
+    function startDrag(event, field) {
+      event.preventDefault();
+      selectField(field.id, false);
+      const pageSize = fieldPageSize(field);
+      const rect = els.pdfStage.getBoundingClientRect();
+      const startCanvasX = (event.clientX - rect.left) / state.zoom;
+      const startCanvasY = (event.clientY - rect.top) / state.zoom;
+      const startAnchorCanvasY = pageSize.height - field.y;
+      const drag = {
+        pointerId: event.pointerId,
+        offsetX: startCanvasX - field.x,
+        offsetY: startCanvasY - startAnchorCanvasY
+      };
+
+      event.currentTarget.setPointerCapture(event.pointerId);
+
+      const move = moveEvent => {
+        if (moveEvent.pointerId !== drag.pointerId) return;
+        const moveCanvasX = (moveEvent.clientX - rect.left) / state.zoom;
+        const moveCanvasY = (moveEvent.clientY - rect.top) / state.zoom;
+        const nextX = Math.max(0, Math.min(pageSize.width, snap(moveCanvasX - drag.offsetX)));
+        const nextY = Math.max(0, Math.min(pageSize.height, snap(pageSize.height - (moveCanvasY - drag.offsetY))));
+        field.x = nextX;
+        field.y = nextY;
+        updateFieldPositionsOnly();
+        renderInspector();
+      };
+
+      const end = endEvent => {
+        if (endEvent.pointerId !== drag.pointerId) return;
+        event.currentTarget.releasePointerCapture(drag.pointerId);
+        event.currentTarget.removeEventListener("pointermove", move);
+        event.currentTarget.removeEventListener("pointerup", end);
+        event.currentTarget.removeEventListener("pointercancel", end);
+      };
+
+      event.currentTarget.addEventListener("pointermove", move);
+      event.currentTarget.addEventListener("pointerup", end);
+      event.currentTarget.addEventListener("pointercancel", end);
+    }
+
+    function updateActiveField(patch) {
+      const field = fieldById.get(state.activeId);
+      if (!field) return;
+      Object.assign(field, patch);
+      if (patch.page && patch.page !== state.pageNumber) {
+        state.pageNumber = field.page;
+        renderPage();
+        return;
+      }
+      updateFieldPositionsOnly();
+      renderInspector();
+      renderFieldList();
+    }
+
+    function nudge(direction, largeStep) {
+      const field = fieldById.get(state.activeId);
+      if (!field) return;
+      const pageSize = fieldPageSize(field);
+      const amount = (Number(state.snap) || 1) * (largeStep ? 10 : 1);
+      if (direction === "left") field.x = Math.max(0, snap(field.x - amount));
+      if (direction === "right") field.x = Math.min(pageSize.width, snap(field.x + amount));
+      if (direction === "up") field.y = Math.min(pageSize.height, snap(field.y + amount));
+      if (direction === "down") field.y = Math.max(0, snap(field.y - amount));
+      updateFieldPositionsOnly();
+      renderInspector();
+      renderFieldList();
+    }
+
+    function exportData() {
+      return {
+        pdf: {
+          name: state.pdfName,
+          page: state.pageNumber,
+          pages: Array.from(state.pageSizes.entries()).map(([page, size]) => ({ page, ...size }))
+        },
+        fields: fields.map(field => ({
+          id: field.id,
+          label: field.label,
+          group: field.groupLabel,
+          page: field.page,
+          x: Number(formatNumber(field.x)),
+          y: Number(formatNumber(field.y)),
+          type: field.type,
+          fontSize: field.fontSize,
+          width: field.type === "image" ? field.width : undefined,
+          height: field.type === "image" ? field.height : undefined,
+          sample: field.sample
+        }))
+      };
+    }
+
+    function line(expr, fieldId, comment, indent = "    ") {
+      const field = fieldById.get(fieldId);
+      return `${indent}draw(${expr}, ${formatNumber(field.x)}, ${formatNumber(field.y)});  // ${comment}`;
+    }
+
+    function switchLine(value, fieldId, comment) {
+      const field = fieldById.get(fieldId);
+      return `      case "${value}": draw("X", ${formatNumber(field.x)}, ${formatNumber(field.y)}); break;   // ${comment}`;
+    }
+
+    function exportCode() {
+      const pageOne = state.pageSizes.get(1) || { width: 612, height: 1008 };
+      const photo = fieldById.get("fotoCliente");
+      return `    // ============================================
+    // COORDENADAS CALIBRADAS - PDF: ${formatNumber(pageOne.width)} x ${formatNumber(pageOne.height)}
     // ============================================
 
+    // Para a foto do cliente, ajuste a linha drawImage para:
+    // firstPage.drawImage(image, { x: ${formatNumber(photo.x)}, y: ${formatNumber(photo.y)}, width: ${formatNumber(photo.width)}, height: ${formatNumber(photo.height)} });  // Foto Cliente
+
     // === CONTRATANTE ===
-    draw(info.contratante, ${fields.contratante[0].x}, ${fields.contratante[0].y});  // Nome Contratante
-    draw(info.documento, ${fields.contratante[1].x}, ${fields.contratante[1].y});     // CPF
-    draw(info.rg, ${fields.contratante[2].x}, ${fields.contratante[2].y});           // RG
+${line("info.contratante", "contratante", "Nome Contratante")}
+${line("info.documento", "documento", "CPF")}
+${line("info.rg", "rg", "RG")}
     if (info.dn) {
       const [d, m, y] = info.dn.split("/");
-      if (d) draw(d, ${fields.contratante[3].x}, ${fields.contratante[3].y});        // DN Dia
-      if (m) draw(m, ${fields.contratante[4].x}, ${fields.contratante[4].y});        // DN Mês
-      if (y) draw(y, ${fields.contratante[5].x}, ${fields.contratante[5].y});        // DN Ano
+${line("d", "dn_dia", "DN Dia", "      if (d) ")}
+${line("m", "dn_mes", "DN Mês", "      if (m) ")}
+${line("y", "dn_ano", "DN Ano", "      if (y) ")}
     }
-    draw(info.filiacao, ${fields.contratante[6].x}, ${fields.contratante[6].y});      // Filiação
-    draw(info.naturalidade, ${fields.contratante[7].x}, ${fields.contratante[7].y}); // Naturalidade
-    
+${line("info.filiacao", "filiacao", "Filiação")}
+${line("info.naturalidade", "naturalidade", "Naturalidade")}
+
     if (info.sexo === "M") {
-      draw("X", ${fields.contratante[8].x}, ${fields.contratante[8].y});             // Sexo M
+${line('"X"', "sexo_m", "Sexo M", "      ")}
     } else if (info.sexo === "F") {
-      draw("X", ${fields.contratante[9].x}, ${fields.contratante[9].y});             // Sexo F
+${line('"X"', "sexo_f", "Sexo F", "      ")}
     }
-    
-    draw(info.endereco, ${fields.contratante[10].x}, ${fields.contratante[10].y});     // Endereço
-    draw(info.numero, ${fields.contratante[11].x}, ${fields.contratante[11].y});       // Número
-    draw(info.bairro, ${fields.contratante[12].x}, ${fields.contratante[12].y});        // Bairro
-    draw(info.cidade, ${fields.contratante[13].x}, ${fields.contratante[13].y});        // Cidade
-    draw(info.cep, ${fields.contratante[14].x}, ${fields.contratante[14].y});          // CEP
-    draw(info.uf, ${fields.contratante[15].x}, ${fields.contratante[15].y});           // UF
-    draw(info.telefones, ${fields.contratante[16].x}, ${fields.contratante[16].y});     // Telefones
+
+${line("info.endereco", "endereco", "Endereço")}
+${line("info.numero", "numero", "Número")}
+${line("info.bairro", "bairro", "Bairro")}
+${line("info.cidade", "cidade", "Cidade")}
+${line("info.cep", "cep", "CEP")}
+${line("info.uf", "uf", "UF")}
+${line("info.telefones", "telefones", "Telefones")}
 
     // === ALUNO ===
-    draw(info.aluno, ${fields.aluno[0].x}, ${fields.aluno[0].y});         // Nome Aluno
-    draw(info.alunoDocumento, ${fields.aluno[1].x}, ${fields.aluno[1].y}); // CPF/RG Aluno
+${line("info.aluno", "aluno", "Nome Aluno")}
+${line("info.alunoDocumento", "alunoDocumento", "CPF/RG Aluno")}
     if (info.alunoDN) {
       const [d, m, y] = info.alunoDN.split("/");
-      if (d) draw(d, ${fields.aluno[2].x}, ${fields.aluno[2].y});        // Aluno DN Dia
-      if (m) draw(m, ${fields.aluno[3].x}, ${fields.aluno[3].y});        // Aluno DN Mês
-      if (y) draw(y, ${fields.aluno[4].x}, ${fields.aluno[4].y});        // Aluno DN Ano
+${line("d", "alunoDN_dia", "Aluno DN Dia", "      if (d) ")}
+${line("m", "alunoDN_mes", "Aluno DN Mês", "      if (m) ")}
+${line("y", "alunoDN_ano", "Aluno DN Ano", "      if (y) ")}
     }
-    draw(info.alunoNaturalidade, ${fields.aluno[5].x}, ${fields.aluno[5].y});  // Aluno Naturalidade
-    draw(info.alunoTelefone, ${fields.aluno[6].x}, ${fields.aluno[6].y}); // Aluno Telefone
+${line("info.alunoNaturalidade", "alunoNaturalidade", "Aluno Naturalidade")}
+${line("info.alunoTelefone", "alunoTelefone", "Aluno Telefone")}
 
     // === OPÇÃO DE CURSO ===
     const opcaoCursoRaw = info.opcaoCurso !== undefined && info.opcaoCurso !== null ? String(info.opcaoCurso).trim() : "";
@@ -667,203 +1433,257 @@
     const opcaoCursoKey = opcaoCursoKeyMatch ? opcaoCursoKeyMatch[0] : opcaoCursoRaw;
 
     switch (opcaoCursoKey) {
-      case "1": draw("X", ${fields.curso[0].x}, ${fields.curso[0].y}); break;   // Curso 1
-      case "2": draw("X", ${fields.curso[1].x}, ${fields.curso[1].y}); break;   // Curso 2
-      case "3": draw("X", ${fields.curso[2].x}, ${fields.curso[2].y}); break;   // Curso 3
-      case "4": draw("X", ${fields.curso[3].x}, ${fields.curso[3].y}); break;   // Curso 4
+${switchLine("1", "curso_1", "Curso 1")}
+${switchLine("2", "curso_2", "Curso 2")}
+${switchLine("3", "curso_3", "Curso 3")}
+${switchLine("4", "curso_4", "Curso 4")}
     }
 
     if (opcaoCursoKey === "4" && info.outro) {
-      draw(info.outro, ${fields.curso[4].x}, ${fields.curso[4].y});  // Outro/Qual
+${line("info.outro", "outro", "Outro/Qual", "      ")}
     }
 
-    draw(info.indicacao, ${fields.curso[5].x}, ${fields.curso[5].y});  // Indicação
+${line("info.indicacao", "indicacao", "Indicação")}
 
     // === DISPOSIÇÕES INICIAIS ===
     if (info.horas) {
-      draw(info.horas, ${fields.outros[0].x}, ${fields.outros[0].y});  // Carga Horária
+${line("info.horas", "horas", "Carga Horária", "      ")}
     }
 
     if (info.inicioPrevisto) {
       const parts = info.inicioPrevisto.split("/");
-      if (parts.length >= 1) draw(parts[0], ${fields.outros[1].x}, ${fields.outros[1].y});  // Início Dia
-      if (parts.length >= 2) draw(parts[1], ${fields.outros[2].x}, ${fields.outros[2].y});  // Início Mês
+${line("parts[0]", "inicio_dia", "Início Dia", "      if (parts.length >= 1) ")}
+${line("parts[1]", "inicio_mes", "Início Mês", "      if (parts.length >= 2) ")}
     }
-    draw(info.contratada, ${fields.outros[3].x}, ${fields.outros[3].y});  // Contratada
+${line("info.contratada", "contratada", "Contratada")}
 
     // === PAGAMENTO (Checkboxes) ===
-    if (info.opcaoCurso === "3") {
-      switch (info.pagamento) {
-        case "18": draw("X", ${fields.pagamento[2].x}, ${fields.pagamento[2].y}); break;
-        case "12": draw("X", ${fields.pagamento[6].x}, ${fields.pagamento[6].y}); break;
-        case "8":  draw("X", ${fields.pagamento[4].x}, ${fields.pagamento[4].y}); break;
-        case "5":  draw("X", ${fields.pagamento[5].x}, ${fields.pagamento[5].y}); break;
-        case "3":  draw("X", ${fields.pagamento[5].x}, ${fields.pagamento[5].y}); break;
-        case "0":  draw("X", ${fields.pagamento[6].x}, ${fields.pagamento[6].y}); break;
-      }
-    } else {
-      switch (info.pagamento) {
-        case "36": draw("X", ${fields.pagamento[0].x}, ${fields.pagamento[0].y}); break;   // 36x
-        case "24": draw("X", ${fields.pagamento[1].x}, ${fields.pagamento[1].y}); break;   // 24x
-        case "18": draw("X", ${fields.pagamento[2].x}, ${fields.pagamento[2].y}); break;   // 18x
-        case "14": draw("X", ${fields.pagamento[3].x}, ${fields.pagamento[3].y}); break;   // 14x
-        case "8":  draw("X", ${fields.pagamento[4].x}, ${fields.pagamento[4].y}); break;   // 8x
-        case "3":  draw("X", ${fields.pagamento[5].x}, ${fields.pagamento[5].y}); break;   // 3x
-        case "12": draw("X", ${fields.pagamento[6].x}, ${fields.pagamento[6].y}); break;   // À Vista
-      }
+    switch (info.pagamento) {
+${switchLine("36", "pag_36x", "36x")}
+${switchLine("24", "pag_24x", "24x")}
+${switchLine("18", "pag_18x", "18x")}
+${switchLine("14", "pag_14x", "14x")}
+${switchLine("8", "pag_8x", "8x")}
+${switchLine("3", "pag_3x", "3x")}
+${switchLine("12", "pag_12x", "À vista/cartão")}
     }
 
     // === PRIMEIRA PARCELA E DESCONTO ===
     if (info.primeiraParcela) {
       const [d, m, y] = info.primeiraParcela.split("/");
-      if (d) draw(d, ${fields.outros[4].x}, ${fields.outros[4].y});   // Parcela Dia
-      if (m) draw(m, ${fields.outros[5].x}, ${fields.outros[5].y});   // Parcela Mês
-      if (y) draw(y, ${fields.outros[6].x}, ${fields.outros[6].y});   // Parcela Ano
+${line("d", "parcela_dia", "Parcela Dia", "      if (d) ")}
+${line("m", "parcela_mes", "Parcela Mês", "      if (m) ")}
+${line("y", "parcela_ano", "Parcela Ano", "      if (y) ")}
     }
 
-    draw(info.descontoRS, ${fields.outros[7].x}, ${fields.outros[7].y});  // Desconto R$
+${line("info.descontoRS", "desconto", "Desconto R$")}
 
     // === DATA FINAL (RODAPÉ) ===
     const dataFinal = info.criado_str ? info.criado_str.split("/") : [];
     if (dataFinal.length === 3) {
-      draw(dataFinal[0], ${fields.outros[8].x}, ${fields.outros[8].y});    // Data Dia
-      draw(dataFinal[1], ${fields.outros[9].x}, ${fields.outros[9].y});    // Data Mês
-      draw(dataFinal[2], ${fields.outros[10].x}, ${fields.outros[10].y});   // Data Ano
+${line("dataFinal[0]", "data_dia", "Data Dia", "      ")}
+${line("dataFinal[1]", "data_mes", "Data Mês", "      ")}
+${line("dataFinal[2]", "data_ano", "Data Ano", "      ")}
     } else {
       const today = new Date();
-      draw(String(today.getDate()), ${fields.outros[8].x}, ${fields.outros[8].y});
-      draw(String(today.getMonth() + 1), ${fields.outros[9].x}, ${fields.outros[9].y});
-      draw(String(today.getFullYear()), ${fields.outros[10].x}, ${fields.outros[10].y});
+${line("String(today.getDate())", "data_dia", "Data Dia", "      ")}
+${line("String(today.getMonth() + 1)", "data_mes", "Data Mês", "      ")}
+${line("String(today.getFullYear())", "data_ano", "Data Ano", "      ")}
     }`;
+    }
 
-            document.getElementById('generatedCode').textContent = code;
-            document.getElementById('codeModal').classList.add('show');
+    function openDialog(title, text, mode) {
+      state.dialogMode = mode;
+      els.dialogTitle.textContent = title;
+      els.dialogText.value = text;
+      els.applyImportButton.style.display = mode === "import" ? "inline-flex" : "none";
+      els.copyDialogButton.style.display = mode === "import" ? "none" : "inline-flex";
+      els.dialogBackdrop.classList.add("visible");
+      els.dialogText.focus();
+      els.dialogText.select();
+    }
+
+    function closeDialog() {
+      els.dialogBackdrop.classList.remove("visible");
+    }
+
+    async function copyDialog() {
+      await navigator.clipboard.writeText(els.dialogText.value);
+      setStatus("Copiado");
+      setTimeout(() => setStatus("Pronto"), 1200);
+    }
+
+    function importCoordinates(text) {
+      let updated = 0;
+
+      try {
+        const parsed = JSON.parse(text);
+        const sourceFields = Array.isArray(parsed) ? parsed : parsed.fields;
+        if (Array.isArray(sourceFields)) {
+          sourceFields.forEach(item => {
+            const field = fieldById.get(item.id);
+            if (!field) return;
+            if (Number.isFinite(Number(item.x))) field.x = Number(item.x);
+            if (Number.isFinite(Number(item.y))) field.y = Number(item.y);
+            if (Number.isFinite(Number(item.page))) field.page = Math.max(1, Math.min(state.pageCount, Number(item.page)));
+            if (Number.isFinite(Number(item.fontSize))) field.fontSize = Number(item.fontSize);
+            if (field.type === "image" && Number.isFinite(Number(item.width))) field.width = Number(item.width);
+            if (field.type === "image" && Number.isFinite(Number(item.height))) field.height = Number(item.height);
+            if (item.sample !== undefined) field.sample = String(item.sample);
+            updated += 1;
+          });
+          afterImport(updated);
+          return;
+        }
+      } catch (error) {
+        parseCodeCoordinates(text, count => {
+          updated = count;
+        });
+        afterImport(updated);
+        return;
+      }
+
+      parseCodeCoordinates(text, count => {
+        updated = count;
+      });
+      afterImport(updated);
+    }
+
+    function afterImport(updated) {
+      closeDialog();
+      updateFieldPositionsOnly();
+      renderInspector();
+      renderFieldList();
+      renderMeta();
+      setStatus(`${updated} campos`);
+      setTimeout(() => setStatus("Pronto"), 1400);
+    }
+
+    function parseCodeCoordinates(code, done) {
+      let updated = 0;
+
+      fields.forEach(field => {
+        if (field.type === "image") {
+          const imageRegex = /drawImage\(image,\s*\{\s*x:\s*([0-9.]+),\s*y:\s*([0-9.]+),\s*width:\s*([0-9.]+),\s*height:\s*([0-9.]+)/;
+          const match = code.match(imageRegex);
+          if (match) {
+            field.x = Number(match[1]);
+            field.y = Number(match[2]);
+            field.width = Number(match[3]);
+            field.height = Number(match[4]);
+            updated += 1;
+          }
+          return;
         }
 
-        function closeModal() {
-            document.getElementById('codeModal').classList.remove('show');
+        const comment = field.comment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(`draw\\([^\\n;]+,\\s*([0-9.]+),\\s*([0-9.]+)\\);\\s*//\\s*${comment}`);
+        const match = code.match(regex);
+        if (match) {
+          field.x = Number(match[1]);
+          field.y = Number(match[2]);
+          updated += 1;
         }
+      });
 
-        function copyCode() {
-            const code = document.getElementById('generatedCode').textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                alert('Código copiado para a área de transferência!');
-            });
+      done(updated);
+    }
+
+    function bindEvents() {
+      els.fieldSearch.addEventListener("input", renderFieldList);
+      els.groupFilter.addEventListener("change", renderFieldList);
+
+      els.pdfUpload.addEventListener("change", async event => {
+        const file = event.target.files[0];
+        if (!file) return;
+        await loadPdfFromArrayBuffer(await file.arrayBuffer(), file.name);
+      });
+
+      els.loadDefaultButton.addEventListener("click", () => loadPdfFromUrl(DEFAULT_PDF, "Contrato 2026.pdf"));
+      els.prevPageButton.addEventListener("click", async () => {
+        if (state.pageNumber <= 1) return;
+        state.pageNumber -= 1;
+        await renderPage();
+      });
+      els.nextPageButton.addEventListener("click", async () => {
+        if (state.pageNumber >= state.pageCount) return;
+        state.pageNumber += 1;
+        await renderPage();
+      });
+
+      els.zoomSelect.addEventListener("change", async event => {
+        state.zoom = Number(event.target.value);
+        await renderPage();
+      });
+
+      els.snapSelect.addEventListener("change", event => {
+        state.snap = Number(event.target.value);
+        renderMeta();
+      });
+
+      els.gridButton.addEventListener("click", () => {
+        state.gridVisible = !state.gridVisible;
+        renderMeta();
+      });
+
+      els.importButton.addEventListener("click", () => openDialog("Importar coordenadas", "", "import"));
+      els.jsonButton.addEventListener("click", () => openDialog("Coordenadas em JSON", JSON.stringify(exportData(), null, 2), "export"));
+      els.codeButton.addEventListener("click", () => openDialog("Bloco de código", exportCode(), "export"));
+      els.closeDialogButton.addEventListener("click", closeDialog);
+      els.copyDialogButton.addEventListener("click", copyDialog);
+      els.applyImportButton.addEventListener("click", () => importCoordinates(els.dialogText.value));
+      els.dialogBackdrop.addEventListener("click", event => {
+        if (event.target === els.dialogBackdrop) closeDialog();
+      });
+
+      els.fieldPage.addEventListener("change", event => {
+        const page = Math.max(1, Math.min(state.pageCount, Number(event.target.value) || 1));
+        updateActiveField({ page });
+      });
+      els.fieldFontSize.addEventListener("input", event => updateActiveField({ fontSize: Number(event.target.value) || 10 }));
+      els.fieldX.addEventListener("input", event => updateActiveField({ x: Number(event.target.value) || 0 }));
+      els.fieldY.addEventListener("input", event => updateActiveField({ y: Number(event.target.value) || 0 }));
+      els.fieldWidth.addEventListener("input", event => updateActiveField({ width: Math.max(1, Number(event.target.value) || 1) }));
+      els.fieldHeight.addEventListener("input", event => updateActiveField({ height: Math.max(1, Number(event.target.value) || 1) }));
+      els.fieldSample.addEventListener("input", event => updateActiveField({ sample: event.target.value }));
+
+      document.querySelectorAll("[data-nudge]").forEach(button => {
+        button.addEventListener("click", () => nudge(button.dataset.nudge, false));
+      });
+
+      document.addEventListener("keydown", event => {
+        const tag = event.target.tagName;
+        if (["INPUT", "TEXTAREA", "SELECT"].includes(tag)) return;
+        if (event.key === "Escape" && els.dialogBackdrop.classList.contains("visible")) {
+          closeDialog();
+          return;
         }
-
-        // === FUNÇÕES DE IMPORTAÇÃO ===
-        function showImportModal() {
-            document.getElementById('importModal').classList.add('show');
+        const directions = {
+          ArrowLeft: "left",
+          ArrowRight: "right",
+          ArrowUp: "up",
+          ArrowDown: "down"
+        };
+        const direction = directions[event.key];
+        if (direction) {
+          event.preventDefault();
+          nudge(direction, event.shiftKey);
         }
+      });
+    }
 
-        function closeImportModal() {
-            document.getElementById('importModal').classList.remove('show');
-        }
+    function init() {
+      initFilters();
+      bindEvents();
+      renderFieldList();
+      renderFieldLayer();
+      renderInspector();
+      renderMeta();
+      loadPdfFromUrl(DEFAULT_PDF, "Contrato 2026.pdf");
+    }
 
-        function importCode() {
-            const code = document.getElementById('importCode').value;
-
-            // Mapeamento de padrões para IDs de campos
-            const mappings = [
-                // CONTRATANTE
-                { pattern: /draw\(info\.contratante,\s*(\d+),\s*(\d+)\)/, id: 'contratante' },
-                { pattern: /draw\(info\.documento,\s*(\d+),\s*(\d+)\)/, id: 'documento' },
-                { pattern: /draw\(info\.rg,\s*(\d+),\s*(\d+)\)/, id: 'rg' },
-                { pattern: /if \(d\) draw\(d,\s*(\d+),\s*(\d+)\);\s*\/\/\s*DN Dia/, id: 'dn_dia' },
-                { pattern: /if \(m\) draw\(m,\s*(\d+),\s*(\d+)\);\s*\/\/\s*DN M/, id: 'dn_mes' },
-                { pattern: /if \(y\) draw\(y,\s*(\d+),\s*(\d+)\);\s*\/\/\s*DN Ano/, id: 'dn_ano' },
-                { pattern: /draw\(info\.filiacao,\s*(\d+),\s*(\d+)\)/, id: 'filiacao' },
-                { pattern: /draw\(info\.naturalidade,\s*(\d+),\s*(\d+)\)/, id: 'naturalidade' },
-                { pattern: /draw\("X",\s*(\d+),\s*(\d+)\);\s*\/\/\s*Sexo M/, id: 'sexo_m' },
-                { pattern: /draw\("X",\s*(\d+),\s*(\d+)\);\s*\/\/\s*Sexo F/, id: 'sexo_f' },
-                { pattern: /draw\(info\.endereco,\s*(\d+),\s*(\d+)\)/, id: 'endereco' },
-                { pattern: /draw\(info\.numero,\s*(\d+),\s*(\d+)\)/, id: 'numero' },
-                { pattern: /draw\(info\.bairro,\s*(\d+),\s*(\d+)\)/, id: 'bairro' },
-                { pattern: /draw\(info\.cidade,\s*(\d+),\s*(\d+)\)/, id: 'cidade' },
-                { pattern: /draw\(info\.cep,\s*(\d+),\s*(\d+)\)/, id: 'cep' },
-                { pattern: /draw\(info\.uf,\s*(\d+),\s*(\d+)\)/, id: 'uf' },
-                { pattern: /draw\(info\.telefones,\s*(\d+),\s*(\d+)\)/, id: 'telefones' },
-
-                // ALUNO
-                { pattern: /draw\(info\.aluno,\s*(\d+),\s*(\d+)\)/, id: 'aluno' },
-                { pattern: /draw\(info\.alunoDocumento,\s*(\d+),\s*(\d+)\)/, id: 'alunoDocumento' },
-                { pattern: /if \(d\) draw\(d,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Aluno DN Dia/, id: 'alunoDN_dia' },
-                { pattern: /if \(m\) draw\(m,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Aluno DN M/, id: 'alunoDN_mes' },
-                { pattern: /if \(y\) draw\(y,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Aluno DN Ano/, id: 'alunoDN_ano' },
-                { pattern: /draw\(info\.alunoNaturalidade,\s*(\d+),\s*(\d+)\)/, id: 'alunoNaturalidade' },
-                { pattern: /draw\(info\.alunoTelefone,\s*(\d+),\s*(\d+)\)/, id: 'alunoTelefone' },
-
-                // CURSOS
-                { pattern: /case "1": draw\("X",\s*(\d+),\s*(\d+)\)/, id: 'curso_1' },
-                { pattern: /case "2": draw\("X",\s*(\d+),\s*(\d+)\)/, id: 'curso_2' },
-                { pattern: /case "3": draw\("X",\s*(\d+),\s*(\d+)\)/, id: 'curso_3' },
-                { pattern: /case "4": draw\("X",\s*(\d+),\s*(\d+)\)/, id: 'curso_4' },
-                { pattern: /draw\(info\.outro,\s*(\d+),\s*(\d+)\)/, id: 'outro' },
-                { pattern: /draw\(info\.indicacao,\s*(\d+),\s*(\d+)\)/, id: 'indicacao' },
-
-                // OUTROS
-                { pattern: /draw\(info\.horas,\s*(\d+),\s*(\d+)\)/, id: 'horas' },
-                { pattern: /draw\(info\.contratada,\s*(\d+),\s*(\d+)\)/, id: 'contratada' },
-                { pattern: /draw\(info\.descontoRS,\s*(\d+),\s*(\d+)\)/, id: 'desconto' },
-            ];
-
-            // Parsear padrões de pagamento
-            const pagPatterns = [
-                { pattern: /case "36": draw\("X",\s*(\d+),\s*(\d+)\)/, id: 'pag_36x' },
-                { pattern: /case "24": draw\("X",\s*(\d+),\s*(\d+)\)/, id: 'pag_24x' },
-                { pattern: /case "18": draw\("X",\s*(\d+),\s*(\d+)\).*\/\/\s*18x/, id: 'pag_18x' },
-                { pattern: /case "14": draw\("X",\s*(\d+),\s*(\d+)\)/, id: 'pag_14x' },
-                { pattern: /case "8":\s*draw\("X",\s*(\d+),\s*(\d+)\).*\/\/\s*8x/, id: 'pag_8x' },
-                { pattern: /case "3":\s*draw\("X",\s*(\d+),\s*(\d+)\).*\/\/\s*3x/, id: 'pag_3x' },
-                { pattern: /case "12": draw\("X",\s*(\d+),\s*(\d+)\).*\/\/.*Vista/, id: 'pag_vista' },
-            ];
-
-            // Parsear datas
-            const datePatterns = [
-                { pattern: /if \(d\) draw\(d,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Parcela Dia/, id: 'parcela_dia' },
-                { pattern: /if \(m\) draw\(m,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Parcela M/, id: 'parcela_mes' },
-                { pattern: /if \(y\) draw\(y,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Parcela Ano/, id: 'parcela_ano' },
-                { pattern: /if \(d\) draw\(d,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Início Dia/, id: 'inicio_dia' },
-                { pattern: /if \(.*\) draw\(.*,\s*(\d+),\s*(\d+)\);\s*\/\/\s*Início M/, id: 'inicio_mes' },
-                { pattern: /draw\(dataFinal\[0\],\s*(\d+),\s*(\d+)\)/, id: 'data_dia' },
-                { pattern: /draw\(dataFinal\[1\],\s*(\d+),\s*(\d+)\)/, id: 'data_mes' },
-                { pattern: /draw\(dataFinal\[2\],\s*(\d+),\s*(\d+)\)/, id: 'data_ano' },
-            ];
-
-            let updatedCount = 0;
-            const allPatterns = [...mappings, ...pagPatterns, ...datePatterns];
-
-            allPatterns.forEach(({ pattern, id }) => {
-                const match = code.match(pattern);
-                if (match) {
-                    const x = parseInt(match[1]);
-                    const y = parseInt(match[2]);
-
-                    // Encontrar e atualizar o campo
-                    const allFields = Object.values(fields).flat();
-                    const field = allFields.find(f => f.id === id);
-                    if (field) {
-                        field.x = x;
-                        field.y = y;
-                        updateCoords(id, x, y);
-                        updatedCount++;
-                    }
-                }
-            });
-
-            // Recriar campos arrastáveis com novas posições
-            createDraggableFields();
-            initFieldLists();
-
-            closeImportModal();
-            alert(`Importação concluída! ${updatedCount} campos atualizados.`);
-        }
-
-        // Inicializar
-        initFieldLists();
-        createDraggableFields();
-        document.getElementById('statusBar').textContent = 'Clique "Carregar PDF" para começar';
-    </script>
+    init();
+  </script>
 </body>
 
 </html>

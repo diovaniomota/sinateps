@@ -59,8 +59,15 @@ class _LoginPageWidgetState extends State<LoginPageWidget>
             curve: Curves.easeOut,
             delay: 0.0.ms,
             duration: 600.0.ms,
-            begin: Offset(0.0, 60.0),
-            end: Offset(0.0, 0.0),
+            begin: const Offset(0.0, 60.0),
+            end: const Offset(0.0, 0.0),
+          ),
+          FadeEffect(
+            curve: Curves.easeInOut,
+            delay: 0.0.ms,
+            duration: 600.0.ms,
+            begin: 0.0,
+            end: 1.0,
           ),
         ],
       ),
@@ -76,8 +83,71 @@ class _LoginPageWidgetState extends State<LoginPageWidget>
     super.dispose();
   }
 
+  InputDecoration _inputDecoration({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    Widget? suffixIcon,
+  }) {
+    final theme = FlutterFlowTheme.of(context);
+
+    return InputDecoration(
+      labelText: label,
+      labelStyle: theme.labelMedium.override(
+        font: GoogleFonts.manrope(
+          fontWeight: FontWeight.w600,
+          fontStyle: theme.labelMedium.fontStyle,
+        ),
+        color: theme.secondaryText,
+        letterSpacing: 0.0,
+      ),
+      filled: true,
+      fillColor: theme.accent4,
+      prefixIcon: Icon(
+        icon,
+        color: theme.secondaryText,
+        size: 20.0,
+      ),
+      suffixIcon: suffixIcon,
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(
+          color: theme.alternate,
+          width: 1.0,
+        ),
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: BorderSide(
+          color: theme.primary,
+          width: 1.3,
+        ),
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderSide: BorderSide(
+          color: theme.error,
+          width: 1.0,
+        ),
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderSide: BorderSide(
+          color: theme.error,
+          width: 1.3,
+        ),
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 18.0,
+        vertical: 18.0,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -85,40 +155,95 @@ class _LoginPageWidgetState extends State<LoginPageWidget>
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
-          automaticallyImplyLeading: false,
-          title: Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 8.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: Image.asset(
-                'assets/images/Design_sem_nome_(37).png',
-                width: 200.0,
-                height: 50.0,
-                fit: BoxFit.cover,
-                alignment: Alignment(0.0, 0.0),
-              ),
+        backgroundColor: theme.primaryBackground,
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                theme.primaryBackground,
+                const Color(0xFFEAF2FB),
+                const Color(0xFFF8FBFF),
+              ],
+              begin: const AlignmentDirectional(-1.0, -1.0),
+              end: const AlignmentDirectional(1.0, 1.0),
             ),
           ),
-          actions: [],
-          centerTitle: true,
-          elevation: 4.0,
-        ),
-        body: Column(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Expanded(
-              child: Align(
-                alignment: AlignmentDirectional(0.0, 0.0),
-                child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: SingleChildScrollView(
+          child: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 460.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.secondaryBackground.withValues(alpha: 0.96),
+                      borderRadius: BorderRadius.circular(28.0),
+                      border: Border.all(color: theme.alternate),
+                      boxShadow: const [
+                        BoxShadow(
+                          blurRadius: 32.0,
+                          color: Color(0x140F2237),
+                          offset: Offset(0.0, 18.0),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(28.0),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        Container(
+                          width: 72.0,
+                          height: 72.0,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(22.0),
+                            gradient: LinearGradient(
+                              colors: [
+                                theme.primary,
+                                const Color(0xFF4B88BF),
+                              ],
+                              begin: const AlignmentDirectional(-1.0, -1.0),
+                              end: const AlignmentDirectional(1.0, 1.0),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16.0),
+                              child: Image.asset(
+                                'assets/images/Design_sem_nome_(37).png',
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24.0),
+                        Text(
+                          'Acesse sua conta',
+                          style: theme.headlineMedium.override(
+                            font: GoogleFonts.sora(
+                              fontWeight: FontWeight.w700,
+                              fontStyle: theme.headlineMedium.fontStyle,
+                            ),
+                            letterSpacing: -0.4,
+                          ),
+                        ),
+                        const SizedBox(height: 10.0),
+                        Text(
+                          'Entrar no painel para consultar contratos e continuar o fluxo do app.',
+                          style: theme.bodyMedium.override(
+                            font: GoogleFonts.manrope(
+                              fontWeight: FontWeight.w500,
+                              fontStyle: theme.bodyMedium.fontStyle,
+                            ),
+                            color: theme.secondaryText,
+                            letterSpacing: 0.0,
+                            lineHeight: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 28.0),
                         Form(
                           key: _model.formKey,
                           autovalidateMode: AutovalidateMode.disabled,
@@ -129,196 +254,37 @@ class _LoginPageWidgetState extends State<LoginPageWidget>
                                 controller: _model.emailTextController,
                                 focusNode: _model.emailFocusNode,
                                 autofocus: true,
-                                autofillHints: [AutofillHints.email],
+                                autofillHints: const [AutofillHints.email],
                                 textInputAction: TextInputAction.next,
                                 obscureText: false,
-                                decoration: InputDecoration(
-                                  isDense: false,
-                                  labelText: 'Email',
-                                  labelStyle: FlutterFlowTheme.of(context)
-                                      .labelMedium
-                                      .override(
-                                        font: GoogleFonts.readexPro(
-                                          fontWeight:
-                                              FlutterFlowTheme.of(context)
-                                                  .labelMedium
-                                                  .fontWeight,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .labelMedium
-                                                  .fontStyle,
-                                        ),
-                                        letterSpacing: 0.0,
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .fontStyle,
-                                      ),
-                                  hintStyle: FlutterFlowTheme.of(context)
-                                      .labelMedium
-                                      .override(
-                                        font: GoogleFonts.readexPro(
-                                          fontWeight:
-                                              FlutterFlowTheme.of(context)
-                                                  .labelMedium
-                                                  .fontWeight,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .labelMedium
-                                                  .fontStyle,
-                                        ),
-                                        fontSize: 14.0,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .fontStyle,
-                                      ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Color(0x00000000),
-                                      width: 1.0,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color:
-                                          FlutterFlowTheme.of(context).primary,
-                                      width: 1.0,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                  errorBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: FlutterFlowTheme.of(context).error,
-                                      width: 1.0,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                  focusedErrorBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: FlutterFlowTheme.of(context).error,
-                                      width: 1.0,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                  filled: true,
-                                  fillColor:
-                                      FlutterFlowTheme.of(context).alternate,
-                                  contentPadding: EdgeInsets.all(12.0),
+                                decoration: _inputDecoration(
+                                  context: context,
+                                  label: 'Email',
+                                  icon: Icons.alternate_email_rounded,
                                 ),
-                                style: FlutterFlowTheme.of(context)
-                                    .bodyMedium
-                                    .override(
-                                      font: GoogleFonts.readexPro(
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .fontStyle,
-                                      ),
-                                      letterSpacing: 0.0,
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
+                                style: theme.bodyLarge.override(
+                                  font: GoogleFonts.manrope(
+                                    fontWeight: FontWeight.w600,
+                                    fontStyle: theme.bodyLarge.fontStyle,
+                                  ),
+                                  letterSpacing: 0.0,
+                                ),
                                 keyboardType: TextInputType.emailAddress,
                                 validator: _model.emailTextControllerValidator
                                     .asValidator(context),
                               ),
+                              const SizedBox(height: 16.0),
                               TextFormField(
                                 controller: _model.passwordTextController,
                                 focusNode: _model.passwordFocusNode,
-                                autofocus: true,
-                                autofillHints: [AutofillHints.password],
+                                autofocus: false,
+                                autofillHints: const [AutofillHints.password],
                                 textInputAction: TextInputAction.done,
                                 obscureText: !_model.passwordVisibility,
-                                decoration: InputDecoration(
-                                  labelText: 'Senha',
-                                  labelStyle: FlutterFlowTheme.of(context)
-                                      .labelMedium
-                                      .override(
-                                        font: GoogleFonts.readexPro(
-                                          fontWeight:
-                                              FlutterFlowTheme.of(context)
-                                                  .labelMedium
-                                                  .fontWeight,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .labelMedium
-                                                  .fontStyle,
-                                        ),
-                                        letterSpacing: 0.0,
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .fontStyle,
-                                      ),
-                                  hintStyle: FlutterFlowTheme.of(context)
-                                      .labelMedium
-                                      .override(
-                                        font: GoogleFonts.readexPro(
-                                          fontWeight:
-                                              FlutterFlowTheme.of(context)
-                                                  .labelMedium
-                                                  .fontWeight,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .labelMedium
-                                                  .fontStyle,
-                                        ),
-                                        letterSpacing: 0.0,
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .fontStyle,
-                                      ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Color(0x00000000),
-                                      width: 1.0,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color:
-                                          FlutterFlowTheme.of(context).primary,
-                                      width: 1.0,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                  errorBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: FlutterFlowTheme.of(context).error,
-                                      width: 1.0,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                  focusedErrorBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: FlutterFlowTheme.of(context).error,
-                                      width: 1.0,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                  filled: true,
-                                  fillColor:
-                                      FlutterFlowTheme.of(context).alternate,
-                                  contentPadding: EdgeInsets.all(12.0),
+                                decoration: _inputDecoration(
+                                  context: context,
+                                  label: 'Senha',
+                                  icon: Icons.lock_outline_rounded,
                                   suffixIcon: InkWell(
                                     onTap: () => safeSetState(
                                       () => _model.passwordVisibility =
@@ -329,172 +295,162 @@ class _LoginPageWidgetState extends State<LoginPageWidget>
                                       _model.passwordVisibility
                                           ? Icons.visibility_outlined
                                           : Icons.visibility_off_outlined,
-                                      color: FlutterFlowTheme.of(context)
-                                          .secondaryText,
+                                      color: theme.secondaryText,
                                       size: 20.0,
                                     ),
                                   ),
                                 ),
-                                style: FlutterFlowTheme.of(context)
-                                    .bodyMedium
-                                    .override(
-                                      font: GoogleFonts.readexPro(
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .fontStyle,
-                                      ),
-                                      letterSpacing: 0.0,
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
+                                style: theme.bodyLarge.override(
+                                  font: GoogleFonts.manrope(
+                                    fontWeight: FontWeight.w600,
+                                    fontStyle: theme.bodyLarge.fontStyle,
+                                  ),
+                                  letterSpacing: 0.0,
+                                ),
                                 validator: _model
                                     .passwordTextControllerValidator
                                     .asValidator(context),
                               ),
-                            ].divide(SizedBox(height: 16.0)),
+                            ],
                           ),
                         ),
-                        Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 16.0, 0.0, 16.0),
-                          child: FFButtonWidget(
-                            onPressed: () async {
-                              if (_model.formKey.currentState == null ||
-                                  !_model.formKey.currentState!.validate()) {
-                                return;
-                              }
-                              GoRouter.of(context).prepareAuthEvent();
+                        const SizedBox(height: 24.0),
+                        FFButtonWidget(
+                          onPressed: () async {
+                            if (_model.formKey.currentState == null ||
+                                !_model.formKey.currentState!.validate()) {
+                              return;
+                            }
+                            GoRouter.of(context).prepareAuthEvent();
 
-                              final user = await authManager.signInWithEmail(
-                                context,
-                                _model.emailTextController.text,
-                                _model.passwordTextController.text,
-                              );
-                              if (user == null) {
-                                return;
-                              }
+                            final user = await authManager.signInWithEmail(
+                              context,
+                              _model.emailTextController.text,
+                              _model.passwordTextController.text,
+                            );
+                            if (user == null) {
+                              return;
+                            }
 
-                              context.goNamedAuth(ContratosPageWidget.routeName,
-                                  context.mounted);
-                            },
-                            text: 'Entrar',
-                            options: FFButtonOptions(
-                              width: 160.0,
-                              height: 40.0,
-                              padding: EdgeInsetsDirectional.fromSTEB(
-                                  24.0, 0.0, 24.0, 0.0),
-                              iconPadding: EdgeInsetsDirectional.fromSTEB(
-                                  0.0, 0.0, 0.0, 0.0),
-                              color: FlutterFlowTheme.of(context).primary,
-                              textStyle: FlutterFlowTheme.of(context)
-                                  .titleSmall
-                                  .override(
-                                    font: GoogleFonts.readexPro(
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontStyle,
-                                    ),
-                                    color: FlutterFlowTheme.of(context).info,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FlutterFlowTheme.of(context)
-                                        .titleSmall
-                                        .fontWeight,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .titleSmall
-                                        .fontStyle,
-                                  ),
-                              elevation: 2.0,
-                              borderSide: BorderSide(
-                                color: Colors.transparent,
-                                width: 1.0,
-                              ),
-                              borderRadius: BorderRadius.circular(20.0),
-                            ),
-                          ).animateOnPageLoad(
-                              animationsMap['buttonOnPageLoadAnimation']!),
-                        ),
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          focusColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            context
-                                .pushNamed(EsqueceuSenhaPageWidget.routeName);
+                            context.goNamedAuth(
+                              ContratosPageWidget.routeName,
+                              context.mounted,
+                            );
                           },
-                          child: Text(
-                            'Esqueceu senha?',
-                            style: FlutterFlowTheme.of(context)
-                                .bodyMedium
-                                .override(
-                                  font: GoogleFonts.readexPro(
-                                    fontWeight: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontWeight,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
-                                  ),
-                                  color: FlutterFlowTheme.of(context).primary,
-                                  letterSpacing: 0.0,
-                                  fontWeight: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .fontWeight,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .fontStyle,
-                                  decoration: TextDecoration.underline,
+                          text: 'Entrar',
+                          icon: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 20.0,
+                          ),
+                          options: FFButtonOptions(
+                            width: double.infinity,
+                            height: 54.0,
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                              24.0,
+                              0.0,
+                              24.0,
+                              0.0,
+                            ),
+                            iconPadding: const EdgeInsetsDirectional.fromSTEB(
+                              0.0,
+                              0.0,
+                              8.0,
+                              0.0,
+                            ),
+                            iconColor: theme.info,
+                            color: theme.primary,
+                            hoverColor: const Color(0xFF175984),
+                            hoverTextColor: theme.info,
+                            hoverElevation: 0.0,
+                            textStyle: theme.titleSmall.override(
+                              font: GoogleFonts.manrope(
+                                fontWeight: FontWeight.w700,
+                                fontStyle: theme.titleSmall.fontStyle,
+                              ),
+                              color: theme.info,
+                              letterSpacing: 0.0,
+                            ),
+                            elevation: 0.0,
+                            borderSide: BorderSide(
+                              color: Colors.transparent,
+                              width: 1.0,
+                            ),
+                            borderRadius: BorderRadius.circular(18.0),
+                          ),
+                        ).animateOnPageLoad(
+                          animationsMap['buttonOnPageLoadAnimation']!,
+                        ),
+                        const SizedBox(height: 18.0),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: InkWell(
+                            splashColor: Colors.transparent,
+                            focusColor: Colors.transparent,
+                            hoverColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+                            onTap: () async {
+                              context.pushNamed(
+                                EsqueceuSenhaPageWidget.routeName,
+                              );
+                            },
+                            child: Text(
+                              'Esqueceu sua senha?',
+                              style: theme.bodyMedium.override(
+                                font: GoogleFonts.manrope(
+                                  fontWeight: FontWeight.w700,
+                                  fontStyle: theme.bodyMedium.fontStyle,
                                 ),
+                                color: theme.primary,
+                                decoration: TextDecoration.underline,
+                                letterSpacing: 0.0,
+                              ),
+                            ),
                           ),
                         ),
-                      ].divide(SizedBox(height: 8.0)),
+                        const SizedBox(height: 24.0),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: theme.accent1,
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14.0,
+                            vertical: 12.0,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.verified_user_outlined,
+                                color: theme.primary,
+                                size: 18.0,
+                              ),
+                              const SizedBox(width: 10.0),
+                              Expanded(
+                                child: Text(
+                                  'Versão 1.0',
+                                  style: theme.labelLarge.override(
+                                    font: GoogleFonts.manrope(
+                                      fontWeight: FontWeight.w700,
+                                      fontStyle: theme.labelLarge.fontStyle,
+                                    ),
+                                    color: theme.primary,
+                                    letterSpacing: 0.0,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
+                  ).animateOnPageLoad(
+                    animationsMap['containerOnPageLoadAnimation']!,
                   ),
                 ),
               ),
             ),
-            Container(
-              width: double.infinity,
-              height: 60.0,
-              decoration: BoxDecoration(
-                color: FlutterFlowTheme.of(context).primary,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(0.0),
-                  bottomRight: Radius.circular(0.0),
-                  topLeft: Radius.circular(20.0),
-                  topRight: Radius.circular(20.0),
-                ),
-              ),
-              child: Align(
-                alignment: AlignmentDirectional(0.0, 0.0),
-                child: Text(
-                  'Versão 1.0',
-                  style: FlutterFlowTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.readexPro(
-                          fontWeight: FontWeight.w300,
-                          fontStyle:
-                              FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                        ),
-                        color: FlutterFlowTheme.of(context).info,
-                        letterSpacing: 0.0,
-                        fontWeight: FontWeight.w300,
-                        fontStyle:
-                            FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                      ),
-                ),
-              ),
-            ).animateOnPageLoad(animationsMap['containerOnPageLoadAnimation']!),
-          ],
+          ),
         ),
       ),
     );

@@ -29,24 +29,38 @@ class FlutterFlowPdfViewer extends StatefulWidget {
 class _FlutterFlowPdfViewerState extends State<FlutterFlowPdfViewer> {
   PdfController? controller;
   bool _isLoading = true;
+  String? _errorMessage;
   String get networkPath => widget.networkPath ?? '';
   String get assetPath => widget.assetPath ?? '';
   Uint8List get fileBytes => widget.fileBytes ?? Uint8List.fromList([]);
 
   Future<void> _initializeController() async {
-    safeSetState(() => _isLoading = true);
-    final pdfDocument =
-        networkPath.isNotEmpty || assetPath.isNotEmpty || fileBytes.isNotEmpty
-            ? assetPath.isNotEmpty
-                ? await PdfDocument.openAsset(assetPath)
-                : networkPath.isNotEmpty
-                    ? await PdfDocument.openData(InternetFile.get(networkPath))
-                    : await PdfDocument.openData(Uint8List.fromList(fileBytes))
-            : null;
-    controller = pdfDocument != null
-        ? PdfController(document: Future.value(pdfDocument))
-        : null;
-    safeSetState(() => _isLoading = false);
+    safeSetState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final pdfDocument = networkPath.isNotEmpty ||
+              assetPath.isNotEmpty ||
+              fileBytes.isNotEmpty
+          ? assetPath.isNotEmpty
+              ? await PdfDocument.openAsset(assetPath)
+              : networkPath.isNotEmpty
+                  ? await PdfDocument.openData(InternetFile.get(networkPath))
+                  : await PdfDocument.openData(
+                      Uint8List.fromList(fileBytes),
+                    )
+          : null;
+      controller = pdfDocument != null
+          ? PdfController(document: Future.value(pdfDocument))
+          : null;
+    } catch (_) {
+      controller = null;
+      _errorMessage =
+          'Não foi possível carregar a prévia do PDF neste navegador.';
+    } finally {
+      safeSetState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -70,21 +84,56 @@ class _FlutterFlowPdfViewerState extends State<FlutterFlowPdfViewer> {
         height: widget.height,
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : controller != null
-                ? PdfView(
-                    controller: controller!,
-                    scrollDirection: widget.horizontalScroll
-                        ? Axis.horizontal
-                        : Axis.vertical,
-                    builders: PdfViewBuilders<DefaultBuilderOptions>(
-                      options: const DefaultBuilderOptions(),
-                      documentLoaderBuilder: (_) =>
-                          const Center(child: CircularProgressIndicator()),
-                      pageLoaderBuilder: (_) =>
-                          const Center(child: CircularProgressIndicator()),
-                      errorBuilder: (_, __) => Container(),
+            : _errorMessage != null
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 56.0,
+                            height: 56.0,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEAF2FB),
+                              borderRadius: BorderRadius.circular(18.0),
+                            ),
+                            child: const Icon(
+                              Icons.picture_as_pdf_outlined,
+                              color: Color(0xFF1F6AA5),
+                              size: 28.0,
+                            ),
+                          ),
+                          const SizedBox(height: 14.0),
+                          Text(
+                            _errorMessage!,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF102033),
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   )
-                : const SizedBox(),
+                : controller != null
+                    ? PdfView(
+                        controller: controller!,
+                        scrollDirection: widget.horizontalScroll
+                            ? Axis.horizontal
+                            : Axis.vertical,
+                        builders: PdfViewBuilders<DefaultBuilderOptions>(
+                          options: const DefaultBuilderOptions(),
+                          documentLoaderBuilder: (_) =>
+                              const Center(child: CircularProgressIndicator()),
+                          pageLoaderBuilder: (_) =>
+                              const Center(child: CircularProgressIndicator()),
+                          errorBuilder: (_, __) => Container(),
+                        ),
+                      )
+                    : const SizedBox(),
       );
 }

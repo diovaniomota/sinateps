@@ -13,11 +13,11 @@ class PerfilPageModel extends FlutterFlowModel<PerfilPageWidget> {
   String? Function(BuildContext, String?)? nomeTextControllerValidator;
   String? _nomeTextControllerValidator(BuildContext context, String? val) {
     if (val == null || val.isEmpty) {
-      return 'Field is required';
+      return 'Informe seu nome';
     }
 
     if (val.length < 2) {
-      return 'Requires at least 2 characters.';
+      return 'Use pelo menos 2 caracteres';
     }
 
     return null;
@@ -29,11 +29,11 @@ class PerfilPageModel extends FlutterFlowModel<PerfilPageWidget> {
   String? Function(BuildContext, String?)? emailTextControllerValidator;
   String? _emailTextControllerValidator(BuildContext context, String? val) {
     if (val == null || val.isEmpty) {
-      return 'Field is required';
+      return 'Informe seu e-mail';
     }
 
     if (!RegExp(kTextValidatorEmailRegex).hasMatch(val)) {
-      return 'Has to be a valid email address.';
+      return 'Digite um e-mail válido';
     }
     return null;
   }

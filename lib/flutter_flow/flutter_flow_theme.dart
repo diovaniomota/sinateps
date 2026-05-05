@@ -118,21 +118,21 @@ class LightModeTheme extends FlutterFlowTheme {
   @Deprecated('Use tertiary instead')
   Color get tertiaryColor => tertiary;
 
-  late Color primary = const Color(0xFF488DBC);
-  late Color secondary = const Color(0xFF39D2C0);
-  late Color tertiary = const Color(0xFFEE8B60);
-  late Color alternate = const Color(0xFFE0E3E7);
-  late Color primaryText = const Color(0xFF14181B);
-  late Color secondaryText = const Color(0xFF57636C);
-  late Color primaryBackground = const Color(0xFFF1F4F8);
+  late Color primary = const Color(0xFF1F6AA5);
+  late Color secondary = const Color(0xFF2F9E8F);
+  late Color tertiary = const Color(0xFFF08A5D);
+  late Color alternate = const Color(0xFFE6EDF5);
+  late Color primaryText = const Color(0xFF102033);
+  late Color secondaryText = const Color(0xFF5E7186);
+  late Color primaryBackground = const Color(0xFFF5F7FB);
   late Color secondaryBackground = const Color(0xFFFFFFFF);
-  late Color accent1 = const Color(0x66488DBC);
-  late Color accent2 = const Color(0x4D39D2C0);
-  late Color accent3 = const Color(0x4DEE8B60);
-  late Color accent4 = const Color(0xCCFFFFFF);
-  late Color success = const Color(0xFF249689);
-  late Color warning = const Color(0xFFF9CF58);
-  late Color error = const Color(0xFFFF5963);
+  late Color accent1 = const Color(0x1A1F6AA5);
+  late Color accent2 = const Color(0x1A2F9E8F);
+  late Color accent3 = const Color(0x1AF08A5D);
+  late Color accent4 = const Color(0xFFF8FBFF);
+  late Color success = const Color(0xFF23836B);
+  late Color warning = const Color(0xFFE8B038);
+  late Color error = const Color(0xFFD94F4F);
   late Color info = const Color(0xFFFFFFFF);
 }
 
@@ -189,109 +189,109 @@ class ThemeTypography extends Typography {
 
   final FlutterFlowTheme theme;
 
-  String get displayLargeFamily => 'Outfit';
+  String get displayLargeFamily => 'Sora';
   bool get displayLargeIsCustom => false;
-  TextStyle get displayLarge => GoogleFonts.outfit(
+  TextStyle get displayLarge => GoogleFonts.sora(
         color: theme.primaryText,
-        fontWeight: FontWeight.normal,
-        fontSize: 64.0,
+        fontWeight: FontWeight.w700,
+        fontSize: 60.0,
       );
-  String get displayMediumFamily => 'Outfit';
+  String get displayMediumFamily => 'Sora';
   bool get displayMediumIsCustom => false;
-  TextStyle get displayMedium => GoogleFonts.outfit(
+  TextStyle get displayMedium => GoogleFonts.sora(
         color: theme.primaryText,
-        fontWeight: FontWeight.normal,
+        fontWeight: FontWeight.w700,
         fontSize: 44.0,
       );
-  String get displaySmallFamily => 'Outfit';
+  String get displaySmallFamily => 'Sora';
   bool get displaySmallIsCustom => false;
-  TextStyle get displaySmall => GoogleFonts.outfit(
+  TextStyle get displaySmall => GoogleFonts.sora(
         color: theme.primaryText,
-        fontWeight: FontWeight.w600,
-        fontSize: 36.0,
+        fontWeight: FontWeight.w700,
+        fontSize: 34.0,
       );
-  String get headlineLargeFamily => 'Outfit';
+  String get headlineLargeFamily => 'Sora';
   bool get headlineLargeIsCustom => false;
-  TextStyle get headlineLarge => GoogleFonts.outfit(
+  TextStyle get headlineLarge => GoogleFonts.sora(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
-        fontSize: 32.0,
+        fontSize: 30.0,
       );
-  String get headlineMediumFamily => 'Outfit';
+  String get headlineMediumFamily => 'Sora';
   bool get headlineMediumIsCustom => false;
-  TextStyle get headlineMedium => GoogleFonts.outfit(
+  TextStyle get headlineMedium => GoogleFonts.sora(
         color: theme.primaryText,
-        fontWeight: FontWeight.normal,
+        fontWeight: FontWeight.w600,
         fontSize: 24.0,
       );
-  String get headlineSmallFamily => 'Outfit';
+  String get headlineSmallFamily => 'Sora';
   bool get headlineSmallIsCustom => false;
-  TextStyle get headlineSmall => GoogleFonts.outfit(
-        color: theme.primaryText,
-        fontWeight: FontWeight.w500,
-        fontSize: 24.0,
-      );
-  String get titleLargeFamily => 'Outfit';
-  bool get titleLargeIsCustom => false;
-  TextStyle get titleLarge => GoogleFonts.outfit(
+  TextStyle get headlineSmall => GoogleFonts.sora(
         color: theme.primaryText,
         fontWeight: FontWeight.w500,
         fontSize: 22.0,
       );
-  String get titleMediumFamily => 'Readex Pro';
-  bool get titleMediumIsCustom => false;
-  TextStyle get titleMedium => GoogleFonts.readexPro(
-        color: theme.info,
-        fontWeight: FontWeight.normal,
-        fontSize: 18.0,
+  String get titleLargeFamily => 'Sora';
+  bool get titleLargeIsCustom => false;
+  TextStyle get titleLarge => GoogleFonts.sora(
+        color: theme.primaryText,
+        fontWeight: FontWeight.w600,
+        fontSize: 20.0,
       );
-  String get titleSmallFamily => 'Readex Pro';
+  String get titleMediumFamily => 'Manrope';
+  bool get titleMediumIsCustom => false;
+  TextStyle get titleMedium => GoogleFonts.manrope(
+        color: theme.primaryText,
+        fontWeight: FontWeight.w700,
+        fontSize: 17.0,
+      );
+  String get titleSmallFamily => 'Manrope';
   bool get titleSmallIsCustom => false;
-  TextStyle get titleSmall => GoogleFonts.readexPro(
-        color: theme.info,
+  TextStyle get titleSmall => GoogleFonts.manrope(
+        color: theme.primaryText,
+        fontWeight: FontWeight.w700,
+        fontSize: 16.0,
+      );
+  String get labelLargeFamily => 'Manrope';
+  bool get labelLargeIsCustom => false;
+  TextStyle get labelLarge => GoogleFonts.manrope(
+        color: theme.secondaryText,
+        fontWeight: FontWeight.w600,
+        fontSize: 15.0,
+      );
+  String get labelMediumFamily => 'Manrope';
+  bool get labelMediumIsCustom => false;
+  TextStyle get labelMedium => GoogleFonts.manrope(
+        color: theme.secondaryText,
+        fontWeight: FontWeight.w500,
+        fontSize: 14.0,
+      );
+  String get labelSmallFamily => 'Manrope';
+  bool get labelSmallIsCustom => false;
+  TextStyle get labelSmall => GoogleFonts.manrope(
+        color: theme.secondaryText,
+        fontWeight: FontWeight.w500,
+        fontSize: 12.0,
+      );
+  String get bodyLargeFamily => 'Manrope';
+  bool get bodyLargeIsCustom => false;
+  TextStyle get bodyLarge => GoogleFonts.manrope(
+        color: theme.primaryText,
         fontWeight: FontWeight.w500,
         fontSize: 16.0,
       );
-  String get labelLargeFamily => 'Readex Pro';
-  bool get labelLargeIsCustom => false;
-  TextStyle get labelLarge => GoogleFonts.readexPro(
-        color: theme.secondaryText,
-        fontWeight: FontWeight.normal,
-        fontSize: 16.0,
-      );
-  String get labelMediumFamily => 'Readex Pro';
-  bool get labelMediumIsCustom => false;
-  TextStyle get labelMedium => GoogleFonts.readexPro(
-        color: theme.secondaryText,
-        fontWeight: FontWeight.normal,
-        fontSize: 14.0,
-      );
-  String get labelSmallFamily => 'Readex Pro';
-  bool get labelSmallIsCustom => false;
-  TextStyle get labelSmall => GoogleFonts.readexPro(
-        color: theme.secondaryText,
-        fontWeight: FontWeight.normal,
-        fontSize: 12.0,
-      );
-  String get bodyLargeFamily => 'Readex Pro';
-  bool get bodyLargeIsCustom => false;
-  TextStyle get bodyLarge => GoogleFonts.readexPro(
-        color: theme.primaryText,
-        fontWeight: FontWeight.normal,
-        fontSize: 16.0,
-      );
-  String get bodyMediumFamily => 'Readex Pro';
+  String get bodyMediumFamily => 'Manrope';
   bool get bodyMediumIsCustom => false;
-  TextStyle get bodyMedium => GoogleFonts.readexPro(
+  TextStyle get bodyMedium => GoogleFonts.manrope(
         color: theme.primaryText,
-        fontWeight: FontWeight.normal,
+        fontWeight: FontWeight.w500,
         fontSize: 14.0,
       );
-  String get bodySmallFamily => 'Readex Pro';
+  String get bodySmallFamily => 'Manrope';
   bool get bodySmallIsCustom => false;
-  TextStyle get bodySmall => GoogleFonts.readexPro(
+  TextStyle get bodySmall => GoogleFonts.manrope(
         color: theme.primaryText,
-        fontWeight: FontWeight.normal,
+        fontWeight: FontWeight.w500,
         fontSize: 12.0,
       );
 }

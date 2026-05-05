@@ -53,6 +53,13 @@ class _ContratosPageWidgetState extends State<ContratosPageWidget>
             begin: 0.0,
             end: 1.0,
           ),
+          MoveEffect(
+            curve: Curves.easeOut,
+            delay: 0.0.ms,
+            duration: 600.0.ms,
+            begin: const Offset(0.0, 32.0),
+            end: const Offset(0.0, 0.0),
+          ),
         ],
       ),
     });
@@ -67,8 +74,277 @@ class _ContratosPageWidgetState extends State<ContratosPageWidget>
     super.dispose();
   }
 
+  InputDecoration _searchDecoration(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+
+    return InputDecoration(
+      labelText: 'Pesquisar por cidade',
+      labelStyle: theme.labelMedium.override(
+        font: GoogleFonts.manrope(
+          fontWeight: FontWeight.w600,
+          fontStyle: theme.labelMedium.fontStyle,
+        ),
+        color: theme.secondaryText,
+        letterSpacing: 0.0,
+      ),
+      filled: true,
+      fillColor: theme.secondaryBackground,
+      prefixIcon: Icon(
+        Icons.location_on_outlined,
+        color: theme.secondaryText,
+        size: 22.0,
+      ),
+      suffixIcon: _model.pesquisarPorCidadeTextController!.text.isNotEmpty
+          ? InkWell(
+              onTap: () async {
+                _model.pesquisarPorCidadeTextController?.clear();
+                safeSetState(() {});
+              },
+              child: Icon(
+                Icons.close_rounded,
+                color: theme.secondaryText,
+                size: 20.0,
+              ),
+            )
+          : null,
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: theme.alternate),
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: theme.primary, width: 1.3),
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: theme.error),
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: theme.error, width: 1.3),
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 18.0,
+        vertical: 18.0,
+      ),
+    );
+  }
+
+  Widget _buildContratoCard(
+    BuildContext context,
+    ContratoRecord contrato,
+  ) {
+    final theme = FlutterFlowTheme.of(context);
+
+    return InkWell(
+      splashColor: Colors.transparent,
+      focusColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      borderRadius: BorderRadius.circular(24.0),
+      onTap: () async {
+        context.pushNamed(
+          VerContratoPageWidget.routeName,
+          queryParameters: {
+            'contrato': serializeParam(
+              contrato,
+              ParamType.Document,
+            ),
+            'contratoAssinado': serializeParam(
+              contrato.contratoAssinado,
+              ParamType.bool,
+            ),
+            'contratoTestemunha': serializeParam(
+              contrato.contratoTestemunha,
+              ParamType.bool,
+            ),
+            'nomeTxt': serializeParam(
+              contrato.contratante,
+              ParamType.String,
+            ),
+          }.withoutNulls,
+          extra: <String, dynamic>{
+            'contrato': contrato,
+          },
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.secondaryBackground,
+          borderRadius: BorderRadius.circular(24.0),
+          border: Border.all(color: theme.alternate),
+          boxShadow: const [
+            BoxShadow(
+              blurRadius: 22.0,
+              color: Color(0x120F2237),
+              offset: Offset(0.0, 12.0),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(18.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 62.0,
+                  height: 62.0,
+                  decoration: BoxDecoration(
+                    color: theme.accent4,
+                    borderRadius: BorderRadius.circular(18.0),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18.0),
+                    child: Image.network(
+                      valueOrDefault<String>(
+                        contrato.fotoCliente,
+                        'https://images.vexels.com/content/137047/preview/user-profile-blue-icon-32113c.png',
+                      ),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: 8.0,
+                        runSpacing: 8.0,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          if (contrato.numeroDoc > 0)
+                            Container(
+                              decoration: BoxDecoration(
+                                color: theme.accent1,
+                                borderRadius: BorderRadius.circular(999.0),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10.0,
+                                vertical: 6.0,
+                              ),
+                              child: Text(
+                                'Nº ${contrato.numeroDoc}',
+                                style: theme.labelSmall.override(
+                                  font: GoogleFonts.manrope(
+                                    fontWeight: FontWeight.w800,
+                                    fontStyle: theme.labelSmall.fontStyle,
+                                  ),
+                                  color: theme.primary,
+                                  letterSpacing: 0.1,
+                                ),
+                              ),
+                            ),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F7FB),
+                              borderRadius: BorderRadius.circular(999.0),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10.0,
+                              vertical: 6.0,
+                            ),
+                            child: Text(
+                              dateTimeFormat(
+                                'd/M/y',
+                                contrato.criadoEm!,
+                                locale:
+                                    FFLocalizations.of(context).languageCode,
+                              ),
+                              style: theme.labelSmall.override(
+                                font: GoogleFonts.manrope(
+                                  fontWeight: FontWeight.w700,
+                                  fontStyle: theme.labelSmall.fontStyle,
+                                ),
+                                color: theme.secondaryText,
+                                letterSpacing: 0.0,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12.0),
+                      Text(
+                        contrato.contratante,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.titleLarge.override(
+                          font: GoogleFonts.sora(
+                            fontWeight: FontWeight.w700,
+                            fontStyle: theme.titleLarge.fontStyle,
+                          ),
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 6.0),
+                      Text(
+                        valueOrDefault<String>(contrato.tipo, 'N/A'),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.bodyMedium.override(
+                          font: GoogleFonts.manrope(
+                            fontWeight: FontWeight.w700,
+                            fontStyle: theme.bodyMedium.fontStyle,
+                          ),
+                          color: theme.secondaryText,
+                          letterSpacing: 0.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10.0),
+                Container(
+                  width: 38.0,
+                  height: 38.0,
+                  decoration: BoxDecoration(
+                    color: theme.accent4,
+                    borderRadius: BorderRadius.circular(14.0),
+                  ),
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    color: theme.primary,
+                    size: 20.0,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16.0),
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: theme.accent4,
+                borderRadius: BorderRadius.circular(18.0),
+              ),
+              padding: const EdgeInsets.all(14.0),
+              child: Text(
+                contrato.documento,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+                style: theme.bodyMedium.override(
+                  font: GoogleFonts.manrope(
+                    fontWeight: FontWeight.w600,
+                    fontStyle: theme.bodyMedium.fontStyle,
+                  ),
+                  color: theme.primaryText,
+                  letterSpacing: 0.0,
+                  lineHeight: 1.35,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -76,652 +352,375 @@ class _ContratosPageWidgetState extends State<ContratosPageWidget>
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        backgroundColor: theme.primaryBackground,
         drawer: Drawer(
-          elevation: 16.0,
+          elevation: 0.0,
           child: wrapWithModel(
             model: _model.drawerModel,
             updateCallback: () => safeSetState(() {}),
-            child: DrawerWidget(),
+            child: const DrawerWidget(),
           ),
         ),
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
+          backgroundColor: theme.secondaryBackground,
           automaticallyImplyLeading: false,
-          leading: FlutterFlowIconButton(
-            borderColor: Colors.transparent,
-            borderRadius: 30.0,
-            borderWidth: 1.0,
-            buttonSize: 60.0,
-            icon: Icon(
-              Icons.menu_rounded,
-              color: FlutterFlowTheme.of(context).info,
-              size: 30.0,
-            ),
-            onPressed: () async {
-              scaffoldKey.currentState!.openDrawer();
-            },
-          ),
-          title: Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 8.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: Image.asset(
-                'assets/images/Design_sem_nome_(37).png',
-                width: 200.0,
-                height: 50.0,
-                fit: BoxFit.cover,
-                alignment: Alignment(0.0, 0.0),
+          leading: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: FlutterFlowIconButton(
+              borderColor: theme.alternate,
+              borderRadius: 18.0,
+              borderWidth: 1.0,
+              fillColor: theme.secondaryBackground,
+              buttonSize: 48.0,
+              icon: Icon(
+                Icons.menu_rounded,
+                color: theme.primaryText,
+                size: 24.0,
               ),
+              onPressed: () async {
+                scaffoldKey.currentState!.openDrawer();
+              },
             ),
           ),
-          actions: [],
+          title: ClipRRect(
+            borderRadius: BorderRadius.circular(10.0),
+            child: Image.asset(
+              'assets/images/Design_sem_nome_(37).png',
+              width: 148.0,
+              height: 44.0,
+              fit: BoxFit.contain,
+              alignment: const Alignment(0.0, 0.0),
+            ),
+          ),
           centerTitle: true,
-          elevation: 2.0,
+          elevation: 0.0,
         ),
-        body: Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(32.0, 0.0, 32.0, 0.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(0.0, 24.0, 0.0, 0.0),
-                child: FFButtonWidget(
-                  onPressed: () async {
-                    context.pushNamed(RegistrarContratoPageWidget.routeName);
-                  },
-                  text: 'Novo Registro',
-                  icon: FaIcon(
-                    FontAwesomeIcons.plus,
-                    size: 20.0,
-                  ),
-                  options: FFButtonOptions(
-                    width: 200.0,
-                    height: 50.0,
-                    padding:
-                        EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 24.0, 0.0),
-                    iconPadding:
-                        EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 8.0, 0.0),
-                    iconColor: FlutterFlowTheme.of(context).info,
-                    color: FlutterFlowTheme.of(context).primary,
-                    textStyle: FlutterFlowTheme.of(context).titleSmall.override(
-                          font: GoogleFonts.readexPro(
-                            fontWeight: FlutterFlowTheme.of(context)
-                                .titleSmall
-                                .fontWeight,
-                            fontStyle: FlutterFlowTheme.of(context)
-                                .titleSmall
-                                .fontStyle,
-                          ),
-                          color: FlutterFlowTheme.of(context).info,
-                          letterSpacing: 0.0,
-                          fontWeight: FlutterFlowTheme.of(context)
-                              .titleSmall
-                              .fontWeight,
-                          fontStyle:
-                              FlutterFlowTheme.of(context).titleSmall.fontStyle,
-                        ),
-                    elevation: 2.0,
-                    borderSide: BorderSide(
-                      color: Colors.transparent,
-                      width: 1.0,
-                    ),
-                    borderRadius: BorderRadius.circular(16.0),
-                  ),
-                ),
-              ),
-              Divider(
-                thickness: 1.0,
-                color: FlutterFlowTheme.of(context).primary,
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20.0, 12.0, 20.0, 20.0),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 960.0),
+              child: Column(
                 children: [
-                  Icon(
-                    Icons.text_snippet_rounded,
-                    color: FlutterFlowTheme.of(context).primary,
-                    size: 24.0,
-                  ),
-                  Align(
-                    alignment: AlignmentDirectional(0.0, 0.0),
-                    child: Text(
-                      'Ultimos Contratos',
-                      style: FlutterFlowTheme.of(context).titleMedium.override(
-                            font: GoogleFonts.readexPro(
-                              fontWeight: FontWeight.w500,
-                              fontStyle: FlutterFlowTheme.of(context)
-                                  .titleMedium
-                                  .fontStyle,
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.primary,
+                          const Color(0xFF4E88BC),
+                        ],
+                        begin: const AlignmentDirectional(-1.0, -1.0),
+                        end: const AlignmentDirectional(1.0, 1.0),
+                      ),
+                      borderRadius: BorderRadius.circular(28.0),
+                    ),
+                    padding: const EdgeInsets.all(22.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(999.0),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12.0,
+                            vertical: 8.0,
+                          ),
+                          child: Text(
+                            'Painel de contratos',
+                            style: theme.labelLarge.override(
+                              font: GoogleFonts.manrope(
+                                fontWeight: FontWeight.w800,
+                                fontStyle: theme.labelLarge.fontStyle,
+                              ),
+                              color: theme.info,
+                              letterSpacing: 0.0,
                             ),
-                            color: FlutterFlowTheme.of(context).primary,
+                          ),
+                        ),
+                        const SizedBox(height: 16.0),
+                        Text(
+                          'Visualize e gerencie os registros mais recentes.',
+                          style: theme.headlineSmall.override(
+                            font: GoogleFonts.sora(
+                              fontWeight: FontWeight.w700,
+                              fontStyle: theme.headlineSmall.fontStyle,
+                            ),
+                            color: theme.info,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 10.0),
+                        Text(
+                          'A busca e o acesso aos detalhes continuam iguais, mas com leitura mais rápida e organização melhor.',
+                          style: theme.bodyMedium.override(
+                            font: GoogleFonts.manrope(
+                              fontWeight: FontWeight.w600,
+                              fontStyle: theme.bodyMedium.fontStyle,
+                            ),
+                            color: Colors.white.withValues(alpha: 0.86),
                             letterSpacing: 0.0,
-                            fontWeight: FontWeight.w500,
-                            fontStyle: FlutterFlowTheme.of(context)
-                                .titleMedium
-                                .fontStyle,
+                            lineHeight: 1.4,
                           ),
-                    ),
-                  ),
-                ].divide(SizedBox(width: 8.0)),
-              ),
-              TextFormField(
-                controller: _model.pesquisarPorCidadeTextController,
-                focusNode: _model.pesquisarPorCidadeFocusNode,
-                onChanged: (_) => EasyDebounce.debounce(
-                  '_model.pesquisarPorCidadeTextController',
-                  Duration(milliseconds: 2000),
-                  () => safeSetState(() {}),
-                ),
-                autofocus: false,
-                autofillHints: [AutofillHints.addressCity],
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                obscureText: false,
-                decoration: InputDecoration(
-                  isDense: false,
-                  labelText: 'Pesquisar por Cidade',
-                  labelStyle: FlutterFlowTheme.of(context).labelMedium.override(
-                        font: GoogleFonts.readexPro(
-                          fontWeight: FlutterFlowTheme.of(context)
-                              .labelMedium
-                              .fontWeight,
-                          fontStyle: FlutterFlowTheme.of(context)
-                              .labelMedium
-                              .fontStyle,
                         ),
-                        letterSpacing: 0.0,
-                        fontWeight:
-                            FlutterFlowTheme.of(context).labelMedium.fontWeight,
-                        fontStyle:
-                            FlutterFlowTheme.of(context).labelMedium.fontStyle,
-                      ),
-                  hintStyle: FlutterFlowTheme.of(context).labelMedium.override(
-                        font: GoogleFonts.readexPro(
-                          fontWeight: FlutterFlowTheme.of(context)
-                              .labelMedium
-                              .fontWeight,
-                          fontStyle: FlutterFlowTheme.of(context)
-                              .labelMedium
-                              .fontStyle,
-                        ),
-                        letterSpacing: 0.0,
-                        fontWeight:
-                            FlutterFlowTheme.of(context).labelMedium.fontWeight,
-                        fontStyle:
-                            FlutterFlowTheme.of(context).labelMedium.fontStyle,
-                      ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: Color(0x00000000),
-                      width: 1.0,
-                    ),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: FlutterFlowTheme.of(context).primary,
-                      width: 1.0,
-                    ),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: FlutterFlowTheme.of(context).error,
-                      width: 1.0,
-                    ),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  focusedErrorBorder: OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: FlutterFlowTheme.of(context).error,
-                      width: 1.0,
-                    ),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  filled: true,
-                  fillColor: FlutterFlowTheme.of(context).alternate,
-                  prefixIcon: Icon(
-                    Icons.location_on_rounded,
-                    color: FlutterFlowTheme.of(context).secondaryText,
-                    size: 24.0,
-                  ),
-                  suffixIcon: _model
-                          .pesquisarPorCidadeTextController!.text.isNotEmpty
-                      ? InkWell(
-                          onTap: () async {
-                            _model.pesquisarPorCidadeTextController?.clear();
-                            safeSetState(() {});
-                          },
-                          child: Icon(
-                            Icons.clear,
-                            color: FlutterFlowTheme.of(context).secondaryText,
-                            size: 24.0,
-                          ),
-                        )
-                      : null,
-                ),
-                style: FlutterFlowTheme.of(context).bodyMedium.override(
-                      font: GoogleFonts.readexPro(
-                        fontWeight:
-                            FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                        fontStyle:
-                            FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                      ),
-                      letterSpacing: 0.0,
-                      fontWeight:
-                          FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                      fontStyle:
-                          FlutterFlowTheme.of(context).bodyMedium.fontStyle,
-                    ),
-                keyboardType: TextInputType.streetAddress,
-                validator: _model.pesquisarPorCidadeTextControllerValidator
-                    .asValidator(context),
-                inputFormatters: [
-                  if (!isAndroid && !isiOS)
-                    TextInputFormatter.withFunction((oldValue, newValue) {
-                      return TextEditingValue(
-                        selection: newValue.selection,
-                        text: newValue.text
-                            .toCapitalization(TextCapitalization.words),
-                      );
-                    }),
-                ],
-              ),
-              Expanded(
-                child: AuthUserStreamWidget(
-                  builder: (context) => StreamBuilder<List<ContratoRecord>>(
-                    stream: queryContratoRecord(
-                      queryBuilder: (contratoRecord) => contratoRecord
-                          .where(
-                            'criador',
-                            isEqualTo: !valueOrDefault<bool>(
-                                    currentUserDocument?.isAdmin, false)
-                                ? currentUserReference
-                                : null,
-                          )
-                          .orderBy('criado_em', descending: true),
-                    ),
-                    builder: (context, snapshot) {
-                      // Customize what your widget looks like when it's loading.
-                      if (!snapshot.hasData) {
-                        return Center(
-                          child: SizedBox(
-                            width: 32.0,
-                            height: 32.0,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                FlutterFlowTheme.of(context).primary,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                      List<ContratoRecord> containerContratoRecordList =
-                          snapshot.data!;
-
-                      return Container(
-                        decoration: BoxDecoration(),
-                        child: Builder(
-                          builder: (context) {
-                            final containerVar = (_model.pesquisarPorCidadeTextController
-                                                .text !=
-                                            ''
-                                    ? containerContratoRecordList
-                                        .where((e) => valueOrDefault<String>(
-                                              e.cidade,
-                                              'X',
-                                            ).contains(_model
-                                                .pesquisarPorCidadeTextController
-                                                .text))
-                                        .toList()
-                                    : containerContratoRecordList)
-                                .toList()
-                                .take(200)
-                                .toList();
-
-                            return SingleChildScrollView(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.max,
-                                children: List.generate(containerVar.length,
-                                        (containerVarIndex) {
-                                  final containerVarItem =
-                                      containerVar[containerVarIndex];
-                                  return Padding(
-                                    padding: EdgeInsetsDirectional.fromSTEB(
-                                        0.0, 16.0, 0.0, 0.0),
-                                    child: InkWell(
-                                      splashColor: Colors.transparent,
-                                      focusColor: Colors.transparent,
-                                      hoverColor: Colors.transparent,
-                                      highlightColor: Colors.transparent,
-                                      onTap: () async {
-                                        context.pushNamed(
-                                          VerContratoPageWidget.routeName,
-                                          queryParameters: {
-                                            'contrato': serializeParam(
-                                              containerVarItem,
-                                              ParamType.Document,
-                                            ),
-                                            'contratoAssinado': serializeParam(
-                                              containerVarItem.contratoAssinado,
-                                              ParamType.bool,
-                                            ),
-                                            'contratoTestemunha':
-                                                serializeParam(
-                                              containerVarItem
-                                                  .contratoTestemunha,
-                                              ParamType.bool,
-                                            ),
-                                            'nomeTxt': serializeParam(
-                                              containerVarItem.contratante,
-                                              ParamType.String,
-                                            ),
-                                          }.withoutNulls,
-                                          extra: <String, dynamic>{
-                                            'contrato': containerVarItem,
-                                          },
-                                        );
-                                      },
-                                      child: Container(
-                                        width: double.infinity,
-                                        decoration: BoxDecoration(
-                                          color: FlutterFlowTheme.of(context)
-                                              .alternate,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              blurRadius: 4.0,
-                                              color: Color(0x33000000),
-                                              offset: Offset(
-                                                0.0,
-                                                2.0,
-                                              ),
-                                            )
-                                          ],
-                                          borderRadius:
-                                              BorderRadius.circular(12.0),
-                                        ),
-                                        child: Padding(
-                                          padding: EdgeInsets.all(16.0),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.max,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                mainAxisSize: MainAxisSize.max,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                children: [
-                                                  Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.max,
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius.only(
-                                                          bottomLeft:
-                                                              Radius.circular(
-                                                                  0.0),
-                                                          bottomRight:
-                                                              Radius.circular(
-                                                                  0.0),
-                                                          topLeft:
-                                                              Radius.circular(
-                                                                  0.0),
-                                                          topRight:
-                                                              Radius.circular(
-                                                                  0.0),
-                                                        ),
-                                                        child: Image.network(
-                                                          valueOrDefault<
-                                                              String>(
-                                                            containerVarItem
-                                                                .fotoCliente,
-                                                            'https://images.vexels.com/content/137047/preview/user-profile-blue-icon-32113c.png',
-                                                          ),
-                                                          width: 50.0,
-                                                          height: 50.0,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      ),
-                                                      if (containerVarItem
-                                                              .numeroDoc >
-                                                          0)
-                                                        Text(
-                                                          '${containerVarItem.numeroDoc.toString()}.',
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .labelMedium
-                                                              .override(
-                                                                font: GoogleFonts
-                                                                    .readexPro(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w300,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelMedium
-                                                                      .fontStyle,
-                                                                ),
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w300,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontStyle,
-                                                              ),
-                                                        ),
-                                                    ].divide(
-                                                        SizedBox(height: 2.0)),
-                                                  ),
-                                                  Flexible(
-                                                    child: Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.max,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                          containerVarItem
-                                                              .contratante,
-                                                          maxLines: 3,
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .bodyLarge
-                                                              .override(
-                                                                font: GoogleFonts
-                                                                    .readexPro(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w500,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyLarge
-                                                                      .fontStyle,
-                                                                ),
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w500,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .bodyLarge
-                                                                    .fontStyle,
-                                                              ),
-                                                        ),
-                                                        Padding(
-                                                          padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                      0.0,
-                                                                      0.0,
-                                                                      0.0,
-                                                                      16.0),
-                                                          child: Text(
-                                                            valueOrDefault<
-                                                                String>(
-                                                              containerVarItem
-                                                                  .tipo,
-                                                              'N/A',
-                                                            ),
-                                                            maxLines: 3,
-                                                            style: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .bodyLarge
-                                                                .override(
-                                                                  font: GoogleFonts
-                                                                      .readexPro(
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .normal,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyLarge
-                                                                        .fontStyle,
-                                                                  ),
-                                                                  fontSize:
-                                                                      14.0,
-                                                                  letterSpacing:
-                                                                      0.0,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .normal,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyLarge
-                                                                      .fontStyle,
-                                                                ),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ].divide(SizedBox(width: 12.0)),
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(
-                                                        0.0, 6.0, 0.0, 0.0),
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.max,
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Flexible(
-                                                      child: Text(
-                                                        containerVarItem
-                                                            .documento,
-                                                        maxLines: 5,
-                                                        style:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyMedium
-                                                                .override(
-                                                                  font: GoogleFonts
-                                                                      .readexPro(
-                                                                    fontWeight: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontWeight,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodyMedium
-                                                                        .fontStyle,
-                                                                  ),
-                                                                  letterSpacing:
-                                                                      0.0,
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodyMedium
-                                                                      .fontStyle,
-                                                                ),
-                                                      ),
-                                                    ),
-                                                    Align(
-                                                      alignment:
-                                                          AlignmentDirectional(
-                                                              1.0, 0.0),
-                                                      child: Text(
-                                                        dateTimeFormat(
-                                                          "d/M/y",
-                                                          containerVarItem
-                                                              .criadoEm!,
-                                                          locale:
-                                                              FFLocalizations.of(
-                                                                      context)
-                                                                  .languageCode,
-                                                        ),
-                                                        style:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .labelMedium
-                                                                .override(
-                                                                  font: GoogleFonts
-                                                                      .readexPro(
-                                                                    fontWeight: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .labelMedium
-                                                                        .fontWeight,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .labelMedium
-                                                                        .fontStyle,
-                                                                  ),
-                                                                  letterSpacing:
-                                                                      0.0,
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelMedium
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelMedium
-                                                                      .fontStyle,
-                                                                ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ).animateOnPageLoad(animationsMap[
-                                        'containerOnPageLoadAnimation']!),
-                                  );
-                                })
-                                    .divide(SizedBox(height: 8.0))
-                                    .around(SizedBox(height: 8.0)),
-                              ),
+                        const SizedBox(height: 20.0),
+                        FFButtonWidget(
+                          onPressed: () async {
+                            context.pushNamed(
+                              RegistrarContratoPageWidget.routeName,
                             );
                           },
+                          text: 'Novo registro',
+                          icon: const FaIcon(
+                            FontAwesomeIcons.plus,
+                            size: 16.0,
+                          ),
+                          options: FFButtonOptions(
+                            width: 200.0,
+                            height: 50.0,
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                              22.0,
+                              0.0,
+                              22.0,
+                              0.0,
+                            ),
+                            iconPadding: const EdgeInsetsDirectional.fromSTEB(
+                              0.0,
+                              0.0,
+                              8.0,
+                              0.0,
+                            ),
+                            iconColor: theme.primary,
+                            color: Colors.white,
+                            textStyle: theme.titleSmall.override(
+                              font: GoogleFonts.manrope(
+                                fontWeight: FontWeight.w800,
+                                fontStyle: theme.titleSmall.fontStyle,
+                              ),
+                              color: theme.primary,
+                              letterSpacing: 0.0,
+                            ),
+                            elevation: 0.0,
+                            borderSide: BorderSide(
+                              color: Colors.white,
+                              width: 1.0,
+                            ),
+                            borderRadius: BorderRadius.circular(18.0),
+                          ),
                         ),
-                      );
-                    },
+                      ],
+                    ),
+                  ).animateOnPageLoad(
+                    animationsMap['containerOnPageLoadAnimation']!,
                   ),
-                ),
+                  const SizedBox(height: 18.0),
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: theme.secondaryBackground,
+                      borderRadius: BorderRadius.circular(28.0),
+                      border: Border.all(color: theme.alternate),
+                    ),
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Últimos contratos',
+                          style: theme.titleLarge.override(
+                            font: GoogleFonts.sora(
+                              fontWeight: FontWeight.w700,
+                              fontStyle: theme.titleLarge.fontStyle,
+                            ),
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 6.0),
+                        Text(
+                          'Filtre por cidade para localizar registros mais rápido.',
+                          style: theme.bodyMedium.override(
+                            font: GoogleFonts.manrope(
+                              fontWeight: FontWeight.w600,
+                              fontStyle: theme.bodyMedium.fontStyle,
+                            ),
+                            color: theme.secondaryText,
+                            letterSpacing: 0.0,
+                          ),
+                        ),
+                        const SizedBox(height: 18.0),
+                        TextFormField(
+                          controller: _model.pesquisarPorCidadeTextController,
+                          focusNode: _model.pesquisarPorCidadeFocusNode,
+                          onChanged: (_) => EasyDebounce.debounce(
+                            '_model.pesquisarPorCidadeTextController',
+                            const Duration(milliseconds: 2000),
+                            () => safeSetState(() {}),
+                          ),
+                          autofocus: false,
+                          autofillHints: const [AutofillHints.addressCity],
+                          textCapitalization: TextCapitalization.words,
+                          textInputAction: TextInputAction.next,
+                          obscureText: false,
+                          decoration: _searchDecoration(context),
+                          style: theme.bodyLarge.override(
+                            font: GoogleFonts.manrope(
+                              fontWeight: FontWeight.w600,
+                              fontStyle: theme.bodyLarge.fontStyle,
+                            ),
+                            letterSpacing: 0.0,
+                          ),
+                          keyboardType: TextInputType.streetAddress,
+                          validator: _model
+                              .pesquisarPorCidadeTextControllerValidator
+                              .asValidator(context),
+                          inputFormatters: [
+                            if (!isAndroid && !isiOS)
+                              TextInputFormatter.withFunction(
+                                (oldValue, newValue) {
+                                  return TextEditingValue(
+                                    selection: newValue.selection,
+                                    text: newValue.text.toCapitalization(
+                                      TextCapitalization.words,
+                                    ),
+                                  );
+                                },
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 18.0),
+                        SizedBox(
+                          height: 0.0,
+                          width: double.infinity,
+                        ),
+                        AuthUserStreamWidget(
+                          builder: (context) =>
+                              StreamBuilder<List<ContratoRecord>>(
+                            stream: queryContratoRecord(
+                              queryBuilder: (contratoRecord) => contratoRecord
+                                  .where(
+                                    'criador',
+                                    isEqualTo: !valueOrDefault<bool>(
+                                      currentUserDocument?.isAdmin,
+                                      false,
+                                    )
+                                        ? currentUserReference
+                                        : null,
+                                  )
+                                  .orderBy('criado_em', descending: true),
+                            ),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 48.0,
+                                  ),
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 32.0,
+                                      height: 32.0,
+                                      child: CircularProgressIndicator(
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                          theme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                              final contratos = snapshot.data!;
+                              final filtrados = (_model
+                                              .pesquisarPorCidadeTextController
+                                              .text !=
+                                          ''
+                                      ? contratos
+                                          .where(
+                                            (e) => valueOrDefault<String>(
+                                              e.cidade,
+                                              'X',
+                                            ).contains(
+                                              _model
+                                                  .pesquisarPorCidadeTextController
+                                                  .text,
+                                            ),
+                                          )
+                                          .toList()
+                                      : contratos)
+                                  .take(200)
+                                  .toList();
+
+                              if (filtrados.isEmpty) {
+                                return Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: theme.accent4,
+                                    borderRadius: BorderRadius.circular(24.0),
+                                  ),
+                                  padding: const EdgeInsets.all(24.0),
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.search_off_rounded,
+                                        color: theme.secondaryText,
+                                        size: 34.0,
+                                      ),
+                                      const SizedBox(height: 12.0),
+                                      Text(
+                                        'Nenhum contrato encontrado.',
+                                        style: theme.titleMedium.override(
+                                          font: GoogleFonts.manrope(
+                                            fontWeight: FontWeight.w800,
+                                            fontStyle:
+                                                theme.titleMedium.fontStyle,
+                                          ),
+                                          letterSpacing: 0.0,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6.0),
+                                      Text(
+                                        'Tente ajustar o filtro de cidade para ver mais resultados.',
+                                        textAlign: TextAlign.center,
+                                        style: theme.bodyMedium.override(
+                                          font: GoogleFonts.manrope(
+                                            fontWeight: FontWeight.w600,
+                                            fontStyle:
+                                                theme.bodyMedium.fontStyle,
+                                          ),
+                                          color: theme.secondaryText,
+                                          letterSpacing: 0.0,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+
+                              return ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: filtrados.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 14.0),
+                                itemBuilder: (context, index) {
+                                  final contrato = filtrados[index];
+                                  return _buildContratoCard(context, contrato)
+                                      .animateOnPageLoad(
+                                    animationsMap[
+                                        'containerOnPageLoadAnimation']!,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ].divide(SizedBox(height: 8.0)),
+            ),
           ),
         ),
       ),

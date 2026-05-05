@@ -187,7 +187,7 @@ exports.criarPDF = onCall({
     // ============================================
 
     // === CONTRATANTE ===
-    draw(info.contratante, 127, 761);  // Nome Contratante
+    draw(info.contratante, 122, 757);  // Nome Contratante
     draw(info.documento, 59, 746);     // CPF
     draw(info.rg, 326, 747);           // RG
     if (info.dn) {
@@ -196,13 +196,13 @@ exports.criarPDF = onCall({
       if (m) draw(m, 513, 744);        // DN Mês
       if (y) draw(y, 538, 744);        // DN Ano
     }
-    draw(info.filiacao, 77, 734);      // Filiação
-    draw(info.naturalidade, 442, 735); // Naturalidade
+    draw(info.filiacao, 107, 733);      // Filiação
+    draw(info.naturalidade, 461, 727); // Naturalidade
 
     if (info.sexo === "M") {
       draw("X", 108, 720);             // Sexo M
     } else if (info.sexo === "F") {
-      draw("X", 172, 721);             // Sexo F
+      draw("X", 160, 698);             // Sexo F
     }
 
     draw(info.endereco, 176, 711);     // Endereço
@@ -256,25 +256,14 @@ exports.criarPDF = onCall({
     draw(info.contratada, 456, 433);  // Contratada
 
     // === PAGAMENTO (Checkboxes) ===
-    if (info.opcaoCurso === "3") {
-      switch (info.pagamento) {
-        case "18": draw("X", 76, 339); break;
-        case "12": draw("X", 292, 341); break;
-        case "8": draw("X", 292, 371); break;
-        case "5": draw("X", 292, 354); break;
-        case "3": draw("X", 292, 354); break;
-        case "0": draw("X", 292, 341); break;
-      }
-    } else {
-      switch (info.pagamento) {
-        case "36": draw("X", 76, 371); break;   // 36x
-        case "24": draw("X", 76, 356); break;   // 24x
-        case "18": draw("X", 76, 339); break;   // 18x
-        case "14": draw("X", 76, 323); break;   // 14x
-        case "8": draw("X", 292, 371); break;   // 8x
-        case "3": draw("X", 292, 354); break;   // 3x
-        case "12": draw("X", 292, 341); break;   // À Vista
-      }
+    switch (info.pagamento) {
+      case "36": draw("X", 76, 371); break;   // 36x
+      case "24": draw("X", 76, 356); break;   // 24x
+      case "18": draw("X", 76, 339); break;   // 18x
+      case "14": draw("X", 76, 323); break;   // 14x
+      case "8": draw("X", 292, 371); break;   // 8x
+      case "3": draw("X", 292, 354); break;   // 3x
+      case "12": draw("X", 292, 341); break;   // À vista/cartão
     }
 
     // === PRIMEIRA PARCELA E DESCONTO ===
@@ -451,7 +440,7 @@ exports.enviarContratoAutentique = onCall({
     let phone = null;
 
     // Prioriza o whatsapp passado explicitamente, senão usa do cadastro
-    const phoneSource = whatsappClean || info.telefones;
+    const phoneSource = whatsappClean || info.alunoTelefone || info.telefones;
 
     if (phoneSource) {
       // Remove tudo que não é dígito
@@ -507,6 +496,7 @@ exports.enviarContratoAutentique = onCall({
                 public_id
                 name
                 email
+                phone
                 action { name }
                 link { short_link }
               }
@@ -533,36 +523,39 @@ exports.enviarContratoAutentique = onCall({
       0: ["variables.file"],
     };
 
-    // TENTATIVA 1: Com WhatsApp (se disponível)
-    let operations = createPayload(true);
-    let formData = new FormData();
-    formData.append("operations", JSON.stringify(operations));
-    formData.append("map", JSON.stringify(map));
-    formData.append("0", fileBuffer, { filename: "contrato.pdf", contentType: "application/pdf" });
-
-    let response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...formData.getHeaders(),
-      },
-      body: formData,
+    const summarizeAttempt = (deliveryMethod, response, result) => ({
+      deliveryMethod,
+      httpStatus: response.status,
+      ok: response.ok && !result.errors,
+      errors: result.errors || null,
+      document: result?.data?.createDocument
+        ? {
+            id: result.data.createDocument.id || null,
+            name: result.data.createDocument.name || null,
+            createdAt: result.data.createDocument.created_at || null,
+            signatures: (result.data.createDocument.signatures || []).map((signature) => ({
+              publicId: signature.public_id || null,
+              name: signature.name || null,
+              email: signature.email || null,
+              phone: signature.phone || null,
+              shortLink: signature.link?.short_link || null,
+            })),
+          }
+        : null,
     });
 
-    let result = await response.json();
-
-    // SE FALHAR E TIVER WHATSAPP: Tenta novamente SEM WhatsApp (Fallback)
-    // Apenas se tivermos email para fallback
-    if (result.errors && phone && emailClean) {
-      console.warn("Falha no envio com WhatsApp. Tentando apenas email...", JSON.stringify(result.errors));
-
-      operations = createPayload(false); // Recria payload SEM telefone (apenas email)
-      formData = new FormData();
+    const executeAutentiqueRequest = async (usePhone) => {
+      const attemptDeliveryMethod = usePhone && phone ? "whatsapp" : "email";
+      const operations = createPayload(usePhone);
+      const formData = new FormData();
       formData.append("operations", JSON.stringify(operations));
       formData.append("map", JSON.stringify(map));
-      formData.append("0", fileBuffer, { filename: "contrato.pdf", contentType: "application/pdf" });
+      formData.append("0", fileBuffer, {
+        filename: "contrato.pdf",
+        contentType: "application/pdf",
+      });
 
-      response = await fetch(url, {
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -571,13 +564,44 @@ exports.enviarContratoAutentique = onCall({
         body: formData,
       });
 
-      result = await response.json();
+      const result = await response.json();
+      attempts.push(summarizeAttempt(attemptDeliveryMethod, response, result));
+      return result;
+    };
+
+    // TENTATIVA 1: Com WhatsApp (se disponível)
+    const requestedDeliveryMethod = phone ? "whatsapp" : "email";
+    let deliveryMethodUsed = requestedDeliveryMethod;
+    let fallbackUsed = false;
+    const attempts = [];
+
+    let result = await executeAutentiqueRequest(true);
+
+    // SE FALHAR E TIVER WHATSAPP: Tenta novamente SEM WhatsApp (Fallback)
+    // Apenas se tivermos email para fallback
+    if (result.errors && phone && emailClean) {
+      console.warn("Falha no envio com WhatsApp. Tentando apenas email...", JSON.stringify(result.errors));
+      deliveryMethodUsed = "email";
+      fallbackUsed = true;
+
+      result = await executeAutentiqueRequest(false);
     }
 
     if (result.errors) {
       console.error("Autentique API Errors (Final):", JSON.stringify(result.errors));
-      // Retorna o erro detalhado para o frontend
-      throw new HttpsError("internal", `Erro na API Autentique: ${result.errors[0].message}`);
+      throw new HttpsError(
+        "internal",
+        `Erro na API Autentique: ${result.errors[0].message}`,
+        {
+          source: "autentique",
+          requestedDeliveryMethod,
+          deliveryMethodUsed,
+          fallbackUsed,
+          emailAluno: emailClean || null,
+          whatsappAluno: phone,
+          attempts,
+        },
+      );
     }
 
     await contratoRef.update({
@@ -589,10 +613,22 @@ exports.enviarContratoAutentique = onCall({
     return {
       success: true,
       autentiqueId: result.data.createDocument.id,
+      requestedDeliveryMethod,
+      deliveryMethodUsed,
+      fallbackUsed,
+      emailAluno: emailClean || null,
+      whatsappAluno: phone,
+      attempts,
+      apiResponse: attempts[attempts.length - 1] || null,
     };
 
   } catch (error) {
     console.error("Erro ao enviar para Autentique:", error);
-    throw new HttpsError("internal", `Falha ao enviar contrato: ${error.message}`);
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+
+    const errorMessage = error?.message || "Erro desconhecido ao enviar contrato.";
+    throw new HttpsError("internal", `Falha ao enviar contrato: ${errorMessage}`);
   }
 });
