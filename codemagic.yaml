@@ -23,16 +23,10 @@ workflows:
       - name: Get dependencies
         script: |
           flutter packages pub get
-      - name: Build Android App
-        script: |
-          flutter build apk --release
-          flutter build appbundle --release
       - name: Build iOS App
         script: |
           flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
     artifacts:
-      - build/**/outputs/**/*.apk
-      - build/**/outputs/**/*.aab
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
       - "*.log"
