@@ -2,7 +2,7 @@ workflows:
   my-workflow:
     name: Codemagic Workflow
     integrations:
-      app_store_connect: Codemagic Key
+      app_store_connect: SMX
     environment:
       flutter: stable
       xcode: latest

@@ -376,11 +376,11 @@
       box-shadow: 0 4px 14px rgba(15, 118, 110, 0.16);
     }
 
-    .overlay-item.active {
+    .overlay-item:active {
       z-index: 20;
     }
 
-    .overlay-item.active .field-badge {
+    .overlay-item:active .field-badge {
       border-color: var(--warn);
       background: rgba(255, 237, 213, 0.92);
       color: #6a3506;
@@ -820,29 +820,37 @@
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-    const DEFAULT_PDF = "assets/pdfs/Contrato%202026.pdf";
+    const DEFAULT_PDF_NAME = "Contrato 2026.pdf";
+    const DEFAULT_PDF_URLS = [
+      "assets/pdfs/Contrato 2026.pdf",
+      "assets/pdfs/Contrato%202026.pdf",
+      "./assets/pdfs/Contrato 2026.pdf",
+      "./assets/pdfs/Contrato%202026.pdf",
+      "/assets/pdfs/Contrato%202026.pdf"
+    ];
+    const PDF_IMAGE_FALLBACK = "assets/images/Contrato_2023_page-0001.jpg";
 
     const groups = [
       {
         id: "contratante",
         label: "Contratante",
         fields: [
-          { id: "contratante", label: "Nome contratante", sample: "JOAO SILVA", expr: "info.contratante", comment: "Nome Contratante", x: 122, y: 757 },
-          { id: "documento", label: "CPF contratante", sample: "123.456.789-00", expr: "info.documento", comment: "CPF", x: 59, y: 746 },
-          { id: "rg", label: "RG", sample: "12.345.678-9", expr: "info.rg", comment: "RG", x: 326, y: 747 },
+          { id: "contratante", label: "Nome contratante", sample: "JOAO SILVA", expr: "info.contratante", comment: "Nome Contratante", x: 121, y: 762 },
+          { id: "documento", label: "CPF contratante", sample: "123.456.789-00", expr: "info.documento", comment: "CPF", x: 64, y: 746 },
+          { id: "rg", label: "RG", sample: "12.345.678-9", expr: "info.rg", comment: "RG", x: 202, y: 747 },
           { id: "dn_dia", label: "Nascimento dia", sample: "15", expr: "d", comment: "DN Dia", x: 491, y: 744 },
           { id: "dn_mes", label: "Nascimento mês", sample: "03", expr: "m", comment: "DN Mês", x: 513, y: 744 },
           { id: "dn_ano", label: "Nascimento ano", sample: "1990", expr: "y", comment: "DN Ano", x: 538, y: 744 },
-          { id: "filiacao", label: "Filiação", sample: "MARIA E JOSE", expr: "info.filiacao", comment: "Filiação", x: 107, y: 733 },
-          { id: "naturalidade", label: "Naturalidade", sample: "BRASILEIRO", expr: "info.naturalidade", comment: "Naturalidade", x: 461, y: 727 },
-          { id: "sexo_m", label: "Sexo masculino", sample: "X", expr: "\"X\"", comment: "Sexo M", x: 108, y: 720 },
-          { id: "sexo_f", label: "Sexo feminino", sample: "X", expr: "\"X\"", comment: "Sexo F", x: 160, y: 698 },
-          { id: "endereco", label: "Endereço", sample: "RUA DAS FLORES", expr: "info.endereco", comment: "Endereço", x: 176, y: 711 },
-          { id: "numero", label: "Número", sample: "456", expr: "info.numero", comment: "Número", x: 527, y: 710 },
-          { id: "bairro", label: "Bairro", sample: "CENTRO", expr: "info.bairro", comment: "Bairro", x: 65, y: 700 },
+          { id: "filiacao", label: "Filiação", sample: "MARIA E JOSE", expr: "info.filiacao", comment: "Filiação", x: 106, y: 734 },
+          { id: "naturalidade", label: "Naturalidade", sample: "BRASILEIRO", expr: "info.naturalidade", comment: "Naturalidade", x: 471, y: 734 },
+          { id: "sexo_m", label: "Sexo masculino", sample: "X", expr: "\"X\"", comment: "Sexo M", x: 104, y: 715 },
+          { id: "sexo_f", label: "Sexo feminino", sample: "X", expr: "\"X\"", comment: "Sexo F", x: 168, y: 719 },
+          { id: "endereco", label: "Endereço", sample: "RUA DAS FLORES", expr: "info.endereco", comment: "Endereço", x: 180, y: 712 },
+          { id: "numero", label: "Número", sample: "456", expr: "info.numero", comment: "Número", x: 530, y: 715 },
+          { id: "bairro", label: "Bairro", sample: "CENTRO", expr: "info.bairro", comment: "Bairro", x: 70, y: 702 },
           { id: "cidade", label: "Cidade", sample: "CAPINZAL", expr: "info.cidade", comment: "Cidade", x: 71, y: 688 },
-          { id: "cep", label: "CEP", sample: "89665-000", expr: "info.cep", comment: "CEP", x: 357, y: 686 },
-          { id: "uf", label: "UF", sample: "SC", expr: "info.uf", comment: "UF", x: 491, y: 686 },
+          { id: "cep", label: "CEP", sample: "89665-000", expr: "info.cep", comment: "CEP", x: 356, y: 688 },
+          { id: "uf", label: "UF", sample: "SC", expr: "info.uf", comment: "UF", x: 498, y: 691 },
           { id: "telefones", label: "Telefones", sample: "(49) 99999-9999", expr: "info.telefones", comment: "Telefones", x: 81, y: 676 }
         ]
       },
@@ -850,8 +858,8 @@
         id: "aluno",
         label: "Aluno",
         fields: [
-          { id: "aluno", label: "Nome aluno", sample: "PEDRO SANTOS", expr: "info.aluno", comment: "Nome Aluno", x: 103, y: 640 },
-          { id: "alunoDocumento", label: "CPF/RG aluno", sample: "987.654.321-00", expr: "info.alunoDocumento", comment: "CPF/RG Aluno", x: 89, y: 627 },
+          { id: "aluno", label: "Nome aluno", sample: "PEDRO SANTOS", expr: "info.aluno", comment: "Nome Aluno", x: 105, y: 642 },
+          { id: "alunoDocumento", label: "CPF/RG aluno", sample: "987.654.321-00", expr: "info.alunoDocumento", comment: "CPF/RG Aluno", x: 94, y: 629 },
           { id: "alunoDN_dia", label: "Aluno nascimento dia", sample: "20", expr: "d", comment: "Aluno DN Dia", x: 474, y: 639 },
           { id: "alunoDN_mes", label: "Aluno nascimento mês", sample: "05", expr: "m", comment: "Aluno DN Mês", x: 500, y: 639 },
           { id: "alunoDN_ano", label: "Aluno nascimento ano", sample: "2005", expr: "y", comment: "Aluno DN Ano", x: 526, y: 639 },
@@ -867,8 +875,8 @@
           { id: "curso_2", label: "Curso 2", sample: "X", expr: "\"X\"", comment: "Curso 2", x: 38, y: 552 },
           { id: "curso_3", label: "Curso 3", sample: "X", expr: "\"X\"", comment: "Curso 3", x: 183, y: 561 },
           { id: "curso_4", label: "Curso 4", sample: "X", expr: "\"X\"", comment: "Curso 4", x: 183, y: 552 },
-          { id: "outro", label: "Outro curso", sample: "CURSO LIVRE", expr: "info.outro", comment: "Outro/Qual", x: 255, y: 555 },
-          { id: "indicacao", label: "Indicação", sample: "AMIGO", expr: "info.indicacao", comment: "Indicação", x: 96, y: 538 }
+          { id: "outro", label: "Outro curso", sample: "CURSO LIVRE", expr: "info.outro", comment: "Outro/Qual", x: 257, y: 557 },
+          { id: "indicacao", label: "Indicação", sample: "AMIGO", expr: "info.indicacao", comment: "Indicação", x: 100, y: 540 }
         ]
       },
       {
@@ -917,7 +925,7 @@
         id: "imagem",
         label: "Imagem",
         fields: [
-          { id: "fotoCliente", label: "Foto cliente", sample: "FOTO", type: "image", comment: "Foto Cliente", x: 50, y: 500, width: 100, height: 100 }
+          { id: "fotoCliente", label: "Foto cliente", sample: "FOTO", type: "image", comment: "Foto Cliente", x: 0, y: 98, width: 100, height: 100 }
         ]
       }
     ];
@@ -942,7 +950,8 @@
       pageSizes: new Map([[1, { width: 612, height: 1008 }]]),
       zoom: 1,
       snap: 1,
-      activeId: fields[0].id,
+      activeId: null,
+      skipNextOverlayClick: false,
       gridVisible: true,
       dialogMode: "export"
     };
@@ -1020,6 +1029,40 @@
       els.statusMeta.textContent = value;
     }
 
+    function clearFallbackImage() {
+      els.pdfCanvas.style.visibility = "visible";
+      els.pdfStage.style.backgroundImage = "";
+      els.pdfStage.style.backgroundSize = "";
+      els.pdfStage.style.backgroundPosition = "";
+      els.pdfStage.style.backgroundRepeat = "";
+    }
+
+    function showFallbackImage() {
+      state.pdfDoc = null;
+      state.pdfName = "Imagem de referência";
+      state.pageNumber = 1;
+      state.pageCount = 1;
+      state.pageSizes.set(1, { width: 612, height: 1008 });
+      const pageSize = currentPageSize();
+      els.pdfCanvas.width = pageSize.width * state.zoom;
+      els.pdfCanvas.height = pageSize.height * state.zoom;
+      els.pdfCanvas.style.width = `${pageSize.width * state.zoom}px`;
+      els.pdfCanvas.style.height = `${pageSize.height * state.zoom}px`;
+      els.pdfCanvas.style.visibility = "hidden";
+      els.pdfStage.style.width = `${pageSize.width * state.zoom}px`;
+      els.pdfStage.style.height = `${pageSize.height * state.zoom}px`;
+      els.pdfStage.style.backgroundImage = `url("${PDF_IMAGE_FALLBACK}")`;
+      els.pdfStage.style.backgroundSize = "100% 100%";
+      els.pdfStage.style.backgroundPosition = "center";
+      els.pdfStage.style.backgroundRepeat = "no-repeat";
+      els.emptyState.classList.remove("visible");
+      renderFieldLayer();
+      renderInspector();
+      renderFieldList();
+      renderMeta();
+      setStatus("Imagem de referência");
+    }
+
     function initFilters() {
       groups.forEach(group => {
         const option = document.createElement("option");
@@ -1070,10 +1113,11 @@
 
     function renderFieldLayer() {
       els.fieldLayer.innerHTML = "";
+      if (!state.pdfDoc && !els.pdfStage.style.backgroundImage) return;
       fields.forEach(field => {
         const pageSize = fieldPageSize(field);
         const item = document.createElement("div");
-        item.className = `overlay-item${field.id === state.activeId ? " active" : ""}${field.page !== state.pageNumber ? " hidden-page" : ""}`;
+        item.className = `overlay-item${field.page !== state.pageNumber ? " hidden-page" : ""}`;
         item.dataset.fieldId = field.id;
         item.style.left = `${field.x * state.zoom}px`;
         item.style.top = `${(pageSize.height - field.y) * state.zoom}px`;
@@ -1101,6 +1145,10 @@
         item.addEventListener("pointerdown", event => startDrag(event, field));
         item.addEventListener("click", event => {
           event.stopPropagation();
+          if (state.skipNextOverlayClick) {
+            state.skipNextOverlayClick = false;
+            return;
+          }
           selectField(field.id, false);
         });
 
@@ -1115,7 +1163,6 @@
         const pageSize = fieldPageSize(field);
         item.style.left = `${field.x * state.zoom}px`;
         item.style.top = `${(pageSize.height - field.y) * state.zoom}px`;
-        item.classList.toggle("active", field.id === state.activeId);
         item.classList.toggle("hidden-page", field.page !== state.pageNumber);
 
         const imageBox = item.querySelector(".image-box");
@@ -1148,7 +1195,16 @@
       [els.fieldPage, els.fieldFontSize, els.fieldX, els.fieldY, els.fieldWidth, els.fieldHeight, els.fieldSample]
         .forEach(input => input.disabled = !hasField);
 
-      if (!hasField) return;
+      if (!hasField) {
+        els.fieldPage.value = "";
+        els.fieldFontSize.value = "";
+        els.fieldX.value = "";
+        els.fieldY.value = "";
+        els.fieldWidth.value = "";
+        els.fieldHeight.value = "";
+        els.fieldSample.value = "";
+        return;
+      }
 
       els.fieldPage.max = state.pageCount;
       els.fieldPage.value = field.page;
@@ -1192,9 +1248,17 @@
       }
     }
 
+    function clearSelection() {
+      state.activeId = null;
+      updateFieldPositionsOnly();
+      renderInspector();
+      renderFieldList();
+    }
+
     async function loadPdfFromArrayBuffer(arrayBuffer, name) {
       els.loadingState.classList.add("visible");
       els.emptyState.classList.remove("visible");
+      clearFallbackImage();
       setStatus("Carregando");
 
       try {
@@ -1230,7 +1294,9 @@
       els.loadingState.classList.add("visible");
       setStatus("Carregando");
       try {
-        const response = await fetch(url);
+        const cacheBreaker = `v=${Date.now()}`;
+        const separator = url.includes("?") ? "&" : "?";
+        const response = await fetch(`${url}${separator}${cacheBreaker}`, { cache: "no-store" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const buffer = await response.arrayBuffer();
         await loadPdfFromArrayBuffer(buffer, name);
@@ -1241,6 +1307,31 @@
         els.emptyState.classList.add("visible");
         setStatus("Aguardando PDF");
       }
+    }
+
+    async function loadDefaultPdf() {
+      els.loadingState.classList.add("visible");
+      els.emptyState.classList.remove("visible");
+      setStatus("Carregando");
+
+      const errors = [];
+      for (const url of DEFAULT_PDF_URLS) {
+        try {
+          const cacheBreaker = `v=${Date.now()}`;
+          const separator = url.includes("?") ? "&" : "?";
+          const response = await fetch(`${url}${separator}${cacheBreaker}`, { cache: "no-store" });
+          if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
+          const buffer = await response.arrayBuffer();
+          await loadPdfFromArrayBuffer(buffer, DEFAULT_PDF_NAME);
+          return;
+        } catch (error) {
+          errors.push(error.message);
+        }
+      }
+
+      console.warn("Falha ao carregar PDF padrão:", errors);
+      els.loadingState.classList.remove("visible");
+      showFallbackImage();
     }
 
     async function renderPage() {
@@ -1278,7 +1369,9 @@
 
     function startDrag(event, field) {
       event.preventDefault();
+      event.stopPropagation();
       selectField(field.id, false);
+      const target = event.currentTarget;
       const pageSize = fieldPageSize(field);
       const rect = els.pdfStage.getBoundingClientRect();
       const startCanvasX = (event.clientX - rect.left) / state.zoom;
@@ -1287,17 +1380,30 @@
       const drag = {
         pointerId: event.pointerId,
         offsetX: startCanvasX - field.x,
-        offsetY: startCanvasY - startAnchorCanvasY
+        offsetY: startCanvasY - startAnchorCanvasY,
+        moved: false,
+        ended: false
       };
 
-      event.currentTarget.setPointerCapture(event.pointerId);
+      if (target.setPointerCapture && event.pointerId !== undefined) {
+        try {
+          target.setPointerCapture(event.pointerId);
+        } catch (error) {
+          console.warn("Não foi possível capturar o ponteiro:", error);
+        }
+      }
 
       const move = moveEvent => {
-        if (moveEvent.pointerId !== drag.pointerId) return;
+        if (drag.ended) return;
+        if (moveEvent.pointerId !== undefined && moveEvent.pointerId !== drag.pointerId) return;
+        moveEvent.preventDefault();
         const moveCanvasX = (moveEvent.clientX - rect.left) / state.zoom;
         const moveCanvasY = (moveEvent.clientY - rect.top) / state.zoom;
         const nextX = Math.max(0, Math.min(pageSize.width, snap(moveCanvasX - drag.offsetX)));
         const nextY = Math.max(0, Math.min(pageSize.height, snap(pageSize.height - (moveCanvasY - drag.offsetY))));
+        if (nextX !== field.x || nextY !== field.y) {
+          drag.moved = true;
+        }
         field.x = nextX;
         field.y = nextY;
         updateFieldPositionsOnly();
@@ -1305,16 +1411,40 @@
       };
 
       const end = endEvent => {
-        if (endEvent.pointerId !== drag.pointerId) return;
-        event.currentTarget.releasePointerCapture(drag.pointerId);
-        event.currentTarget.removeEventListener("pointermove", move);
-        event.currentTarget.removeEventListener("pointerup", end);
-        event.currentTarget.removeEventListener("pointercancel", end);
+        if (drag.ended) return;
+        if (endEvent && endEvent.pointerId !== undefined && endEvent.pointerId !== drag.pointerId) return;
+        drag.ended = true;
+
+        document.removeEventListener("pointermove", move);
+        document.removeEventListener("pointerup", end);
+        document.removeEventListener("pointercancel", end);
+        document.removeEventListener("mousemove", move);
+        document.removeEventListener("mouseup", end);
+        window.removeEventListener("blur", end);
+
+        if (target.releasePointerCapture && drag.pointerId !== undefined) {
+          try {
+            if (!target.hasPointerCapture || target.hasPointerCapture(drag.pointerId)) {
+              target.releasePointerCapture(drag.pointerId);
+            }
+          } catch (error) {
+            console.warn("Não foi possível liberar o ponteiro:", error);
+          }
+        }
+
+        state.skipNextOverlayClick = true;
+        clearSelection();
+        window.setTimeout(() => {
+          state.skipNextOverlayClick = false;
+        }, 250);
       };
 
-      event.currentTarget.addEventListener("pointermove", move);
-      event.currentTarget.addEventListener("pointerup", end);
-      event.currentTarget.addEventListener("pointercancel", end);
+      document.addEventListener("pointermove", move);
+      document.addEventListener("pointerup", end);
+      document.addEventListener("pointercancel", end);
+      document.addEventListener("mousemove", move);
+      document.addEventListener("mouseup", end);
+      window.addEventListener("blur", end);
     }
 
     function updateActiveField(patch) {
@@ -1599,7 +1729,7 @@ ${line("String(today.getFullYear())", "data_ano", "Data Ano", "      ")}
         await loadPdfFromArrayBuffer(await file.arrayBuffer(), file.name);
       });
 
-      els.loadDefaultButton.addEventListener("click", () => loadPdfFromUrl(DEFAULT_PDF, "Contrato 2026.pdf"));
+      els.loadDefaultButton.addEventListener("click", loadDefaultPdf);
       els.prevPageButton.addEventListener("click", async () => {
         if (state.pageNumber <= 1) return;
         state.pageNumber -= 1;
@@ -1679,7 +1809,7 @@ ${line("String(today.getFullYear())", "data_ano", "Data Ano", "      ")}
       renderFieldLayer();
       renderInspector();
       renderMeta();
-      loadPdfFromUrl(DEFAULT_PDF, "Contrato 2026.pdf");
+      loadDefaultPdf();
     }
 
     init();

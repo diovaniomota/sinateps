@@ -165,7 +165,7 @@ exports.criarPDF = onCall({
         }
 
         if (image) {
-          firstPage.drawImage(image, { x: 50, y: 500, width: 100, height: 100 });
+          firstPage.drawImage(image, { x: 0, y: 98, width: 100, height: 100 });
         }
       } catch (e) {
         console.warn("Erro ao processar imagem (ignorado):", e.message);
@@ -187,35 +187,35 @@ exports.criarPDF = onCall({
     // ============================================
 
     // === CONTRATANTE ===
-    draw(info.contratante, 122, 757);  // Nome Contratante
-    draw(info.documento, 59, 746);     // CPF
-    draw(info.rg, 326, 747);           // RG
+    draw(info.contratante, 121, 762);  // Nome Contratante
+    draw(info.documento, 64, 746);     // CPF
+    draw(info.rg, 202, 747);           // RG
     if (info.dn) {
       const [d, m, y] = info.dn.split("/");
       if (d) draw(d, 491, 744);        // DN Dia
       if (m) draw(m, 513, 744);        // DN Mês
       if (y) draw(y, 538, 744);        // DN Ano
     }
-    draw(info.filiacao, 107, 733);      // Filiação
-    draw(info.naturalidade, 461, 727); // Naturalidade
+    draw(info.filiacao, 106, 734);      // Filiação
+    draw(info.naturalidade, 471, 734); // Naturalidade
 
     if (info.sexo === "M") {
-      draw("X", 108, 720);             // Sexo M
+      draw("X", 104, 715);             // Sexo M
     } else if (info.sexo === "F") {
-      draw("X", 160, 698);             // Sexo F
+      draw("X", 168, 719);             // Sexo F
     }
 
-    draw(info.endereco, 176, 711);     // Endereço
-    draw(info.numero, 527, 710);       // Número
-    draw(info.bairro, 65, 700);        // Bairro
+    draw(info.endereco, 180, 712);     // Endereço
+    draw(info.numero, 530, 715);       // Número
+    draw(info.bairro, 70, 702);        // Bairro
     draw(info.cidade, 71, 688);        // Cidade
-    draw(info.cep, 357, 686);          // CEP
-    draw(info.uf, 491, 686);           // UF
+    draw(info.cep, 356, 688);          // CEP
+    draw(info.uf, 498, 691);           // UF
     draw(info.telefones, 81, 676);     // Telefones
 
     // === ALUNO ===
-    draw(info.aluno, 103, 640);         // Nome Aluno
-    draw(info.alunoDocumento, 89, 627); // CPF/RG Aluno
+    draw(info.aluno, 105, 642);         // Nome Aluno
+    draw(info.alunoDocumento, 94, 629); // CPF/RG Aluno
     if (info.alunoDN) {
       const [d, m, y] = info.alunoDN.split("/");
       if (d) draw(d, 474, 639);        // Aluno DN Dia
@@ -238,10 +238,10 @@ exports.criarPDF = onCall({
     }
 
     if (opcaoCursoKey === "4" && info.outro) {
-      draw(info.outro, 255, 555);  // Outro/Qual
+      draw(info.outro, 257, 557);  // Outro/Qual
     }
 
-    draw(info.indicacao, 96, 538);  // Indicação
+    draw(info.indicacao, 100, 540);  // Indicação
 
     // === DISPOSIÇÕES INICIAIS ===
     if (info.horas) {
