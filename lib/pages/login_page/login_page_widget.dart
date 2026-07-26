@@ -1,12 +1,15 @@
+import 'dart:ui';
+
 import '/auth/firebase_auth/auth_util.dart';
+import '/flutter_flow/background_scene_support.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'login_page_model.dart';
 export 'login_page_model.dart';
 
@@ -28,6 +31,8 @@ class _LoginPageWidgetState extends State<LoginPageWidget>
 
   final animationsMap = <String, AnimationInfo>{};
 
+  WebViewController? _backgroundSceneController;
+
   @override
   void initState() {
     super.initState();
@@ -38,6 +43,13 @@ class _LoginPageWidgetState extends State<LoginPageWidget>
 
     _model.passwordTextController ??= TextEditingController();
     _model.passwordFocusNode ??= FocusNode();
+
+    if (supportsBackgroundScene3D) {
+      _backgroundSceneController = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setBackgroundColor(Colors.transparent)
+        ..loadFlutterAsset('assets/web3d/ambient_scene.html');
+    }
 
     animationsMap.addAll({
       'buttonOnPageLoadAnimation': AnimationInfo(
@@ -102,44 +114,116 @@ class _LoginPageWidgetState extends State<LoginPageWidget>
         letterSpacing: 0.0,
       ),
       filled: true,
-      fillColor: theme.accent4,
+      fillColor: Colors.white.withValues(alpha: 0.9),
       prefixIcon: Icon(
         icon,
-        color: theme.secondaryText,
+        color: theme.primary,
         size: 20.0,
       ),
       suffixIcon: suffixIcon,
       enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(
-          color: theme.alternate,
-          width: 1.0,
-        ),
-        borderRadius: BorderRadius.circular(20.0),
+        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(24.0),
       ),
       focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(
           color: theme.primary,
-          width: 1.3,
+          width: 1.6,
         ),
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(24.0),
       ),
       errorBorder: OutlineInputBorder(
         borderSide: BorderSide(
           color: theme.error,
           width: 1.0,
         ),
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(24.0),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderSide: BorderSide(
           color: theme.error,
-          width: 1.3,
+          width: 1.6,
         ),
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(24.0),
       ),
       contentPadding: const EdgeInsets.symmetric(
-        horizontal: 18.0,
+        horizontal: 20.0,
         vertical: 18.0,
+      ),
+    );
+  }
+
+  Widget _buildSignInButton(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(20.0),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20.0),
+        onTap: () async {
+          if (_model.formKey.currentState == null ||
+              !_model.formKey.currentState!.validate()) {
+            return;
+          }
+          GoRouter.of(context).prepareAuthEvent();
+
+          final user = await authManager.signInWithEmail(
+            context,
+            _model.emailTextController.text,
+            _model.passwordTextController.text,
+          );
+          if (user == null) {
+            return;
+          }
+
+          context.goNamedAuth(
+            ContratosPageWidget.routeName,
+            context.mounted,
+          );
+        },
+        child: Ink(
+          height: 56.0,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [theme.primary, const Color(0xFF4B88BF)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(20.0),
+            boxShadow: [
+              BoxShadow(
+                color: theme.primary.withValues(alpha: 0.38),
+                blurRadius: 26.0,
+                offset: const Offset(0.0, 14.0),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Entrar',
+                  style: theme.titleSmall.override(
+                    font: GoogleFonts.manrope(
+                      fontWeight: FontWeight.w800,
+                      fontStyle: theme.titleSmall.fontStyle,
+                    ),
+                    color: Colors.white,
+                    letterSpacing: 0.0,
+                  ),
+                ),
+                const SizedBox(width: 10.0),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: Colors.white,
+                  size: 20.0,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -156,301 +240,293 @@ class _LoginPageWidgetState extends State<LoginPageWidget>
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: theme.primaryBackground,
-        body: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                theme.primaryBackground,
-                const Color(0xFFEAF2FB),
-                const Color(0xFFF8FBFF),
-              ],
-              begin: const AlignmentDirectional(-1.0, -1.0),
-              end: const AlignmentDirectional(1.0, 1.0),
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: ColoredBox(
+                color: theme.primaryBackground,
+                child: _backgroundSceneController == null
+                    ? const SizedBox.shrink()
+                    : IgnorePointer(
+                        child: WebViewWidget(
+                          controller: _backgroundSceneController!,
+                        ),
+                      ),
+              ),
             ),
-          ),
-          child: SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 460.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: theme.secondaryBackground.withValues(alpha: 0.96),
-                      borderRadius: BorderRadius.circular(28.0),
-                      border: Border.all(color: theme.alternate),
-                      boxShadow: const [
-                        BoxShadow(
-                          blurRadius: 32.0,
-                          color: Color(0x140F2237),
-                          offset: Offset(0.0, 18.0),
-                        ),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.primaryBackground.withValues(alpha: 0.22),
+                        const Color(0xFFEAF2FB).withValues(alpha: 0.22),
+                        const Color(0xFFF8FBFF).withValues(alpha: 0.4),
                       ],
+                      begin: const AlignmentDirectional(-1.0, -1.0),
+                      end: const AlignmentDirectional(1.0, 1.0),
                     ),
-                    padding: const EdgeInsets.all(28.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Container(
-                          width: 72.0,
-                          height: 72.0,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(22.0),
-                            gradient: LinearGradient(
-                              colors: [
-                                theme.primary,
-                                const Color(0xFF4B88BF),
-                              ],
-                              begin: const AlignmentDirectional(-1.0, -1.0),
-                              end: const AlignmentDirectional(1.0, 1.0),
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(10.0),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16.0),
-                              child: Image.asset(
-                                'assets/images/Design_sem_nome_(37).png',
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24.0),
-                        Text(
-                          'Acesse sua conta',
-                          style: theme.headlineMedium.override(
-                            font: GoogleFonts.sora(
-                              fontWeight: FontWeight.w700,
-                              fontStyle: theme.headlineMedium.fontStyle,
-                            ),
-                            letterSpacing: -0.4,
-                          ),
-                        ),
-                        const SizedBox(height: 10.0),
-                        Text(
-                          'Entrar no painel para consultar contratos e continuar o fluxo do app.',
-                          style: theme.bodyMedium.override(
-                            font: GoogleFonts.manrope(
-                              fontWeight: FontWeight.w500,
-                              fontStyle: theme.bodyMedium.fontStyle,
-                            ),
-                            color: theme.secondaryText,
-                            letterSpacing: 0.0,
-                            lineHeight: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 28.0),
-                        Form(
-                          key: _model.formKey,
-                          autovalidateMode: AutovalidateMode.disabled,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            children: [
-                              TextFormField(
-                                controller: _model.emailTextController,
-                                focusNode: _model.emailFocusNode,
-                                autofocus: true,
-                                autofillHints: const [AutofillHints.email],
-                                textInputAction: TextInputAction.next,
-                                obscureText: false,
-                                decoration: _inputDecoration(
-                                  context: context,
-                                  label: 'Email',
-                                  icon: Icons.alternate_email_rounded,
-                                ),
-                                style: theme.bodyLarge.override(
-                                  font: GoogleFonts.manrope(
-                                    fontWeight: FontWeight.w600,
-                                    fontStyle: theme.bodyLarge.fontStyle,
-                                  ),
-                                  letterSpacing: 0.0,
-                                ),
-                                keyboardType: TextInputType.emailAddress,
-                                validator: _model.emailTextControllerValidator
-                                    .asValidator(context),
-                              ),
-                              const SizedBox(height: 16.0),
-                              TextFormField(
-                                controller: _model.passwordTextController,
-                                focusNode: _model.passwordFocusNode,
-                                autofocus: false,
-                                autofillHints: const [AutofillHints.password],
-                                textInputAction: TextInputAction.done,
-                                obscureText: !_model.passwordVisibility,
-                                decoration: _inputDecoration(
-                                  context: context,
-                                  label: 'Senha',
-                                  icon: Icons.lock_outline_rounded,
-                                  suffixIcon: InkWell(
-                                    onTap: () => safeSetState(
-                                      () => _model.passwordVisibility =
-                                          !_model.passwordVisibility,
-                                    ),
-                                    focusNode: FocusNode(skipTraversal: true),
-                                    child: Icon(
-                                      _model.passwordVisibility
-                                          ? Icons.visibility_outlined
-                                          : Icons.visibility_off_outlined,
-                                      color: theme.secondaryText,
-                                      size: 20.0,
-                                    ),
-                                  ),
-                                ),
-                                style: theme.bodyLarge.override(
-                                  font: GoogleFonts.manrope(
-                                    fontWeight: FontWeight.w600,
-                                    fontStyle: theme.bodyLarge.fontStyle,
-                                  ),
-                                  letterSpacing: 0.0,
-                                ),
-                                validator: _model
-                                    .passwordTextControllerValidator
-                                    .asValidator(context),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24.0),
-                        FFButtonWidget(
-                          onPressed: () async {
-                            if (_model.formKey.currentState == null ||
-                                !_model.formKey.currentState!.validate()) {
-                              return;
-                            }
-                            GoRouter.of(context).prepareAuthEvent();
-
-                            final user = await authManager.signInWithEmail(
-                              context,
-                              _model.emailTextController.text,
-                              _model.passwordTextController.text,
-                            );
-                            if (user == null) {
-                              return;
-                            }
-
-                            context.goNamedAuth(
-                              ContratosPageWidget.routeName,
-                              context.mounted,
-                            );
-                          },
-                          text: 'Entrar',
-                          icon: const Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 20.0,
-                          ),
-                          options: FFButtonOptions(
-                            width: double.infinity,
-                            height: 54.0,
-                            padding: const EdgeInsetsDirectional.fromSTEB(
-                              24.0,
-                              0.0,
-                              24.0,
-                              0.0,
-                            ),
-                            iconPadding: const EdgeInsetsDirectional.fromSTEB(
-                              0.0,
-                              0.0,
-                              8.0,
-                              0.0,
-                            ),
-                            iconColor: theme.info,
-                            color: theme.primary,
-                            hoverColor: const Color(0xFF175984),
-                            hoverTextColor: theme.info,
-                            hoverElevation: 0.0,
-                            textStyle: theme.titleSmall.override(
-                              font: GoogleFonts.manrope(
-                                fontWeight: FontWeight.w700,
-                                fontStyle: theme.titleSmall.fontStyle,
-                              ),
-                              color: theme.info,
-                              letterSpacing: 0.0,
-                            ),
-                            elevation: 0.0,
-                            borderSide: BorderSide(
-                              color: Colors.transparent,
-                              width: 1.0,
-                            ),
-                            borderRadius: BorderRadius.circular(18.0),
-                          ),
-                        ).animateOnPageLoad(
-                          animationsMap['buttonOnPageLoadAnimation']!,
-                        ),
-                        const SizedBox(height: 18.0),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: InkWell(
-                            splashColor: Colors.transparent,
-                            focusColor: Colors.transparent,
-                            hoverColor: Colors.transparent,
-                            highlightColor: Colors.transparent,
-                            onTap: () async {
-                              context.pushNamed(
-                                EsqueceuSenhaPageWidget.routeName,
-                              );
-                            },
-                            child: Text(
-                              'Esqueceu sua senha?',
-                              style: theme.bodyMedium.override(
-                                font: GoogleFonts.manrope(
-                                  fontWeight: FontWeight.w700,
-                                  fontStyle: theme.bodyMedium.fontStyle,
-                                ),
-                                color: theme.primary,
-                                decoration: TextDecoration.underline,
-                                letterSpacing: 0.0,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24.0),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: theme.accent1,
-                            borderRadius: BorderRadius.circular(16.0),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14.0,
-                            vertical: 12.0,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.verified_user_outlined,
-                                color: theme.primary,
-                                size: 18.0,
-                              ),
-                              const SizedBox(width: 10.0),
-                              Expanded(
-                                child: Text(
-                                  'Versão 1.0',
-                                  style: theme.labelLarge.override(
-                                    font: GoogleFonts.manrope(
-                                      fontWeight: FontWeight.w700,
-                                      fontStyle: theme.labelLarge.fontStyle,
-                                    ),
-                                    color: theme.primary,
-                                    letterSpacing: 0.0,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ).animateOnPageLoad(
-                    animationsMap['containerOnPageLoadAnimation']!,
                   ),
                 ),
               ),
             ),
-          ),
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420.0),
+                    child: Stack(
+                      alignment: Alignment.topCenter,
+                      clipBehavior: Clip.none,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 30.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(32.0),
+                            child: BackdropFilter(
+                              filter:
+                                  ImageFilter.blur(sigmaX: 24.0, sigmaY: 24.0),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.62),
+                                  borderRadius: BorderRadius.circular(32.0),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    width: 1.2,
+                                  ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      blurRadius: 40.0,
+                                      color: Color(0x1F0F2237),
+                                      offset: Offset(0.0, 24.0),
+                                    ),
+                                  ],
+                                ),
+                                padding: const EdgeInsets.fromLTRB(
+                                  28.0,
+                                  48.0,
+                                  28.0,
+                                  32.0,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text(
+                                      'Acesse sua conta',
+                                      textAlign: TextAlign.center,
+                                      style: theme.headlineMedium.override(
+                                        font: GoogleFonts.sora(
+                                          fontWeight: FontWeight.w800,
+                                          fontStyle:
+                                              theme.headlineMedium.fontStyle,
+                                        ),
+                                        letterSpacing: -0.6,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10.0),
+                                    Text(
+                                      'Entrar no painel para consultar contratos e continuar o fluxo do app.',
+                                      textAlign: TextAlign.center,
+                                      style: theme.bodyMedium.override(
+                                        font: GoogleFonts.manrope(
+                                          fontWeight: FontWeight.w500,
+                                          fontStyle: theme.bodyMedium.fontStyle,
+                                        ),
+                                        color: theme.secondaryText,
+                                        letterSpacing: 0.0,
+                                        lineHeight: 1.4,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 32.0),
+                                    Form(
+                                      key: _model.formKey,
+                                      autovalidateMode:
+                                          AutovalidateMode.disabled,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.max,
+                                        children: [
+                                          TextFormField(
+                                            controller:
+                                                _model.emailTextController,
+                                            focusNode: _model.emailFocusNode,
+                                            autofocus: true,
+                                            autofillHints: const [
+                                              AutofillHints.email
+                                            ],
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            obscureText: false,
+                                            decoration: _inputDecoration(
+                                              context: context,
+                                              label: 'Email',
+                                              icon:
+                                                  Icons.alternate_email_rounded,
+                                            ),
+                                            style: theme.bodyLarge.override(
+                                              font: GoogleFonts.manrope(
+                                                fontWeight: FontWeight.w600,
+                                                fontStyle:
+                                                    theme.bodyLarge.fontStyle,
+                                              ),
+                                              letterSpacing: 0.0,
+                                            ),
+                                            keyboardType:
+                                                TextInputType.emailAddress,
+                                            validator: _model
+                                                .emailTextControllerValidator
+                                                .asValidator(context),
+                                          ),
+                                          const SizedBox(height: 16.0),
+                                          TextFormField(
+                                            controller:
+                                                _model.passwordTextController,
+                                            focusNode: _model.passwordFocusNode,
+                                            autofocus: false,
+                                            autofillHints: const [
+                                              AutofillHints.password
+                                            ],
+                                            textInputAction:
+                                                TextInputAction.done,
+                                            obscureText:
+                                                !_model.passwordVisibility,
+                                            decoration: _inputDecoration(
+                                              context: context,
+                                              label: 'Senha',
+                                              icon: Icons.lock_outline_rounded,
+                                              suffixIcon: InkWell(
+                                                onTap: () => safeSetState(
+                                                  () => _model
+                                                          .passwordVisibility =
+                                                      !_model
+                                                          .passwordVisibility,
+                                                ),
+                                                focusNode: FocusNode(
+                                                    skipTraversal: true),
+                                                child: Icon(
+                                                  _model.passwordVisibility
+                                                      ? Icons
+                                                          .visibility_outlined
+                                                      : Icons
+                                                          .visibility_off_outlined,
+                                                  color: theme.secondaryText,
+                                                  size: 20.0,
+                                                ),
+                                              ),
+                                            ),
+                                            style: theme.bodyLarge.override(
+                                              font: GoogleFonts.manrope(
+                                                fontWeight: FontWeight.w600,
+                                                fontStyle:
+                                                    theme.bodyLarge.fontStyle,
+                                              ),
+                                              letterSpacing: 0.0,
+                                            ),
+                                            validator: _model
+                                                .passwordTextControllerValidator
+                                                .asValidator(context),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 26.0),
+                                    _buildSignInButton(context)
+                                        .animateOnPageLoad(
+                                      animationsMap[
+                                          'buttonOnPageLoadAnimation']!,
+                                    ),
+                                    const SizedBox(height: 18.0),
+                                    Align(
+                                      alignment: Alignment.center,
+                                      child: InkWell(
+                                        splashColor: Colors.transparent,
+                                        focusColor: Colors.transparent,
+                                        hoverColor: Colors.transparent,
+                                        highlightColor: Colors.transparent,
+                                        onTap: () async {
+                                          context.pushNamed(
+                                            EsqueceuSenhaPageWidget.routeName,
+                                          );
+                                        },
+                                        child: Text(
+                                          'Esqueceu sua senha?',
+                                          style: theme.bodyMedium.override(
+                                            font: GoogleFonts.manrope(
+                                              fontWeight: FontWeight.w700,
+                                              fontStyle:
+                                                  theme.bodyMedium.fontStyle,
+                                            ),
+                                            color: theme.primary,
+                                            decoration:
+                                                TextDecoration.underline,
+                                            letterSpacing: 0.0,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 22.0),
+                                    Text(
+                                      'Versão 1.0',
+                                      textAlign: TextAlign.center,
+                                      style: theme.labelMedium.override(
+                                        font: GoogleFonts.manrope(
+                                          fontWeight: FontWeight.w700,
+                                          fontStyle:
+                                              theme.labelMedium.fontStyle,
+                                        ),
+                                        color: theme.secondaryText
+                                            .withValues(alpha: 0.75),
+                                        letterSpacing: 0.4,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 176.0,
+                          height: 60.0,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(30.0),
+                            gradient: LinearGradient(
+                              colors: [theme.primary, const Color(0xFF4B88BF)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            border: Border.all(color: Colors.white, width: 4.0),
+                            boxShadow: [
+                              BoxShadow(
+                                color: theme.primary.withValues(alpha: 0.45),
+                                blurRadius: 28.0,
+                                offset: const Offset(0.0, 14.0),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18.0,
+                              vertical: 12.0,
+                            ),
+                            child: Image.asset(
+                              'assets/images/sinatep_logo_white.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ).animateOnPageLoad(
+                      animationsMap['containerOnPageLoadAnimation']!,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -40,52 +40,53 @@ class _RegistrarContratoPageWidgetState
   late RegistrarContratoPageModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final _scrollController = ScrollController();
+  final _stepOneKey = GlobalKey();
+  final _stepTwoKey = GlobalKey();
+  final _stepThreeKey = GlobalKey();
+  int _currentStep = 1;
 
-  Future<void> _showAutentiqueResponseDialog({
-    required String title,
-    required Map<String, dynamic> payload,
-  }) async {
+  void _updateCurrentStep() {
     if (!mounted) return;
-    await showDialog(
-      context: context,
-      builder: (dialogContext) => Dialog(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: 640.0,
-            maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.75,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: FlutterFlowTheme.of(dialogContext).titleSmall,
-                ),
-                const SizedBox(height: 12.0),
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: SelectableText(
-                      functions.prettyJson(payload),
-                      style: FlutterFlowTheme.of(dialogContext).bodyMedium,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12.0),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: const Text('Fechar'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+
+    var nextStep = 1;
+    final secondContext = _stepTwoKey.currentContext;
+    final thirdContext = _stepThreeKey.currentContext;
+
+    if (secondContext != null) {
+      final secondBox = secondContext.findRenderObject() as RenderBox?;
+      if (secondBox != null &&
+          secondBox.localToGlobal(Offset.zero).dy <= 260.0) {
+        nextStep = 2;
+      }
+    }
+    if (thirdContext != null) {
+      final thirdBox = thirdContext.findRenderObject() as RenderBox?;
+      if (thirdBox != null && thirdBox.localToGlobal(Offset.zero).dy <= 260.0) {
+        nextStep = 3;
+      }
+    }
+
+    if (_currentStep != nextStep) {
+      setState(() => _currentStep = nextStep);
+    }
+  }
+
+  Future<void> _goToStep(int step) async {
+    final targetKey = switch (step) {
+      2 => _stepTwoKey,
+      3 => _stepThreeKey,
+      _ => _stepOneKey,
+    };
+    final targetContext = targetKey.currentContext;
+    if (targetContext == null) return;
+
+    setState(() => _currentStep = step);
+    await Scrollable.ensureVisible(
+      targetContext,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+      alignment: 0.08,
     );
   }
 
@@ -143,84 +144,131 @@ class _RegistrarContratoPageWidgetState
     BuildContext context, {
     required String number,
     required String label,
+    required bool active,
+    required bool completed,
+    required VoidCallback onTap,
   }) {
     final theme = FlutterFlowTheme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(999.0),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 24.0,
-            height: 24.0,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(999.0),
-            ),
-            child: Center(
-              child: Text(
-                number,
-                style: theme.labelSmall.override(
-                  font: GoogleFonts.manrope(
-                    fontWeight: FontWeight.w800,
-                    fontStyle: theme.labelSmall.fontStyle,
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 30.0,
+                  height: 30.0,
+                  decoration: BoxDecoration(
+                    color: active || completed
+                        ? theme.primary
+                        : const Color(0xFFE8EEF5),
+                    shape: BoxShape.circle,
                   ),
-                  color: theme.primary,
-                  letterSpacing: 0.0,
+                  child: Center(
+                    child: completed
+                        ? const Icon(
+                            Icons.check_rounded,
+                            color: Colors.white,
+                            size: 17.0,
+                          )
+                        : Text(
+                            number,
+                            style: theme.labelMedium.override(
+                              font: GoogleFonts.manrope(
+                                fontWeight: FontWeight.w800,
+                              ),
+                              color:
+                                  active ? Colors.white : theme.secondaryText,
+                              letterSpacing: 0.0,
+                            ),
+                          ),
+                  ),
                 ),
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    height: 2.0,
+                    color: active || completed
+                        ? theme.primary
+                        : const Color(0xFFE1E8F0),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8.0),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.labelMedium.override(
+                font: GoogleFonts.manrope(fontWeight: FontWeight.w700),
+                color: active || completed
+                    ? theme.primaryText
+                    : theme.secondaryText,
+                letterSpacing: 0.0,
               ),
             ),
-          ),
-          const SizedBox(width: 8.0),
-          Text(
-            label,
-            style: theme.labelMedium.override(
-              font: GoogleFonts.manrope(
-                fontWeight: FontWeight.w800,
-                fontStyle: theme.labelMedium.fontStyle,
-              ),
-              color: theme.info,
-              letterSpacing: 0.0,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildSectionHeader(
     BuildContext context, {
+    Key? key,
     required String number,
     required String title,
     required String subtitle,
     required IconData icon,
   }) {
     final theme = FlutterFlowTheme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(18.0),
-      decoration: BoxDecoration(
-        color: theme.accent4,
-        borderRadius: BorderRadius.circular(24.0),
-        border: Border.all(color: theme.alternate),
-      ),
+    return Padding(
+      key: key,
+      padding: const EdgeInsets.only(top: 10.0, bottom: 4.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 44.0,
-            height: 44.0,
+            width: 42.0,
+            height: 42.0,
             decoration: BoxDecoration(
-              color: theme.accent1,
-              borderRadius: BorderRadius.circular(14.0),
-            ),
-            child: Icon(
-              icon,
               color: theme.primary,
-              size: 22.0,
+              borderRadius: BorderRadius.circular(13.0),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(icon, color: Colors.white, size: 21.0),
+                Positioned(
+                  right: 3.0,
+                  bottom: 2.0,
+                  child: Container(
+                    width: 15.0,
+                    height: 15.0,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: theme.primary, width: 1.5),
+                    ),
+                    child: Center(
+                      child: Text(
+                        number,
+                        style: const TextStyle(
+                          color: Color(0xFF19618F),
+                          fontSize: 8.0,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(width: 14.0),
@@ -229,14 +277,14 @@ class _RegistrarContratoPageWidgetState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Etapa ',
+                  'ETAPA $number',
                   style: theme.labelMedium.override(
                     font: GoogleFonts.manrope(
                       fontWeight: FontWeight.w800,
                       fontStyle: theme.labelMedium.fontStyle,
                     ),
                     color: theme.primary,
-                    letterSpacing: 0.2,
+                    letterSpacing: 0.8,
                   ),
                 ),
                 const SizedBox(height: 4.0),
@@ -247,7 +295,7 @@ class _RegistrarContratoPageWidgetState
                       fontWeight: FontWeight.w700,
                       fontStyle: theme.titleLarge.fontStyle,
                     ),
-                    letterSpacing: -0.2,
+                    letterSpacing: -0.3,
                   ),
                 ),
                 const SizedBox(height: 6.0),
@@ -260,7 +308,7 @@ class _RegistrarContratoPageWidgetState
                     ),
                     color: theme.secondaryText,
                     letterSpacing: 0.0,
-                    lineHeight: 1.35,
+                    lineHeight: 1.3,
                   ),
                 ),
               ],
@@ -275,6 +323,7 @@ class _RegistrarContratoPageWidgetState
   void initState() {
     super.initState();
     _model = createModel(context, () => RegistrarContratoPageModel());
+    _scrollController.addListener(_updateCurrentStep);
 
     _model.contratanteTextController ??=
         TextEditingController(text: widget.contrato?.contratante);
@@ -404,6 +453,7 @@ class _RegistrarContratoPageWidgetState
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _model.dispose();
 
     super.dispose();
@@ -421,168 +471,189 @@ class _RegistrarContratoPageWidgetState
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: theme.primaryBackground,
+        backgroundColor: const Color(0xFFF4F7FA),
         appBar: AppBar(
-          backgroundColor: theme.secondaryBackground,
+          backgroundColor: const Color(0xFFF4F7FA),
           automaticallyImplyLeading: false,
           leading: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.only(left: 12.0, top: 7.0, bottom: 7.0),
             child: FlutterFlowIconButton(
-              borderColor: theme.alternate,
-              borderRadius: 18.0,
-              borderWidth: 1.0,
-              fillColor: theme.secondaryBackground,
-              buttonSize: 48.0,
+              borderColor: Colors.transparent,
+              borderRadius: 14.0,
+              borderWidth: 0.0,
+              fillColor: Colors.white,
+              buttonSize: 44.0,
               icon: FaIcon(
                 FontAwesomeIcons.angleLeft,
                 color: theme.primaryText,
-                size: 22.0,
+                size: 19.0,
               ),
               onPressed: () async {
                 context.pop();
               },
             ),
           ),
-          title: ClipRRect(
-            borderRadius: BorderRadius.circular(18.0),
-            child: Image.asset(
-              'assets/images/Design_sem_nome_(37).png',
-              width: 150.0,
-              height: 42.0,
-              fit: BoxFit.contain,
-              alignment: const Alignment(0.0, 0.0),
+          title: Text(
+            widget.contrato == null ? 'Novo contrato' : 'Editar contrato',
+            style: theme.titleMedium.override(
+              font: GoogleFonts.sora(fontWeight: FontWeight.w700),
+              color: theme.primaryText,
+              letterSpacing: -0.2,
             ),
           ),
           actions: const [],
-          centerTitle: true,
+          centerTitle: false,
           elevation: 0.0,
+          surfaceTintColor: Colors.transparent,
         ),
         body: Container(
           width: double.infinity,
           height: double.infinity,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                theme.primaryBackground,
-                const Color(0xFFEAF2FB),
-              ],
-              begin: const AlignmentDirectional(-1.0, -1.0),
-              end: const AlignmentDirectional(1.0, 1.0),
-            ),
+            color: const Color(0xFFF4F7FA),
           ),
           child: RepaintBoundary(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20.0, 12.0, 20.0, 32.0),
+              controller: _scrollController,
+              padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 32.0),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 980.0),
+                  constraints: const BoxConstraints(maxWidth: 860.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Container(
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.primary,
-                              const Color(0xFF4E88BC),
-                            ],
-                            begin: const AlignmentDirectional(-1.0, -1.0),
-                            end: const AlignmentDirectional(1.0, 1.0),
-                          ),
-                          borderRadius: BorderRadius.circular(28.0),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24.0),
+                          border: Border.all(color: const Color(0xFFE4EAF1)),
                         ),
-                        padding: const EdgeInsets.all(22.0),
+                        padding: const EdgeInsets.all(20.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.14),
-                                borderRadius: BorderRadius.circular(999.0),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12.0,
-                                vertical: 8.0,
-                              ),
-                              child: Text(
-                                widget.contrato == null
-                                    ? 'Novo cadastro'
-                                    : 'Editar contrato',
-                                style: theme.labelLarge.override(
-                                  font: GoogleFonts.manrope(
-                                    fontWeight: FontWeight.w800,
-                                    fontStyle: theme.labelLarge.fontStyle,
+                            Row(
+                              children: [
+                                Container(
+                                  width: 48.0,
+                                  height: 48.0,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE7F1F8),
+                                    borderRadius: BorderRadius.circular(15.0),
                                   ),
-                                  color: theme.info,
-                                  letterSpacing: 0.0,
+                                  child: Icon(
+                                    Icons.description_outlined,
+                                    color: theme.primary,
+                                    size: 24.0,
+                                  ),
                                 ),
-                              ),
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 11.0,
+                                    vertical: 7.0,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFEAF7EF),
+                                    borderRadius: BorderRadius.circular(99.0),
+                                  ),
+                                  child: Text(
+                                    widget.contrato == null
+                                        ? 'NOVO CADASTRO'
+                                        : 'EM EDIÇÃO',
+                                    style: theme.labelSmall.override(
+                                      font: GoogleFonts.manrope(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                      color: const Color(0xFF247348),
+                                      letterSpacing: 0.7,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 16.0),
                             Text(
-                              'Registrar contrato com mais clareza e menos atrito.',
+                              widget.contrato == null
+                                  ? 'Vamos criar um novo contrato'
+                                  : 'Revise os dados do contrato',
                               style: theme.headlineSmall.override(
                                 font: GoogleFonts.sora(
                                   fontWeight: FontWeight.w700,
                                   fontStyle: theme.headlineSmall.fontStyle,
                                 ),
-                                color: theme.info,
-                                letterSpacing: -0.3,
+                                color: theme.primaryText,
+                                letterSpacing: -0.5,
                               ),
                             ),
-                            const SizedBox(height: 10.0),
+                            const SizedBox(height: 7.0),
                             Text(
-                              'Organizamos o preenchimento por etapas para facilitar a leitura e reduzir erros durante o cadastro.',
+                              'Preencha as três etapas abaixo. Você poderá revisar tudo antes de gerar o documento.',
                               style: theme.bodyMedium.override(
                                 font: GoogleFonts.manrope(
                                   fontWeight: FontWeight.w600,
                                   fontStyle: theme.bodyMedium.fontStyle,
                                 ),
-                                color: Colors.white.withValues(alpha: 0.86),
+                                color: theme.secondaryText,
                                 letterSpacing: 0.0,
                                 lineHeight: 1.4,
                               ),
                             ),
-                            const SizedBox(height: 18.0),
-                            Wrap(
-                              spacing: 10.0,
-                              runSpacing: 10.0,
+                            const SizedBox(height: 22.0),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 _buildStepChip(
                                   context,
                                   number: '1',
                                   label: 'Contratante',
+                                  active: _currentStep == 1,
+                                  completed: _currentStep > 1,
+                                  onTap: () => _goToStep(1),
                                 ),
+                                const SizedBox(width: 8.0),
                                 _buildStepChip(
                                   context,
                                   number: '2',
-                                  label: 'Aluno e curso',
+                                  label: 'Aluno',
+                                  active: _currentStep == 2,
+                                  completed: _currentStep > 2,
+                                  onTap: () => _goToStep(2),
                                 ),
+                                const SizedBox(width: 8.0),
                                 _buildStepChip(
                                   context,
                                   number: '3',
                                   label: 'Pagamento',
+                                  active: _currentStep == 3,
+                                  completed: false,
+                                  onTap: () => _goToStep(3),
                                 ),
                               ],
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 18.0),
+                      const SizedBox(height: 12.0),
                       Container(
                         decoration: BoxDecoration(
                           color: theme.secondaryBackground,
-                          borderRadius: BorderRadius.circular(28.0),
-                          border: Border.all(color: theme.alternate),
+                          borderRadius: BorderRadius.circular(24.0),
+                          border: Border.all(color: const Color(0xFFE4EAF1)),
                           boxShadow: const [
                             BoxShadow(
-                              blurRadius: 20.0,
-                              color: Color(0x120F2237),
-                              offset: Offset(0.0, 12.0),
+                              blurRadius: 24.0,
+                              color: Color(0x0A0F2237),
+                              offset: Offset(0.0, 8.0),
                             ),
                           ],
                         ),
-                        padding: const EdgeInsets.all(20.0),
+                        padding: const EdgeInsets.fromLTRB(
+                          20.0,
+                          18.0,
+                          20.0,
+                          22.0,
+                        ),
                         child: RepaintBoundary(
                           child: Form(
                             key: _model.formKey,
@@ -594,6 +665,7 @@ class _RegistrarContratoPageWidgetState
                               children: [
                                 _buildSectionHeader(
                                   context,
+                                  key: _stepOneKey,
                                   number: '1',
                                   title: 'Dados do contratante',
                                   subtitle:
@@ -2756,6 +2828,7 @@ class _RegistrarContratoPageWidgetState
                                 ),
                                 _buildSectionHeader(
                                   context,
+                                  key: _stepTwoKey,
                                   number: '2',
                                   title: 'Aluno e curso',
                                   subtitle:
@@ -3777,6 +3850,7 @@ class _RegistrarContratoPageWidgetState
                                 ),
                                 _buildSectionHeader(
                                   context,
+                                  key: _stepThreeKey,
                                   number: '3',
                                   title: 'Condições do contrato',
                                   subtitle:
@@ -4922,10 +4996,6 @@ class _RegistrarContratoPageWidgetState
                                                   .primary,
                                         ),
                                       );
-                                      await _showAutentiqueResponseDialog(
-                                        title: 'Resposta da Autentique',
-                                        payload: responseData,
-                                      );
                                     } on FirebaseFunctionsException catch (e) {
                                       if (!context.mounted) return;
                                       ScaffoldMessenger.of(context)
@@ -4940,16 +5010,6 @@ class _RegistrarContratoPageWidgetState
                                                   .error,
                                         ),
                                       );
-                                      await _showAutentiqueResponseDialog(
-                                        title:
-                                            'Erro ao enviar para a Autentique',
-                                        payload: {
-                                          'status': 'error',
-                                          'code': e.code,
-                                          'message': e.message,
-                                          'details': e.details,
-                                        },
-                                      );
                                     } catch (e) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
@@ -4960,14 +5020,6 @@ class _RegistrarContratoPageWidgetState
                                               FlutterFlowTheme.of(context)
                                                   .error,
                                         ),
-                                      );
-                                      await _showAutentiqueResponseDialog(
-                                        title:
-                                            'Erro ao enviar para a Autentique',
-                                        payload: {
-                                          'status': 'error',
-                                          'message': e.toString(),
-                                        },
                                       );
                                     }
                                   }
