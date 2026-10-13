@@ -1,27 +1,21 @@
-import 'dart:ui';
-
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/components/drawer/drawer_widget.dart';
-import '/flutter_flow/background_scene_support.dart';
-import '/flutter_flow/flutter_flow_animations.dart';
-import '/flutter_flow/flutter_flow_icon_button.dart';
+import '/custom_code/contrato_consulta.dart';
+import '/custom_code/contrato_validacao.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'contratos_page_model.dart';
 export 'contratos_page_model.dart';
 
 class ContratosPageWidget extends StatefulWidget {
-  const ContratosPageWidget({super.key});
+  const ContratosPageWidget({super.key, this.filtroInicial = 'todos'});
+
+  final String filtroInicial;
 
   static String routeName = 'ContratosPage';
   static String routePath = '/contratosPage';
@@ -30,89 +24,113 @@ class ContratosPageWidget extends StatefulWidget {
   State<ContratosPageWidget> createState() => _ContratosPageWidgetState();
 }
 
-class _ContratosPageWidgetState extends State<ContratosPageWidget>
-    with TickerProviderStateMixin {
+class _ContratosPageWidgetState extends State<ContratosPageWidget> {
   late ContratosPageModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final _cidadeController = TextEditingController();
 
-  final animationsMap = <String, AnimationInfo>{};
-
-  WebViewController? _backgroundSceneController;
+  String _filtro = 'todos';
+  int _limite = 40;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => ContratosPageModel());
+    _filtro = widget.filtroInicial;
 
     _model.pesquisarPorCidadeTextController ??= TextEditingController();
     _model.pesquisarPorCidadeFocusNode ??= FocusNode();
-
-    if (supportsBackgroundScene3D) {
-      _backgroundSceneController = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setBackgroundColor(Colors.transparent)
-        ..loadFlutterAsset('assets/web3d/ambient_scene.html');
-    }
-
-    animationsMap.addAll({
-      'containerOnPageLoadAnimation': AnimationInfo(
-        trigger: AnimationTrigger.onPageLoad,
-        effectsBuilder: () => [
-          FadeEffect(
-            curve: Curves.easeInOut,
-            delay: 0.0.ms,
-            duration: 600.0.ms,
-            begin: 0.0,
-            end: 1.0,
-          ),
-          MoveEffect(
-            curve: Curves.easeOut,
-            delay: 0.0.ms,
-            duration: 600.0.ms,
-            begin: const Offset(0.0, 32.0),
-            end: const Offset(0.0, 0.0),
-          ),
-        ],
-      ),
-    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
 
   @override
   void dispose() {
+    _cidadeController.dispose();
     _model.dispose();
 
     super.dispose();
   }
 
-  InputDecoration _searchDecoration(BuildContext context) {
+  void _atualizarBusca() {
+    EasyDebounce.debounce(
+      'busca-contratos',
+      const Duration(milliseconds: 350),
+      () {
+        if (mounted) safeSetState(() => _limite = 40);
+      },
+    );
+  }
+
+  Query _consulta(Query contratoRecord) {
+    final consulta = montarConsulta(
+      admin: currentUserDocument?.isAdmin == true,
+      filtro: _filtro,
+      termo: _model.pesquisarPorCidadeTextController?.text ?? '',
+      cidade: _cidadeController.text,
+    );
+    var query = contratoRecord;
+    if (consulta.restringeCriador) {
+      query = query.where('criador', isEqualTo: currentUserReference);
+    }
+    for (final igualdade in consulta.igualdades) {
+      query = query.where(igualdade.campo, isEqualTo: igualdade.valor);
+    }
+    final prefixo = consulta.prefixo;
+    if (consulta.prefixoCampo != null && prefixo != null && prefixo.isNotEmpty) {
+      query = query
+          .where(consulta.prefixoCampo!, isGreaterThanOrEqualTo: prefixo)
+          .where(consulta.prefixoCampo!, isLessThanOrEqualTo: '$prefixo\uf8ff');
+    }
+    if (consulta.ordenar) {
+      query = query.orderBy(consulta.ordenarPor, descending: consulta.descendente);
+    }
+    return query;
+  }
+
+  bool _mostrar(ContratoRecord contrato) {
+    final consulta = montarConsulta(
+      admin: currentUserDocument?.isAdmin == true,
+      filtro: _filtro,
+      termo: _model.pesquisarPorCidadeTextController?.text ?? '',
+      cidade: _cidadeController.text,
+    );
+    return passaFiltroLocal(
+      filtro: consulta.filtroLocal,
+      assinado: contrato.contratoAssinado,
+      enviado: contrato.autentiqueId.isNotEmpty ||
+          contrato.autentiqueStatus == 'enviado',
+      cidadeContrato: contrato.cidade,
+      cidadeBusca: _cidadeController.text,
+      filtrarCidadeLocal: consulta.filtrarCidadeLocal,
+    );
+  }
+
+  InputDecoration _searchDecoration(
+    BuildContext context, {
+    required String label,
+    required IconData icon,
+    required bool mostrarLimpar,
+    required VoidCallback aoLimpar,
+  }) {
     final theme = FlutterFlowTheme.of(context);
 
     return InputDecoration(
-      labelText: 'Pesquisar por cidade',
+      labelText: label,
       labelStyle: theme.labelMedium.override(
-        font: GoogleFonts.manrope(
-          fontWeight: FontWeight.w600,
-          fontStyle: theme.labelMedium.fontStyle,
-        ),
         color: theme.secondaryText,
-        letterSpacing: 0.0,
       ),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.9),
+      fillColor: theme.secondaryBackground,
       prefixIcon: Icon(
-        Icons.location_on_outlined,
-        color: theme.primary,
-        size: 22.0,
+        icon,
+        color: theme.secondaryText,
+        size: 20.0,
       ),
-      suffixIcon: _model.pesquisarPorCidadeTextController!.text.isNotEmpty
+      suffixIcon: mostrarLimpar
           ? InkWell(
-              onTap: () async {
-                _model.pesquisarPorCidadeTextController?.clear();
-                safeSetState(() {});
-              },
+              onTap: aoLimpar,
               child: Icon(
                 Icons.close_rounded,
                 color: theme.secondaryText,
@@ -122,23 +140,23 @@ class _ContratosPageWidgetState extends State<ContratosPageWidget>
           : null,
       enabledBorder: OutlineInputBorder(
         borderSide: BorderSide(color: theme.alternate),
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(14.0),
       ),
       focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(color: theme.primary, width: 1.3),
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(14.0),
       ),
       errorBorder: OutlineInputBorder(
         borderSide: BorderSide(color: theme.error),
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(14.0),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderSide: BorderSide(color: theme.error, width: 1.3),
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(14.0),
       ),
       contentPadding: const EdgeInsets.symmetric(
-        horizontal: 18.0,
-        vertical: 18.0,
+        horizontal: 12.0,
+        vertical: 12.0,
       ),
     );
   }
@@ -149,82 +167,94 @@ class _ContratosPageWidgetState extends State<ContratosPageWidget>
   ) {
     final theme = FlutterFlowTheme.of(context);
 
-    return InkWell(
-      splashColor: Colors.transparent,
-      focusColor: Colors.transparent,
-      hoverColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      borderRadius: BorderRadius.circular(24.0),
-      onTap: () async {
-        context.pushNamed(
-          VerContratoPageWidget.routeName,
-          queryParameters: {
-            'contrato': serializeParam(
-              contrato,
-              ParamType.Document,
-            ),
-            'contratoAssinado': serializeParam(
-              contrato.contratoAssinado,
-              ParamType.bool,
-            ),
-            'contratoTestemunha': serializeParam(
-              contrato.contratoTestemunha,
-              ParamType.bool,
-            ),
-            'nomeTxt': serializeParam(
-              contrato.contratante,
-              ParamType.String,
-            ),
-          }.withoutNulls,
-          extra: <String, dynamic>{
-            'contrato': contrato,
-          },
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.secondaryBackground,
-          borderRadius: BorderRadius.circular(24.0),
-          border: Border.all(color: theme.alternate),
-          boxShadow: const [
-            BoxShadow(
-              blurRadius: 22.0,
-              color: Color(0x120F2237),
-              offset: Offset(0.0, 12.0),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(18.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+    final situacao = seloSituacao(
+      assinado: contrato.contratoAssinado,
+      testemunha: contrato.contratoTestemunha,
+      enviado: contrato.autentiqueId.isNotEmpty ||
+          contrato.autentiqueStatus == 'enviado',
+      temPdf: contrato.pdf.isNotEmpty || contrato.signedUrl.isNotEmpty,
+    );
+    final corSituacao = contrato.contratoAssinado
+        ? theme.success
+        : contrato.autentiqueStatus == 'enviado'
+            ? theme.primary
+            : theme.warning;
+
+    return Container(
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(16.0)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x0F1B2836),
+            blurRadius: 16.0,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: theme.secondaryBackground,
+        borderRadius: BorderRadius.circular(16.0),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () async {
+          context.pushNamed(
+            VerContratoPageWidget.routeName,
+            queryParameters: {
+              'contrato': serializeParam(
+                contrato,
+                ParamType.Document,
+              ),
+              'contratoAssinado': serializeParam(
+                contrato.contratoAssinado,
+                ParamType.bool,
+              ),
+              'contratoTestemunha': serializeParam(
+                contrato.contratoTestemunha,
+                ParamType.bool,
+              ),
+              'nomeTxt': serializeParam(
+                contrato.contratante,
+                ParamType.String,
+              ),
+            }.withoutNulls,
+            extra: <String, dynamic>{
+              'contrato': contrato,
+            },
+          );
+        },
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
               children: [
-                Container(
-                  width: 56.0,
-                  height: 56.0,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: contrato.contratoAssinado
-                          ? theme.success
-                          : theme.warning,
-                      width: 2.5,
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(2.5),
-                  child: ClipOval(
-                    child: Image.network(
-                      valueOrDefault<String>(
-                        contrato.fotoCliente,
-                        'https://images.vexels.com/content/137047/preview/user-profile-blue-icon-32113c.png',
-                      ),
-                      fit: BoxFit.cover,
-                    ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12.0),
+                  child: SizedBox(
+                    width: 48.0,
+                    height: 48.0,
+                    child: contrato.fotoCliente.isEmpty
+                        ? ColoredBox(
+                            color: theme.accent4,
+                            child: Icon(
+                              Icons.person,
+                              color: theme.secondaryText,
+                              size: 22.0,
+                            ),
+                          )
+                        : CachedNetworkImage(
+                            imageUrl: contrato.fotoCliente,
+                            fit: BoxFit.cover,
+                            errorWidget: (context, url, error) => ColoredBox(
+                              color: theme.accent4,
+                              child: Icon(
+                                Icons.person,
+                                color: theme.secondaryText,
+                                size: 22.0,
+                              ),
+                            ),
+                          ),
                   ),
                 ),
-                const SizedBox(width: 14.0),
+                const SizedBox(width: 12.0),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,168 +263,53 @@ class _ContratosPageWidgetState extends State<ContratosPageWidget>
                         contrato.contratante,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.titleLarge.override(
-                          font: GoogleFonts.sora(
-                            fontWeight: FontWeight.w700,
-                            fontStyle: theme.titleLarge.fontStyle,
-                          ),
-                          letterSpacing: -0.2,
-                        ),
+                        style: theme.titleSmall,
                       ),
-                      const SizedBox(height: 3.0),
+                      const SizedBox(height: 2.0),
                       Text(
-                        valueOrDefault<String>(contrato.tipo, 'N/A'),
+                        [
+                          if (contrato.numeroDoc > 0)
+                            'Nº ${contrato.numeroDoc}',
+                          if (contrato.cidade.isNotEmpty) contrato.cidade,
+                          if (contrato.documento.isNotEmpty)
+                            contrato.documento,
+                        ].join('  ·  '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.bodyMedium.override(
-                          font: GoogleFonts.manrope(
-                            fontWeight: FontWeight.w700,
-                            fontStyle: theme.bodyMedium.fontStyle,
-                          ),
+                        style: theme.bodySmall.override(
                           color: theme.secondaryText,
-                          letterSpacing: 0.0,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 10.0),
-                Container(
-                  width: 38.0,
-                  height: 38.0,
-                  decoration: BoxDecoration(
-                    color: theme.accent4,
-                    borderRadius: BorderRadius.circular(14.0),
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    color: theme.primary,
-                    size: 20.0,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14.0),
-            Wrap(
-              spacing: 8.0,
-              runSpacing: 8.0,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: contrato.contratoAssinado
-                        ? theme.success.withValues(alpha: 0.12)
-                        : theme.warning.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(999.0),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10.0,
-                    vertical: 6.0,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        contrato.contratoAssinado
-                            ? Icons.check_circle_rounded
-                            : Icons.schedule_rounded,
-                        color: contrato.contratoAssinado
-                            ? theme.success
-                            : theme.warning,
-                        size: 14.0,
-                      ),
-                      const SizedBox(width: 5.0),
-                      Text(
-                        contrato.contratoAssinado ? 'Assinado' : 'Pendente',
-                        style: theme.labelSmall.override(
-                          font: GoogleFonts.manrope(
-                            fontWeight: FontWeight.w800,
-                            fontStyle: theme.labelSmall.fontStyle,
-                          ),
-                          color: contrato.contratoAssinado
-                              ? theme.success
-                              : theme.warning,
-                          letterSpacing: 0.1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (contrato.numeroDoc > 0)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: theme.accent1,
-                      borderRadius: BorderRadius.circular(999.0),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10.0,
-                      vertical: 6.0,
-                    ),
-                    child: Text(
-                      'Nº ${contrato.numeroDoc}',
+                const SizedBox(width: 8.0),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      situacao,
                       style: theme.labelSmall.override(
-                        font: GoogleFonts.manrope(
-                          fontWeight: FontWeight.w800,
-                          fontStyle: theme.labelSmall.fontStyle,
-                        ),
-                        color: theme.primary,
-                        letterSpacing: 0.1,
-                      ),
-                    ),
-                  ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3F7FB),
-                    borderRadius: BorderRadius.circular(999.0),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10.0,
-                    vertical: 6.0,
-                  ),
-                  child: Text(
-                    dateTimeFormat(
-                      'd/M/y',
-                      contrato.criadoEm!,
-                      locale: FFLocalizations.of(context).languageCode,
-                    ),
-                    style: theme.labelSmall.override(
-                      font: GoogleFonts.manrope(
+                        color: corSituacao,
                         fontWeight: FontWeight.w700,
-                        fontStyle: theme.labelSmall.fontStyle,
                       ),
-                      color: theme.secondaryText,
-                      letterSpacing: 0.0,
                     ),
-                  ),
+                    if (contrato.criadoEm != null) ...[
+                      const SizedBox(height: 2.0),
+                      Text(
+                        dateTimeFormat(
+                          'd/M/y',
+                          contrato.criadoEm!,
+                          locale: FFLocalizations.of(context).languageCode,
+                        ),
+                        style: theme.labelSmall,
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
-            if (contrato.documento.isNotEmpty) ...[
-              const SizedBox(height: 14.0),
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: theme.accent4,
-                  borderRadius: BorderRadius.circular(18.0),
-                ),
-                padding: const EdgeInsets.all(14.0),
-                child: Text(
-                  contrato.documento,
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.bodyMedium.override(
-                    font: GoogleFonts.manrope(
-                      fontWeight: FontWeight.w600,
-                      fontStyle: theme.bodyMedium.fontStyle,
-                    ),
-                    color: theme.primaryText,
-                    letterSpacing: 0.0,
-                    lineHeight: 1.35,
-                  ),
-                ),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
@@ -420,328 +335,209 @@ class _ContratosPageWidgetState extends State<ContratosPageWidget>
             child: const DrawerWidget(),
           ),
         ),
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: ColoredBox(
-                color: theme.primaryBackground,
-                child: _backgroundSceneController == null
-                    ? const SizedBox.shrink()
-                    : IgnorePointer(
-                        child: WebViewWidget(
-                          controller: _backgroundSceneController!,
-                        ),
-                      ),
-              ),
-            ),
-            Positioned.fill(
-              child: IgnorePointer(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        theme.primaryBackground.withValues(alpha: 0.22),
-                        const Color(0xFFEAF2FB).withValues(alpha: 0.22),
-                        const Color(0xFFF8FBFF).withValues(alpha: 0.4),
-                      ],
-                      begin: const AlignmentDirectional(-1.0, -1.0),
-                      end: const AlignmentDirectional(1.0, 1.0),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            SafeArea(
+        body: SafeArea(
               child: Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20.0, 12.0, 20.0, 4.0),
-                    child: Row(
-                      children: [
-                        FlutterFlowIconButton(
-                          borderColor: theme.alternate,
-                          borderRadius: 18.0,
-                          borderWidth: 1.0,
-                          fillColor: Colors.white.withValues(alpha: 0.8),
-                          buttonSize: 48.0,
-                          icon: Icon(
-                            Icons.menu_rounded,
-                            color: theme.primaryText,
-                            size: 24.0,
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: theme.secondaryBackground,
+                      border: Border(
+                        bottom: BorderSide(color: theme.alternate),
+                      ),
+                    ),
+                    child: SizedBox(
+                      height: 60.0,
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: () =>
+                                scaffoldKey.currentState!.openDrawer(),
+                            icon: Icon(
+                              Icons.menu_rounded,
+                              color: theme.primaryText,
+                            ),
                           ),
-                          onPressed: () async {
-                            scaffoldKey.currentState!.openDrawer();
-                          },
-                        ),
-                        Expanded(
-                          child: Center(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10.0),
-                              child: Image.asset(
-                                'assets/images/sinatep_logo_color.png',
-                                height: 32.0,
-                                fit: BoxFit.contain,
+                          Image.asset(
+                            'assets/images/sinatep_logo_color.png',
+                            height: 28.0,
+                            fit: BoxFit.contain,
+                          ),
+                          const Spacer(),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
+                            child: FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: theme.primary,
+                                foregroundColor: Colors.white,
+                                elevation: 0.0,
+                                minimumSize: const Size(0.0, 36.0),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14.0,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                              ),
+                              onPressed: () async {
+                                context.pushNamed(
+                                  RegistrarContratoPageWidget.routeName,
+                                );
+                              },
+                              child: Text(
+                                'Novo contrato',
+                                style: theme.titleSmall.override(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 48.0),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   Expanded(
-                    child: SingleChildScrollView(
+                    child: ColoredBox(
+                      color: theme.primaryBackground,
+                      child: SingleChildScrollView(
                       padding:
                           const EdgeInsets.fromLTRB(20.0, 12.0, 20.0, 20.0),
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 960.0),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      theme.primary,
-                                      const Color(0xFF4E88BC),
-                                    ],
-                                    begin:
-                                        const AlignmentDirectional(-1.0, -1.0),
-                                    end: const AlignmentDirectional(1.0, 1.0),
-                                  ),
-                                  borderRadius: BorderRadius.circular(28.0),
-                                ),
-                                padding: const EdgeInsets.all(22.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.14),
-                                        borderRadius:
-                                            BorderRadius.circular(999.0),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12.0,
-                                        vertical: 8.0,
-                                      ),
-                                      child: Text(
-                                        'Painel de contratos',
-                                        style: theme.labelLarge.override(
-                                          font: GoogleFonts.manrope(
-                                            fontWeight: FontWeight.w800,
-                                            fontStyle:
-                                                theme.labelLarge.fontStyle,
-                                          ),
-                                          color: theme.info,
-                                          letterSpacing: 0.0,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16.0),
-                                    Text(
-                                      'Visualize e gerencie os registros mais recentes.',
-                                      style: theme.headlineSmall.override(
-                                        font: GoogleFonts.sora(
-                                          fontWeight: FontWeight.w700,
-                                          fontStyle:
-                                              theme.headlineSmall.fontStyle,
-                                        ),
-                                        color: theme.info,
-                                        letterSpacing: -0.3,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10.0),
-                                    Text(
-                                      'A busca e o acesso aos detalhes continuam iguais, mas com leitura mais rápida e organização melhor.',
-                                      style: theme.bodyMedium.override(
-                                        font: GoogleFonts.manrope(
-                                          fontWeight: FontWeight.w600,
-                                          fontStyle: theme.bodyMedium.fontStyle,
-                                        ),
-                                        color: Colors.white
-                                            .withValues(alpha: 0.86),
-                                        letterSpacing: 0.0,
-                                        lineHeight: 1.4,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20.0),
-                                    FFButtonWidget(
-                                      onPressed: () async {
-                                        context.pushNamed(
-                                          RegistrarContratoPageWidget.routeName,
-                                        );
-                                      },
-                                      text: 'Novo registro',
-                                      icon: const FaIcon(
-                                        FontAwesomeIcons.plus,
-                                        size: 16.0,
-                                      ),
-                                      options: FFButtonOptions(
-                                        width: 200.0,
-                                        height: 50.0,
-                                        padding: const EdgeInsetsDirectional
-                                            .fromSTEB(
-                                          22.0,
-                                          0.0,
-                                          22.0,
-                                          0.0,
-                                        ),
-                                        iconPadding: const EdgeInsetsDirectional
-                                            .fromSTEB(
-                                          0.0,
-                                          0.0,
-                                          8.0,
-                                          0.0,
-                                        ),
-                                        iconColor: theme.primary,
-                                        color: Colors.white,
-                                        textStyle: theme.titleSmall.override(
-                                          font: GoogleFonts.manrope(
-                                            fontWeight: FontWeight.w800,
-                                            fontStyle:
-                                                theme.titleSmall.fontStyle,
-                                          ),
-                                          color: theme.primary,
-                                          letterSpacing: 0.0,
-                                        ),
-                                        elevation: 0.0,
-                                        borderSide: BorderSide(
-                                          color: Colors.white,
-                                          width: 1.0,
-                                        ),
-                                        borderRadius:
-                                            BorderRadius.circular(18.0),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ).animateOnPageLoad(
-                                animationsMap['containerOnPageLoadAnimation']!,
-                              ),
-                              const SizedBox(height: 18.0),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(28.0),
-                                child: BackdropFilter(
-                                  filter: ImageFilter.blur(
-                                      sigmaX: 20.0, sigmaY: 20.0),
-                                  child: Container(
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.68),
-                                      borderRadius: BorderRadius.circular(28.0),
-                                      border: Border.all(
-                                        color:
-                                            Colors.white.withValues(alpha: 0.7),
-                                      ),
-                                    ),
-                                    padding: const EdgeInsets.all(20.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
                                         Text(
-                                          'Últimos contratos',
-                                          style: theme.titleLarge.override(
-                                            font: GoogleFonts.sora(
-                                              fontWeight: FontWeight.w700,
-                                              fontStyle:
-                                                  theme.titleLarge.fontStyle,
-                                            ),
-                                            letterSpacing: -0.2,
-                                          ),
+                                          'Contratos',
+                                          style: theme.headlineSmall,
                                         ),
-                                        const SizedBox(height: 6.0),
-                                        Text(
-                                          'Filtre por cidade para localizar registros mais rápido.',
-                                          style: theme.bodyMedium.override(
-                                            font: GoogleFonts.manrope(
-                                              fontWeight: FontWeight.w600,
-                                              fontStyle:
-                                                  theme.bodyMedium.fontStyle,
-                                            ),
-                                            color: theme.secondaryText,
-                                            letterSpacing: 0.0,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 18.0),
+                                        const SizedBox(height: 12.0),
                                         TextFormField(
                                           controller: _model
                                               .pesquisarPorCidadeTextController,
                                           focusNode: _model
                                               .pesquisarPorCidadeFocusNode,
-                                          onChanged: (_) =>
-                                              EasyDebounce.debounce(
-                                            '_model.pesquisarPorCidadeTextController',
-                                            const Duration(milliseconds: 2000),
-                                            () => safeSetState(() {}),
-                                          ),
+                                          onChanged: (_) => _atualizarBusca(),
                                           autofocus: false,
-                                          autofillHints: const [
-                                            AutofillHints.addressCity
-                                          ],
                                           textCapitalization:
                                               TextCapitalization.words,
                                           textInputAction: TextInputAction.next,
                                           obscureText: false,
-                                          decoration:
-                                              _searchDecoration(context),
-                                          style: theme.bodyLarge.override(
-                                            font: GoogleFonts.manrope(
-                                              fontWeight: FontWeight.w600,
-                                              fontStyle:
-                                                  theme.bodyLarge.fontStyle,
-                                            ),
-                                            letterSpacing: 0.0,
+                                          decoration: _searchDecoration(
+                                            context,
+                                            label: 'Nome, CPF ou número',
+                                            icon: Icons.search_rounded,
+                                            mostrarLimpar: _model
+                                                    .pesquisarPorCidadeTextController
+                                                    ?.text
+                                                    .isNotEmpty ??
+                                                false,
+                                            aoLimpar: () {
+                                              _model.pesquisarPorCidadeTextController
+                                                  ?.clear();
+                                              safeSetState(() => _limite = 40);
+                                            },
                                           ),
-                                          keyboardType:
-                                              TextInputType.streetAddress,
-                                          validator: _model
-                                              .pesquisarPorCidadeTextControllerValidator
-                                              .asValidator(context),
-                                          inputFormatters: [
-                                            if (!isAndroid && !isiOS)
-                                              TextInputFormatter.withFunction(
-                                                (oldValue, newValue) {
-                                                  return TextEditingValue(
-                                                    selection:
-                                                        newValue.selection,
-                                                    text: newValue.text
-                                                        .toCapitalization(
-                                                      TextCapitalization.words,
+                                          style: theme.bodyLarge,
+                                        ),
+                                        const SizedBox(height: 12.0),
+                                        TextFormField(
+                                          controller: _cidadeController,
+                                          onChanged: (_) => _atualizarBusca(),
+                                          textCapitalization:
+                                              TextCapitalization.words,
+                                          decoration: _searchDecoration(
+                                            context,
+                                            label: 'Cidade',
+                                            icon: Icons.location_on_outlined,
+                                            mostrarLimpar: _cidadeController
+                                                .text.isNotEmpty,
+                                            aoLimpar: () {
+                                              _cidadeController.clear();
+                                              safeSetState(() => _limite = 40);
+                                            },
+                                          ),
+                                          style: theme.bodyLarge,
+                                        ),
+                                        const SizedBox(height: 4.0),
+                                        SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          child: Row(
+                                            children: [
+                                              for (final item in const [
+                                                ['todos', 'Todos'],
+                                                ['pendentes', 'Pendentes'],
+                                                ['enviados', 'Enviados'],
+                                                ['assinados', 'Assinados'],
+                                              ])
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                    right: 8.0,
+                                                  ),
+                                                  child: InkWell(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                      20.0,
                                                     ),
-                                                  );
-                                                },
-                                              ),
-                                          ],
+                                                    onTap: () =>
+                                                        safeSetState(() {
+                                                      _filtro = item[0];
+                                                      _limite = 40;
+                                                    }),
+                                                    child: Container(
+                                                      padding:
+                                                          const EdgeInsets
+                                                              .symmetric(
+                                                        horizontal: 14.0,
+                                                        vertical: 8.0,
+                                                      ),
+                                                      decoration:
+                                                          BoxDecoration(
+                                                        color: _filtro ==
+                                                                item[0]
+                                                            ? theme.primary
+                                                            : theme
+                                                                .secondaryBackground,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                          20.0,
+                                                        ),
+                                                        border: Border.all(
+                                                          color: _filtro ==
+                                                                  item[0]
+                                                              ? theme.primary
+                                                              : theme.alternate,
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        item[1],
+                                                        style: theme.titleSmall
+                                                            .override(
+                                                          color: _filtro ==
+                                                                  item[0]
+                                                              ? Colors.white
+                                                              : theme
+                                                                  .secondaryText,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
                                         ),
-                                        const SizedBox(height: 18.0),
-                                        SizedBox(
-                                          height: 0.0,
-                                          width: double.infinity,
-                                        ),
+                                        const SizedBox(height: 8.0),
                                         AuthUserStreamWidget(
                                           builder: (context) => StreamBuilder<
                                               List<ContratoRecord>>(
                                             stream: queryContratoRecord(
-                                              queryBuilder: (contratoRecord) =>
-                                                  contratoRecord
-                                                      .where(
-                                                        'criador',
-                                                        isEqualTo: !valueOrDefault<
-                                                                bool>(
-                                                          currentUserDocument
-                                                              ?.isAdmin,
-                                                          false,
-                                                        )
-                                                            ? currentUserReference
-                                                            : null,
-                                                      )
-                                                      .orderBy('criado_em',
-                                                          descending: true),
+                                              queryBuilder: _consulta,
+                                              limit: _limite,
                                             ),
                                             builder: (context, snapshot) {
                                               if (!snapshot.hasData) {
@@ -767,129 +563,74 @@ class _ContratosPageWidgetState extends State<ContratosPageWidget>
                                                 );
                                               }
                                               final contratos = snapshot.data!;
-                                              final filtrados =
-                                                  (_model.pesquisarPorCidadeTextController
-                                                                  .text !=
-                                                              ''
-                                                          ? contratos
-                                                              .where(
-                                                                (e) =>
-                                                                    valueOrDefault<
-                                                                        String>(
-                                                                  e.cidade,
-                                                                  'X',
-                                                                ).contains(
-                                                                  _model
-                                                                      .pesquisarPorCidadeTextController
-                                                                      .text,
-                                                                ),
-                                                              )
-                                                              .toList()
-                                                          : contratos)
-                                                      .take(200)
-                                                      .toList();
+                                              final filtrados = contratos
+                                                  .where(_mostrar)
+                                                  .toList();
 
                                               if (filtrados.isEmpty) {
-                                                return Container(
-                                                  width: double.infinity,
-                                                  decoration: BoxDecoration(
-                                                    color: theme.accent4,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            24.0),
+                                                return Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                    vertical: 28.0,
                                                   ),
-                                                  padding: const EdgeInsets.all(
-                                                      24.0),
-                                                  child: Column(
-                                                    children: [
-                                                      Icon(
-                                                        Icons
-                                                            .search_off_rounded,
-                                                        color:
-                                                            theme.secondaryText,
-                                                        size: 34.0,
-                                                      ),
-                                                      const SizedBox(
-                                                          height: 12.0),
-                                                      Text(
-                                                        'Nenhum contrato encontrado.',
-                                                        style: theme.titleMedium
-                                                            .override(
-                                                          font: GoogleFonts
-                                                              .manrope(
-                                                            fontWeight:
-                                                                FontWeight.w800,
-                                                            fontStyle: theme
-                                                                .titleMedium
-                                                                .fontStyle,
-                                                          ),
-                                                          letterSpacing: 0.0,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(
-                                                          height: 6.0),
-                                                      Text(
-                                                        'Tente ajustar o filtro de cidade para ver mais resultados.',
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                        style: theme.bodyMedium
-                                                            .override(
-                                                          font: GoogleFonts
-                                                              .manrope(
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                            fontStyle: theme
-                                                                .bodyMedium
-                                                                .fontStyle,
-                                                          ),
-                                                          color: theme
-                                                              .secondaryText,
-                                                          letterSpacing: 0.0,
-                                                        ),
-                                                      ),
-                                                    ],
+                                                  child: Text(
+                                                    'Nenhum contrato encontrado.',
+                                                    style: theme.bodyMedium
+                                                        .override(
+                                                      color:
+                                                          theme.secondaryText,
+                                                    ),
                                                   ),
                                                 );
                                               }
 
-                                              return ListView.separated(
-                                                shrinkWrap: true,
-                                                physics:
-                                                    const NeverScrollableScrollPhysics(),
-                                                itemCount: filtrados.length,
-                                                separatorBuilder: (_, __) =>
-                                                    const SizedBox(
-                                                        height: 14.0),
-                                                itemBuilder: (context, index) {
-                                                  final contrato =
-                                                      filtrados[index];
-                                                  return _buildContratoCard(
-                                                          context, contrato)
-                                                      .animateOnPageLoad(
-                                                    animationsMap[
-                                                        'containerOnPageLoadAnimation']!,
-                                                  );
-                                                },
+                                              return Column(
+                                                children: [
+                                                  ListView.separated(
+                                                    shrinkWrap: true,
+                                                    physics:
+                                                        const NeverScrollableScrollPhysics(),
+                                                    itemCount: filtrados.length,
+                                                    separatorBuilder: (_, __) =>
+                                                        const SizedBox(
+                                                            height: 10.0),
+                                                    itemBuilder:
+                                                        (context, index) {
+                                                      final contrato =
+                                                          filtrados[index];
+                                                      return _buildContratoCard(
+                                                          context, contrato);
+                                                    },
+                                                  ),
+                                                  if (contratos.length >=
+                                                      _limite)
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 8.0),
+                                                      child: TextButton(
+                                                        onPressed: () =>
+                                                            safeSetState(() =>
+                                                                _limite += 40),
+                                                        child: const Text(
+                                                            'Carregar mais'),
+                                                      ),
+                                                    ),
+                                                ],
                                               );
                                             },
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                         ),
                       ),
                     ),
                   ),
+                  ),
                 ],
               ),
             ),
-          ],
-        ),
       ),
     );
   }

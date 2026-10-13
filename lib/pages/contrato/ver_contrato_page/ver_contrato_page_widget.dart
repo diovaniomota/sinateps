@@ -10,7 +10,6 @@ import '/index.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:share_plus/share_plus.dart';
@@ -146,7 +145,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
             content: Text(
               'Ocorreu um erro ao gerar token do PDF.',
               style: FlutterFlowTheme.of(context).bodyMedium.override(
-                    font: GoogleFonts.readexPro(
+                    font: GoogleFonts.notoSans(
                       fontWeight:
                           FlutterFlowTheme.of(context).bodyMedium.fontWeight,
                       fontStyle:
@@ -178,43 +177,6 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
     super.dispose();
   }
 
-  Widget _buildHeroChip(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-  }) {
-    final theme = FlutterFlowTheme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(999.0),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: theme.info,
-            size: 16.0,
-          ),
-          const SizedBox(width: 8.0),
-          Text(
-            label,
-            style: theme.labelMedium.override(
-              font: GoogleFonts.manrope(
-                fontWeight: FontWeight.w800,
-                fontStyle: theme.labelMedium.fontStyle,
-              ),
-              color: theme.info,
-              letterSpacing: 0.0,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   InputDecoration _contactInputDecoration(
     BuildContext context, {
     required String label,
@@ -226,7 +188,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
       labelText: label,
       hintText: hint,
       labelStyle: theme.labelMedium.override(
-        font: GoogleFonts.manrope(
+        font: GoogleFonts.notoSans(
           fontWeight: FontWeight.w600,
           fontStyle: theme.labelMedium.fontStyle,
         ),
@@ -234,7 +196,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
         letterSpacing: 0.0,
       ),
       hintStyle: theme.labelMedium.override(
-        font: GoogleFonts.manrope(
+        font: GoogleFonts.notoSans(
           fontWeight: FontWeight.w500,
           fontStyle: theme.labelMedium.fontStyle,
         ),
@@ -253,28 +215,28 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
           color: theme.alternate,
           width: 1.2,
         ),
-        borderRadius: BorderRadius.circular(18.0),
+        borderRadius: BorderRadius.circular(14.0),
       ),
       focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(
           color: theme.primary,
           width: 1.4,
         ),
-        borderRadius: BorderRadius.circular(18.0),
+        borderRadius: BorderRadius.circular(14.0),
       ),
       errorBorder: OutlineInputBorder(
         borderSide: BorderSide(
           color: theme.error,
           width: 1.2,
         ),
-        borderRadius: BorderRadius.circular(18.0),
+        borderRadius: BorderRadius.circular(14.0),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderSide: BorderSide(
           color: theme.error,
           width: 1.4,
         ),
-        borderRadius: BorderRadius.circular(18.0),
+        borderRadius: BorderRadius.circular(14.0),
       ),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 18.0,
@@ -302,7 +264,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
       hoverTextColor: textColor,
       hoverElevation: 0.0,
       textStyle: theme.titleSmall.override(
-        font: GoogleFonts.manrope(
+        font: GoogleFonts.notoSans(
           fontWeight: FontWeight.w800,
           fontStyle: theme.titleSmall.fontStyle,
         ),
@@ -314,7 +276,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
         color: Colors.transparent,
         width: 1.0,
       ),
-      borderRadius: BorderRadius.circular(18.0),
+      borderRadius: BorderRadius.circular(14.0),
     );
   }
 
@@ -338,45 +300,17 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
         backgroundColor: theme.primaryBackground,
         appBar: AppBar(
           backgroundColor: theme.secondaryBackground,
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0.0,
           automaticallyImplyLeading: false,
-          leading: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: FlutterFlowIconButton(
-              borderColor: theme.alternate,
-              borderRadius: 18.0,
-              borderWidth: 1.0,
-              fillColor: theme.secondaryBackground,
-              buttonSize: 48.0,
-              icon: FaIcon(
-                FontAwesomeIcons.angleLeft,
-                color: theme.primaryText,
-                size: 22.0,
-              ),
-              onPressed: () async {
-                context.pop();
-              },
-            ),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: theme.primaryText),
+            onPressed: () => context.pop(),
           ),
-          title: InkWell(
-            splashColor: Colors.transparent,
-            focusColor: Colors.transparent,
-            hoverColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            onTap: hasPdf
-                ? () async {
-                    await launchURL(_model.pdf!);
-                  }
-                : null,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(18.0),
-              child: Image.asset(
-                'assets/images/Design_sem_nome_(37).png',
-                width: 150.0,
-                height: 42.0,
-                fit: BoxFit.contain,
-                alignment: const Alignment(0.0, 0.0),
-              ),
-            ),
+          title: Image.asset(
+            'assets/images/sinatep_logo_color.png',
+            height: 28.0,
+            fit: BoxFit.contain,
           ),
           actions: [
             if (hasPdf)
@@ -387,7 +321,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                     padding: const EdgeInsets.all(8.0),
                     child: FlutterFlowIconButton(
                       borderColor: theme.alternate,
-                      borderRadius: 18.0,
+                      borderRadius: 14.0,
                       borderWidth: 1.0,
                       fillColor: theme.secondaryBackground,
                       buttonSize: 48.0,
@@ -414,14 +348,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
           width: double.infinity,
           height: double.infinity,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                theme.primaryBackground,
-                const Color(0xFFEAF2FB),
-              ],
-              begin: const AlignmentDirectional(-1.0, -1.0),
-              end: const AlignmentDirectional(1.0, 1.0),
-            ),
+            color: theme.primaryBackground,
           ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20.0, 12.0, 20.0, 32.0),
@@ -435,98 +362,38 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            theme.primary,
-                            const Color(0xFF4E88BC),
-                          ],
-                          begin: const AlignmentDirectional(-1.0, -1.0),
-                          end: const AlignmentDirectional(1.0, 1.0),
-                        ),
-                        borderRadius: BorderRadius.circular(28.0),
+                        color: theme.secondaryBackground,
+                        borderRadius: BorderRadius.circular(16.0),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x0F1B2836),
+                            blurRadius: 16.0,
+                            offset: Offset(0, 6),
+                          ),
+                        ],
                       ),
-                      padding: const EdgeInsets.all(22.0),
+                      padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.14),
-                              borderRadius: BorderRadius.circular(999.0),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12.0,
-                              vertical: 8.0,
-                            ),
-                            child: Text(
-                              widget.contratoAssinado
-                                  ? 'Contrato assinado'
-                                  : 'Pronto para envio',
-                              style: theme.labelLarge.override(
-                                font: GoogleFonts.manrope(
-                                  fontWeight: FontWeight.w800,
-                                  fontStyle: theme.labelLarge.fontStyle,
-                                ),
-                                color: theme.info,
-                                letterSpacing: 0.0,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16.0),
                           Text(
                             contractTitle,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.headlineSmall.override(
-                              font: GoogleFonts.sora(
-                                fontWeight: FontWeight.w700,
-                                fontStyle: theme.headlineSmall.fontStyle,
-                              ),
-                              color: theme.info,
-                              letterSpacing: -0.3,
-                            ),
+                            style: theme.headlineSmall,
                           ),
-                          const SizedBox(height: 10.0),
+                          const SizedBox(height: 4.0),
                           Text(
-                            hasPdf
-                                ? 'Visualize a prévia, abra o PDF em outra aba e gerencie o envio para assinatura em um só lugar.'
-                                : 'O link do PDF está sendo preparado. Enquanto isso, você ainda pode editar os dados e organizar o envio.',
+                            widget.contratoAssinado
+                                ? 'Assinado'
+                                : hasPdf
+                                    ? 'PDF pronto'
+                                    : 'PDF em preparação',
                             style: theme.bodyMedium.override(
-                              font: GoogleFonts.manrope(
-                                fontWeight: FontWeight.w600,
-                                fontStyle: theme.bodyMedium.fontStyle,
-                              ),
-                              color: Colors.white.withValues(alpha: 0.86),
-                              letterSpacing: 0.0,
-                              lineHeight: 1.4,
+                              color: widget.contratoAssinado
+                                  ? theme.success
+                                  : theme.secondaryText,
                             ),
-                          ),
-                          const SizedBox(height: 18.0),
-                          Wrap(
-                            spacing: 10.0,
-                            runSpacing: 10.0,
-                            children: [
-                              _buildHeroChip(
-                                context,
-                                icon: Icons.picture_as_pdf_outlined,
-                                label:
-                                    hasPdf ? 'PDF disponível' : 'Gerando PDF',
-                              ),
-                              _buildHeroChip(
-                                context,
-                                icon: widget.contratoAssinado
-                                    ? Icons.verified_outlined
-                                    : Icons.outgoing_mail,
-                                label: widget.contratoAssinado
-                                    ? 'Assinatura concluída'
-                                    : 'Envio para assinatura',
-                              ),
-                              _buildHeroChip(
-                                context,
-                                icon: Icons.edit_note_rounded,
-                                label: 'Editar e revisar',
-                              ),
-                            ],
                           ),
                         ],
                       ),
@@ -536,15 +403,8 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: theme.secondaryBackground,
-                        borderRadius: BorderRadius.circular(28.0),
+                        borderRadius: BorderRadius.circular(14.0),
                         border: Border.all(color: theme.alternate),
-                        boxShadow: const [
-                          BoxShadow(
-                            blurRadius: 20.0,
-                            color: Color(0x120F2237),
-                            offset: Offset(0.0, 12.0),
-                          ),
-                        ],
                       ),
                       padding: const EdgeInsets.all(20.0),
                       child: Column(
@@ -559,26 +419,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                                   children: [
                                     Text(
                                       'Prévia do contrato',
-                                      style: theme.titleLarge.override(
-                                        font: GoogleFonts.sora(
-                                          fontWeight: FontWeight.w700,
-                                          fontStyle: theme.titleLarge.fontStyle,
-                                        ),
-                                        letterSpacing: -0.2,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6.0),
-                                    Text(
-                                      'Confira o documento abaixo. Se o navegador não suportar a prévia, use o botão para abrir o PDF diretamente.',
-                                      style: theme.bodyMedium.override(
-                                        font: GoogleFonts.manrope(
-                                          fontWeight: FontWeight.w600,
-                                          fontStyle: theme.bodyMedium.fontStyle,
-                                        ),
-                                        color: theme.secondaryText,
-                                        letterSpacing: 0.0,
-                                        lineHeight: 1.35,
-                                      ),
+                                      style: theme.titleMedium,
                                     ),
                                   ],
                                 ),
@@ -596,7 +437,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                                   child: Container(
                                     decoration: BoxDecoration(
                                       color: theme.accent1,
-                                      borderRadius: BorderRadius.circular(18.0),
+                                      borderRadius: BorderRadius.circular(14.0),
                                     ),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 14.0,
@@ -614,7 +455,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                                         Text(
                                           'Abrir PDF',
                                           style: theme.labelLarge.override(
-                                            font: GoogleFonts.manrope(
+                                            font: GoogleFonts.notoSans(
                                               fontWeight: FontWeight.w800,
                                               fontStyle:
                                                   theme.labelLarge.fontStyle,
@@ -635,7 +476,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                             height: previewHeight,
                             decoration: BoxDecoration(
                               color: theme.accent4,
-                              borderRadius: BorderRadius.circular(24.0),
+                              borderRadius: BorderRadius.circular(14.0),
                               border: Border.all(color: theme.alternate),
                             ),
                             alignment: AlignmentDirectional.center,
@@ -643,7 +484,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                               builder: (context) {
                                 if (hasPdf) {
                                   return ClipRRect(
-                                    borderRadius: BorderRadius.circular(24.0),
+                                    borderRadius: BorderRadius.circular(14.0),
                                     child: FlutterFlowPdfViewer(
                                       networkPath: _model.pdf!,
                                       width: double.infinity,
@@ -663,7 +504,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                                           decoration: BoxDecoration(
                                             color: theme.accent1,
                                             borderRadius:
-                                                BorderRadius.circular(18.0),
+                                                BorderRadius.circular(14.0),
                                           ),
                                           child: Icon(
                                             Icons.picture_as_pdf_outlined,
@@ -675,7 +516,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                                         Text(
                                           'PDF ainda não disponível',
                                           style: theme.titleMedium.override(
-                                            font: GoogleFonts.manrope(
+                                            font: GoogleFonts.notoSans(
                                               fontWeight: FontWeight.w800,
                                               fontStyle:
                                                   theme.titleMedium.fontStyle,
@@ -688,7 +529,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                                           'Assim que o link do documento estiver pronto, a visualização aparecerá aqui.',
                                           textAlign: TextAlign.center,
                                           style: theme.bodyMedium.override(
-                                            font: GoogleFonts.manrope(
+                                            font: GoogleFonts.notoSans(
                                               fontWeight: FontWeight.w600,
                                               fontStyle:
                                                   theme.bodyMedium.fontStyle,
@@ -709,7 +550,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                           Container(
                             decoration: BoxDecoration(
                               color: theme.accent4,
-                              borderRadius: BorderRadius.circular(18.0),
+                              borderRadius: BorderRadius.circular(14.0),
                             ),
                             padding: const EdgeInsets.all(14.0),
                             child: Row(
@@ -725,7 +566,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                                   child: Text(
                                     'Deslize para o lado para acessar a próxima página. Em navegadores sem suporte à prévia, toque em \"Abrir PDF\".',
                                     style: theme.bodyMedium.override(
-                                      font: GoogleFonts.manrope(
+                                      font: GoogleFonts.notoSans(
                                         fontWeight: FontWeight.w700,
                                         fontStyle: theme.bodyMedium.fontStyle,
                                       ),
@@ -746,7 +587,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: theme.secondaryBackground,
-                        borderRadius: BorderRadius.circular(28.0),
+                        borderRadius: BorderRadius.circular(14.0),
                         border: Border.all(color: theme.alternate),
                       ),
                       padding: const EdgeInsets.all(20.0),
@@ -755,26 +596,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                         children: [
                           Text(
                             'Ações do contrato',
-                            style: theme.titleLarge.override(
-                              font: GoogleFonts.sora(
-                                fontWeight: FontWeight.w700,
-                                fontStyle: theme.titleLarge.fontStyle,
-                              ),
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                          const SizedBox(height: 6.0),
-                          Text(
-                            'Edite o cadastro, informe os dados de contato do aluno e envie para assinatura quando estiver tudo certo.',
-                            style: theme.bodyMedium.override(
-                              font: GoogleFonts.manrope(
-                                fontWeight: FontWeight.w600,
-                                fontStyle: theme.bodyMedium.fontStyle,
-                              ),
-                              color: theme.secondaryText,
-                              letterSpacing: 0.0,
-                              lineHeight: 1.35,
-                            ),
+                            style: theme.titleMedium,
                           ),
                           const SizedBox(height: 18.0),
                           FFButtonWidget(
@@ -804,14 +626,14 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                               context,
                               color: theme.tertiary,
                               textColor: theme.info,
-                              hoverColor: const Color(0xFFD97A52),
+                              hoverColor: theme.secondary,
                             ),
                           ),
                           const SizedBox(height: 18.0),
                           Text(
                             'Contato para envio',
                             style: theme.labelLarge.override(
-                              font: GoogleFonts.manrope(
+                              font: GoogleFonts.notoSans(
                                 fontWeight: FontWeight.w800,
                                 fontStyle: theme.labelLarge.fontStyle,
                               ),
@@ -832,7 +654,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                               icon: Icons.alternate_email_rounded,
                             ),
                             style: theme.bodyMedium.override(
-                              font: GoogleFonts.manrope(
+                              font: GoogleFonts.notoSans(
                                 fontWeight: FontWeight.w600,
                                 fontStyle: theme.bodyMedium.fontStyle,
                               ),
@@ -855,7 +677,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                               icon: Icons.phone_rounded,
                             ),
                             style: theme.bodyMedium.override(
-                              font: GoogleFonts.manrope(
+                              font: GoogleFonts.notoSans(
                                 fontWeight: FontWeight.w600,
                                 fontStyle: theme.bodyMedium.fontStyle,
                               ),
@@ -928,10 +750,6 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                                           FlutterFlowTheme.of(context).primary,
                                     ),
                                   );
-                                  await _showAutentiqueResponseDialog(
-                                    title: 'Resposta da Autentique',
-                                    payload: responseData,
-                                  );
                                 } on FirebaseFunctionsException catch (e) {
                                   if (!context.mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -988,7 +806,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 color: theme.accent2,
-                                borderRadius: BorderRadius.circular(18.0),
+                                borderRadius: BorderRadius.circular(14.0),
                               ),
                               padding: const EdgeInsets.all(14.0),
                               child: Row(
@@ -1004,7 +822,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                                     child: Text(
                                       'Este contrato já está assinado, então o envio para a Autentique não é mais necessário.',
                                       style: theme.bodyMedium.override(
-                                        font: GoogleFonts.manrope(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight: FontWeight.w700,
                                           fontStyle: theme.bodyMedium.fontStyle,
                                         ),
@@ -1023,7 +841,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFF4F2),
-                                borderRadius: BorderRadius.circular(18.0),
+                                borderRadius: BorderRadius.circular(14.0),
                                 border: Border.all(
                                   color: const Color(0xFFF3C7BF),
                                 ),
@@ -1042,7 +860,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                                     child: Text(
                                       'Ao confirmar, o contrato e o PDF vinculado serão removidos permanentemente.',
                                       style: theme.bodyMedium.override(
-                                        font: GoogleFonts.manrope(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight: FontWeight.w700,
                                           fontStyle: theme.bodyMedium.fontStyle,
                                         ),
@@ -1092,7 +910,7 @@ class _VerContratoPageWidgetState extends State<VerContratoPageWidget> {
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
-                                              font: GoogleFonts.readexPro(
+                                              font: GoogleFonts.notoSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .bodyMedium

@@ -299,7 +299,7 @@ class _FlutterFlowDropDownState<T> extends State<FlutterFlowDropDown<T>> {
       dropdownStyleData: DropdownStyleData(
         elevation: widget.elevation.toInt(),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4.0),
+          borderRadius: BorderRadius.circular(14.0),
           color: widget.fillColor,
         ),
         isOverButton: widget.isOverButton,

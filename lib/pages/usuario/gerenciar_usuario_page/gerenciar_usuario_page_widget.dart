@@ -92,7 +92,8 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
+          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+          surfaceTintColor: Colors.transparent,
           automaticallyImplyLeading: false,
           leading: FlutterFlowIconButton(
             borderColor: Colors.transparent,
@@ -101,7 +102,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
             buttonSize: 60.0,
             icon: FaIcon(
               FontAwesomeIcons.angleLeft,
-              color: FlutterFlowTheme.of(context).info,
+              color: FlutterFlowTheme.of(context).primaryText,
               size: 30.0,
             ),
             onPressed: () async {
@@ -113,10 +114,10 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8.0),
               child: Image.asset(
-                'assets/images/Design_sem_nome_(37).png',
+                'assets/images/sinatep_logo_color.png',
                 width: 200.0,
                 height: 50.0,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
                 alignment: Alignment(0.0, 0.0),
               ),
             ),
@@ -134,7 +135,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                   fillColor: FlutterFlowTheme.of(context).accent1,
                   icon: FaIcon(
                     FontAwesomeIcons.check,
-                    color: FlutterFlowTheme.of(context).info,
+                    color: FlutterFlowTheme.of(context).primary,
                     size: 24.0,
                   ),
                   showLoadingIndicator: true,
@@ -177,7 +178,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .fontWeight,
@@ -236,7 +237,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .fontWeight,
@@ -272,7 +273,8 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
             ),
           ],
           centerTitle: true,
-          elevation: 2.0,
+          elevation: 0.0,
+          scrolledUnderElevation: 0.0,
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -284,7 +286,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                 child: Text(
                   'Gerenciar Usuário',
                   style: FlutterFlowTheme.of(context).titleMedium.override(
-                        font: GoogleFonts.readexPro(
+                        font: GoogleFonts.notoSans(
                           fontWeight: FontWeight.w500,
                           fontStyle: FlutterFlowTheme.of(context)
                               .titleMedium
@@ -321,7 +323,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                           labelText: 'Nome',
                           labelStyle:
                               FlutterFlowTheme.of(context).labelMedium.override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .fontWeight,
@@ -339,7 +341,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                                   ),
                           hintStyle:
                               FlutterFlowTheme.of(context).labelMedium.override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .fontWeight,
@@ -387,7 +389,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                           fillColor: FlutterFlowTheme.of(context).alternate,
                         ),
                         style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.readexPro(
+                              font: GoogleFonts.notoSans(
                                 fontWeight: FlutterFlowTheme.of(context)
                                     .bodyMedium
                                     .fontWeight,
@@ -429,7 +431,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                           labelText: 'E-mail',
                           labelStyle:
                               FlutterFlowTheme.of(context).labelMedium.override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .fontWeight,
@@ -447,7 +449,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                                   ),
                           hintStyle:
                               FlutterFlowTheme.of(context).labelMedium.override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .fontWeight,
@@ -495,7 +497,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                           fillColor: FlutterFlowTheme.of(context).alternate,
                         ),
                         style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.readexPro(
+                              font: GoogleFonts.notoSans(
                                 fontWeight: FlutterFlowTheme.of(context)
                                     .bodyMedium
                                     .fontWeight,
@@ -545,7 +547,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                                         style: FlutterFlowTheme.of(context)
                                             .titleSmall
                                             .override(
-                                              font: GoogleFonts.readexPro(
+                                              font: GoogleFonts.notoSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .titleSmall
@@ -601,7 +603,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                                         labelStyle: FlutterFlowTheme.of(context)
                                             .labelMedium
                                             .override(
-                                              font: GoogleFonts.readexPro(
+                                              font: GoogleFonts.notoSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .labelMedium
@@ -624,7 +626,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                                         hintStyle: FlutterFlowTheme.of(context)
                                             .labelMedium
                                             .override(
-                                              font: GoogleFonts.readexPro(
+                                              font: GoogleFonts.notoSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .labelMedium
@@ -702,7 +704,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                                       style: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .override(
-                                            font: GoogleFonts.readexPro(
+                                            font: GoogleFonts.notoSans(
                                               fontWeight:
                                                   FlutterFlowTheme.of(context)
                                                       .bodyMedium
@@ -746,7 +748,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                                 labelStyle: FlutterFlowTheme.of(context)
                                     .labelMedium
                                     .override(
-                                      font: GoogleFonts.readexPro(
+                                      font: GoogleFonts.notoSans(
                                         fontWeight: FlutterFlowTheme.of(context)
                                             .labelMedium
                                             .fontWeight,
@@ -765,7 +767,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                                 hintStyle: FlutterFlowTheme.of(context)
                                     .labelMedium
                                     .override(
-                                      font: GoogleFonts.readexPro(
+                                      font: GoogleFonts.notoSans(
                                         fontWeight: FlutterFlowTheme.of(context)
                                             .labelMedium
                                             .fontWeight,
@@ -831,7 +833,7 @@ class _GerenciarUsuarioPageWidgetState extends State<GerenciarUsuarioPageWidget>
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .fontWeight,

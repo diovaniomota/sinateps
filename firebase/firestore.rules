@@ -1,25 +1,65 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /user/{document} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-      allow delete: if request.auth != null;
+    function signedIn() {
+      return request.auth != null;
     }
 
-    match /contrato/{document} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-      allow delete: if request.auth != null;
+    function userRef() {
+      return /databases/$(database)/documents/user/$(request.auth.uid);
     }
 
-    match /contrato_cliente/{document} {
-      allow create: if true;
-      allow read: if true;
-      allow write: if false;
-      allow delete: if false;
+    function isAdmin() {
+      return signedIn() && get(userRef()).data.isAdmin == true;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function adminPermanece() {
+      return request.resource.data.get('isAdmin', false)
+        == resource.data.get('isAdmin', false);
+    }
+
+    match /user/{userId} {
+      allow read: if isSelf(userId) || isAdmin();
+      allow create: if isSelf(userId)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.get('isAdmin', false) == false;
+      allow update: if isAdmin()
+        || (isSelf(userId) && adminPermanece()
+            && request.resource.data.uid == resource.data.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /contrato/{contratoId} {
+      function criadorAtual() {
+        return resource.data.criador == userRef();
+      }
+
+      function criadorNovo() {
+        return request.resource.data.criador == userRef();
+      }
+
+      allow read: if isAdmin() || (signedIn() && criadorAtual());
+      allow create: if signedIn()
+        && criadorNovo()
+        && request.resource.data.contratante is string
+        && request.resource.data.contratante.size() < 200
+        && request.resource.data.documento is string
+        && request.resource.data.documento.size() < 40;
+      allow update: if isAdmin()
+        || (signedIn() && criadorAtual() && criadorNovo());
+      allow delete: if isAdmin() || (signedIn() && criadorAtual());
+    }
+
+    match /contrato_cliente/{documento} {
+      allow read, write: if false;
+    }
+
+    match /config/{documento} {
+      allow read, write: if false;
     }
   }
 }

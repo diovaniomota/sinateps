@@ -65,7 +65,8 @@ class _AssinaturaPageWidgetState extends State<AssinaturaPageWidget> {
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
+          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+          surfaceTintColor: Colors.transparent,
           automaticallyImplyLeading: false,
           leading: FlutterFlowIconButton(
             borderColor: Colors.transparent,
@@ -74,7 +75,7 @@ class _AssinaturaPageWidgetState extends State<AssinaturaPageWidget> {
             buttonSize: 60.0,
             icon: FaIcon(
               FontAwesomeIcons.angleLeft,
-              color: FlutterFlowTheme.of(context).info,
+              color: FlutterFlowTheme.of(context).primaryText,
               size: 30.0,
             ),
             onPressed: () async {
@@ -86,10 +87,10 @@ class _AssinaturaPageWidgetState extends State<AssinaturaPageWidget> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8.0),
               child: Image.asset(
-                'assets/images/Design_sem_nome_(37).png',
+                'assets/images/sinatep_logo_color.png',
                 width: 200.0,
                 height: 50.0,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
                 alignment: Alignment(0.0, 0.0),
               ),
             ),
@@ -107,7 +108,7 @@ class _AssinaturaPageWidgetState extends State<AssinaturaPageWidget> {
                     buttonSize: 40.0,
                     icon: FaIcon(
                       FontAwesomeIcons.broom,
-                      color: FlutterFlowTheme.of(context).info,
+                      color: FlutterFlowTheme.of(context).primaryText,
                       size: 24.0,
                     ),
                     onPressed: () async {
@@ -122,7 +123,7 @@ class _AssinaturaPageWidgetState extends State<AssinaturaPageWidget> {
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
-                                  font: GoogleFonts.readexPro(
+                                  font: GoogleFonts.notoSans(
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .bodyMedium
                                         .fontWeight,
@@ -153,7 +154,8 @@ class _AssinaturaPageWidgetState extends State<AssinaturaPageWidget> {
             ),
           ],
           centerTitle: true,
-          elevation: 2.0,
+          elevation: 0.0,
+          scrolledUnderElevation: 0.0,
         ),
         body: Align(
           alignment: AlignmentDirectional(0.0, 0.0),
@@ -183,7 +185,7 @@ class _AssinaturaPageWidgetState extends State<AssinaturaPageWidget> {
                             style: FlutterFlowTheme.of(context)
                                 .titleMedium
                                 .override(
-                                  font: GoogleFonts.readexPro(
+                                  font: GoogleFonts.notoSans(
                                     fontWeight: FontWeight.w500,
                                     fontStyle: FlutterFlowTheme.of(context)
                                         .titleMedium
@@ -441,7 +443,7 @@ class _AssinaturaPageWidgetState extends State<AssinaturaPageWidget> {
                                                       context)
                                                   .bodyMedium
                                                   .override(
-                                                    font: GoogleFonts.readexPro(
+                                                    font: GoogleFonts.notoSans(
                                                       fontWeight:
                                                           FlutterFlowTheme.of(
                                                                   context)
@@ -491,7 +493,7 @@ class _AssinaturaPageWidgetState extends State<AssinaturaPageWidget> {
                                             style: FlutterFlowTheme.of(context)
                                                 .bodyMedium
                                                 .override(
-                                                  font: GoogleFonts.readexPro(
+                                                  font: GoogleFonts.notoSans(
                                                     fontWeight:
                                                         FlutterFlowTheme.of(
                                                                 context)
@@ -539,7 +541,7 @@ class _AssinaturaPageWidgetState extends State<AssinaturaPageWidget> {
                                           style: FlutterFlowTheme.of(context)
                                               .bodyMedium
                                               .override(
-                                                font: GoogleFonts.readexPro(
+                                                font: GoogleFonts.notoSans(
                                                   fontWeight:
                                                       FlutterFlowTheme.of(
                                                               context)
@@ -589,7 +591,7 @@ class _AssinaturaPageWidgetState extends State<AssinaturaPageWidget> {
                                   textStyle: FlutterFlowTheme.of(context)
                                       .titleSmall
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .titleSmall

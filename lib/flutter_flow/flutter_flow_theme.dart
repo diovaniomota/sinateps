@@ -118,21 +118,21 @@ class LightModeTheme extends FlutterFlowTheme {
   @Deprecated('Use tertiary instead')
   Color get tertiaryColor => tertiary;
 
-  late Color primary = const Color(0xFF1F6AA5);
-  late Color secondary = const Color(0xFF2F9E8F);
-  late Color tertiary = const Color(0xFFF08A5D);
-  late Color alternate = const Color(0xFFE6EDF5);
-  late Color primaryText = const Color(0xFF102033);
-  late Color secondaryText = const Color(0xFF5E7186);
-  late Color primaryBackground = const Color(0xFFF5F7FB);
+  late Color primary = const Color(0xFF1277C2);
+  late Color secondary = const Color(0xFF0E5A94);
+  late Color tertiary = const Color(0xFF0E5A94);
+  late Color alternate = const Color(0xFFD5E0EA);
+  late Color primaryText = const Color(0xFF1B2836);
+  late Color secondaryText = const Color(0xFF5C6C7A);
+  late Color primaryBackground = const Color(0xFFF3F6FA);
   late Color secondaryBackground = const Color(0xFFFFFFFF);
-  late Color accent1 = const Color(0x1A1F6AA5);
-  late Color accent2 = const Color(0x1A2F9E8F);
-  late Color accent3 = const Color(0x1AF08A5D);
-  late Color accent4 = const Color(0xFFF8FBFF);
-  late Color success = const Color(0xFF23836B);
-  late Color warning = const Color(0xFFE8B038);
-  late Color error = const Color(0xFFD94F4F);
+  late Color accent1 = const Color(0x141277C2);
+  late Color accent2 = const Color(0x140E5A94);
+  late Color accent3 = const Color(0x141277C2);
+  late Color accent4 = const Color(0xFFF4F7FA);
+  late Color success = const Color(0xFF1F7A45);
+  late Color warning = const Color(0xFFC47B12);
+  late Color error = const Color(0xFFC4453C);
   late Color info = const Color(0xFFFFFFFF);
 }
 
@@ -189,107 +189,107 @@ class ThemeTypography extends Typography {
 
   final FlutterFlowTheme theme;
 
-  String get displayLargeFamily => 'Sora';
+  String get displayLargeFamily => 'Barlow';
   bool get displayLargeIsCustom => false;
-  TextStyle get displayLarge => GoogleFonts.sora(
+  TextStyle get displayLarge => GoogleFonts.barlow(
         color: theme.primaryText,
         fontWeight: FontWeight.w700,
         fontSize: 60.0,
       );
-  String get displayMediumFamily => 'Sora';
+  String get displayMediumFamily => 'Barlow';
   bool get displayMediumIsCustom => false;
-  TextStyle get displayMedium => GoogleFonts.sora(
+  TextStyle get displayMedium => GoogleFonts.barlow(
         color: theme.primaryText,
         fontWeight: FontWeight.w700,
         fontSize: 44.0,
       );
-  String get displaySmallFamily => 'Sora';
+  String get displaySmallFamily => 'Barlow';
   bool get displaySmallIsCustom => false;
-  TextStyle get displaySmall => GoogleFonts.sora(
+  TextStyle get displaySmall => GoogleFonts.barlow(
         color: theme.primaryText,
         fontWeight: FontWeight.w700,
         fontSize: 34.0,
       );
-  String get headlineLargeFamily => 'Sora';
+  String get headlineLargeFamily => 'Barlow';
   bool get headlineLargeIsCustom => false;
-  TextStyle get headlineLarge => GoogleFonts.sora(
+  TextStyle get headlineLarge => GoogleFonts.barlow(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 30.0,
       );
-  String get headlineMediumFamily => 'Sora';
+  String get headlineMediumFamily => 'Barlow';
   bool get headlineMediumIsCustom => false;
-  TextStyle get headlineMedium => GoogleFonts.sora(
+  TextStyle get headlineMedium => GoogleFonts.barlow(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 24.0,
       );
-  String get headlineSmallFamily => 'Sora';
+  String get headlineSmallFamily => 'Barlow';
   bool get headlineSmallIsCustom => false;
-  TextStyle get headlineSmall => GoogleFonts.sora(
+  TextStyle get headlineSmall => GoogleFonts.barlow(
         color: theme.primaryText,
         fontWeight: FontWeight.w500,
         fontSize: 22.0,
       );
-  String get titleLargeFamily => 'Sora';
+  String get titleLargeFamily => 'Barlow';
   bool get titleLargeIsCustom => false;
-  TextStyle get titleLarge => GoogleFonts.sora(
+  TextStyle get titleLarge => GoogleFonts.barlow(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 20.0,
       );
-  String get titleMediumFamily => 'Manrope';
+  String get titleMediumFamily => 'Noto Sans';
   bool get titleMediumIsCustom => false;
-  TextStyle get titleMedium => GoogleFonts.manrope(
+  TextStyle get titleMedium => GoogleFonts.notoSans(
         color: theme.primaryText,
-        fontWeight: FontWeight.w700,
-        fontSize: 17.0,
-      );
-  String get titleSmallFamily => 'Manrope';
-  bool get titleSmallIsCustom => false;
-  TextStyle get titleSmall => GoogleFonts.manrope(
-        color: theme.primaryText,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         fontSize: 16.0,
       );
-  String get labelLargeFamily => 'Manrope';
+  String get titleSmallFamily => 'Noto Sans';
+  bool get titleSmallIsCustom => false;
+  TextStyle get titleSmall => GoogleFonts.notoSans(
+        color: theme.primaryText,
+        fontWeight: FontWeight.w600,
+        fontSize: 15.0,
+      );
+  String get labelLargeFamily => 'Noto Sans';
   bool get labelLargeIsCustom => false;
-  TextStyle get labelLarge => GoogleFonts.manrope(
+  TextStyle get labelLarge => GoogleFonts.notoSans(
         color: theme.secondaryText,
         fontWeight: FontWeight.w600,
         fontSize: 15.0,
       );
-  String get labelMediumFamily => 'Manrope';
+  String get labelMediumFamily => 'Noto Sans';
   bool get labelMediumIsCustom => false;
-  TextStyle get labelMedium => GoogleFonts.manrope(
+  TextStyle get labelMedium => GoogleFonts.notoSans(
         color: theme.secondaryText,
         fontWeight: FontWeight.w500,
         fontSize: 14.0,
       );
-  String get labelSmallFamily => 'Manrope';
+  String get labelSmallFamily => 'Noto Sans';
   bool get labelSmallIsCustom => false;
-  TextStyle get labelSmall => GoogleFonts.manrope(
+  TextStyle get labelSmall => GoogleFonts.notoSans(
         color: theme.secondaryText,
         fontWeight: FontWeight.w500,
         fontSize: 12.0,
       );
-  String get bodyLargeFamily => 'Manrope';
+  String get bodyLargeFamily => 'Noto Sans';
   bool get bodyLargeIsCustom => false;
-  TextStyle get bodyLarge => GoogleFonts.manrope(
+  TextStyle get bodyLarge => GoogleFonts.notoSans(
         color: theme.primaryText,
         fontWeight: FontWeight.w500,
         fontSize: 16.0,
       );
-  String get bodyMediumFamily => 'Manrope';
+  String get bodyMediumFamily => 'Noto Sans';
   bool get bodyMediumIsCustom => false;
-  TextStyle get bodyMedium => GoogleFonts.manrope(
+  TextStyle get bodyMedium => GoogleFonts.notoSans(
         color: theme.primaryText,
         fontWeight: FontWeight.w500,
         fontSize: 14.0,
       );
-  String get bodySmallFamily => 'Manrope';
+  String get bodySmallFamily => 'Noto Sans';
   bool get bodySmallIsCustom => false;
-  TextStyle get bodySmall => GoogleFonts.manrope(
+  TextStyle get bodySmall => GoogleFonts.notoSans(
         color: theme.primaryText,
         fontWeight: FontWeight.w500,
         fontSize: 12.0,

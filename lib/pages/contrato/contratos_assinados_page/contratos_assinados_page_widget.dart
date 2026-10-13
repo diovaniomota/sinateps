@@ -113,7 +113,7 @@ class _ContratosAssinadosPageWidgetState
               Text(
                 label,
                 style: theme.labelMedium.override(
-                  font: GoogleFonts.manrope(
+                  font: GoogleFonts.notoSans(
                     fontWeight: FontWeight.w800,
                     fontStyle: theme.labelMedium.fontStyle,
                   ),
@@ -163,7 +163,7 @@ class _ContratosAssinadosPageWidgetState
           title: ClipRRect(
             borderRadius: BorderRadius.circular(10.0),
             child: Image.asset(
-              'assets/images/Design_sem_nome_(37).png',
+              'assets/images/sinatep_logo_color.png',
               width: 148.0,
               height: 44.0,
               fit: BoxFit.contain,
@@ -175,13 +175,7 @@ class _ContratosAssinadosPageWidgetState
         body: Container(
           width: double.infinity,
           height: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFF5F8FC), Color(0xFFEAF2FB)],
-              begin: AlignmentDirectional(0.0, -1.0),
-              end: AlignmentDirectional(0.0, 1.0),
-            ),
-          ),
+          color: theme.primaryBackground,
           child: AuthUserStreamWidget(
             builder: (context) => StreamBuilder<List<ContratoRecord>>(
               stream: queryContratoRecord(
@@ -318,7 +312,7 @@ class _ContratosAssinadosPageWidgetState
                                                 context, contrato.assinadoEm,
                                                 format: 'd MMM y'),
                                             style: theme.labelSmall.override(
-                                              font: GoogleFonts.manrope(
+                                              font: GoogleFonts.notoSans(
                                                 fontWeight: FontWeight.w700,
                                                 fontStyle:
                                                     theme.labelSmall.fontStyle,
@@ -336,7 +330,7 @@ class _ContratosAssinadosPageWidgetState
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                       style: theme.titleLarge.override(
-                                        font: GoogleFonts.sora(
+                                        font: GoogleFonts.barlow(
                                           fontWeight: FontWeight.w700,
                                           fontStyle: theme.titleLarge.fontStyle,
                                         ),
@@ -349,7 +343,7 @@ class _ContratosAssinadosPageWidgetState
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                       style: theme.bodyMedium.override(
-                                        font: GoogleFonts.manrope(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight: FontWeight.w700,
                                           fontStyle: theme.bodyMedium.fontStyle,
                                         ),
@@ -391,7 +385,7 @@ class _ContratosAssinadosPageWidgetState
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: theme.bodyMedium.override(
-                                      font: GoogleFonts.manrope(
+                                      font: GoogleFonts.notoSans(
                                         fontWeight: FontWeight.w700,
                                         fontStyle: theme.bodyMedium.fontStyle,
                                       ),
@@ -413,7 +407,7 @@ class _ContratosAssinadosPageWidgetState
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: theme.bodyMedium.override(
-                                      font: GoogleFonts.manrope(
+                                      font: GoogleFonts.notoSans(
                                         fontWeight: FontWeight.w700,
                                         fontStyle: theme.bodyMedium.fontStyle,
                                       ),
@@ -439,7 +433,7 @@ class _ContratosAssinadosPageWidgetState
                               maxLines: 4,
                               overflow: TextOverflow.ellipsis,
                               style: theme.bodyMedium.override(
-                                font: GoogleFonts.manrope(
+                                font: GoogleFonts.notoSans(
                                   fontWeight: FontWeight.w600,
                                   fontStyle: theme.bodyMedium.fontStyle,
                                 ),
@@ -491,7 +485,7 @@ class _ContratosAssinadosPageWidgetState
                                 Text(
                                   'Contratos concluídos com leitura rápida e navegação mais clara.',
                                   style: theme.headlineSmall.override(
-                                    font: GoogleFonts.sora(
+                                    font: GoogleFonts.barlow(
                                       fontWeight: FontWeight.w700,
                                       fontStyle: theme.headlineSmall.fontStyle,
                                     ),
@@ -505,7 +499,7 @@ class _ContratosAssinadosPageWidgetState
                                       ? 'Assim que um contrato for assinado, ele aparece aqui organizado para consulta sem ruído visual.'
                                       : 'Toque em qualquer contrato para revisar o documento, conferir o status e seguir com as próximas ações.',
                                   style: theme.bodyMedium.override(
-                                    font: GoogleFonts.manrope(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FontWeight.w600,
                                       fontStyle: theme.bodyMedium.fontStyle,
                                     ),
@@ -557,7 +551,7 @@ class _ContratosAssinadosPageWidgetState
                                 Text(
                                   'Histórico assinado',
                                   style: theme.titleLarge.override(
-                                    font: GoogleFonts.sora(
+                                    font: GoogleFonts.barlow(
                                       fontWeight: FontWeight.w700,
                                       fontStyle: theme.titleLarge.fontStyle,
                                     ),
@@ -570,7 +564,7 @@ class _ContratosAssinadosPageWidgetState
                                       ? 'Nenhum contrato concluído por enquanto.'
                                       : 'Tudo em um só lugar para abrir, revisar e localizar mais rápido.',
                                   style: theme.bodyMedium.override(
-                                    font: GoogleFonts.manrope(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FontWeight.w600,
                                       fontStyle: theme.bodyMedium.fontStyle,
                                     ),
@@ -608,7 +602,7 @@ class _ContratosAssinadosPageWidgetState
                                           'Nenhum contrato assinado ainda.',
                                           textAlign: TextAlign.center,
                                           style: theme.titleLarge.override(
-                                            font: GoogleFonts.sora(
+                                            font: GoogleFonts.barlow(
                                               fontWeight: FontWeight.w700,
                                               fontStyle:
                                                   theme.titleLarge.fontStyle,
@@ -621,7 +615,7 @@ class _ContratosAssinadosPageWidgetState
                                           'Quando um contrato for concluído, ele ficará disponível aqui com um visual mais limpo para consulta rápida.',
                                           textAlign: TextAlign.center,
                                           style: theme.bodyMedium.override(
-                                            font: GoogleFonts.manrope(
+                                            font: GoogleFonts.notoSans(
                                               fontWeight: FontWeight.w600,
                                               fontStyle:
                                                   theme.bodyMedium.fontStyle,

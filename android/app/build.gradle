@@ -33,6 +33,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace "com.dartsoft.sinatep"
     compileSdkVersion 35
+    ndkVersion "28.2.13676358"
     
 
     compileOptions {
@@ -88,5 +89,5 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.1.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.2.20"
 }

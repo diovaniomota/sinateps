@@ -63,7 +63,8 @@ class _AssTestemunhaPageWidgetState extends State<AssTestemunhaPageWidget> {
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
+          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+          surfaceTintColor: Colors.transparent,
           automaticallyImplyLeading: false,
           leading: FlutterFlowIconButton(
             borderColor: Colors.transparent,
@@ -72,7 +73,7 @@ class _AssTestemunhaPageWidgetState extends State<AssTestemunhaPageWidget> {
             buttonSize: 60.0,
             icon: FaIcon(
               FontAwesomeIcons.angleLeft,
-              color: FlutterFlowTheme.of(context).info,
+              color: FlutterFlowTheme.of(context).primaryText,
               size: 30.0,
             ),
             onPressed: () async {
@@ -84,10 +85,10 @@ class _AssTestemunhaPageWidgetState extends State<AssTestemunhaPageWidget> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8.0),
               child: Image.asset(
-                'assets/images/Design_sem_nome_(37).png',
+                'assets/images/sinatep_logo_color.png',
                 width: 200.0,
                 height: 50.0,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
                 alignment: Alignment(0.0, 0.0),
               ),
             ),
@@ -105,7 +106,7 @@ class _AssTestemunhaPageWidgetState extends State<AssTestemunhaPageWidget> {
                     buttonSize: 40.0,
                     icon: FaIcon(
                       FontAwesomeIcons.broom,
-                      color: FlutterFlowTheme.of(context).info,
+                      color: FlutterFlowTheme.of(context).primaryText,
                       size: 24.0,
                     ),
                     onPressed: () async {
@@ -120,7 +121,7 @@ class _AssTestemunhaPageWidgetState extends State<AssTestemunhaPageWidget> {
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
-                                  font: GoogleFonts.readexPro(
+                                  font: GoogleFonts.notoSans(
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .bodyMedium
                                         .fontWeight,
@@ -151,7 +152,8 @@ class _AssTestemunhaPageWidgetState extends State<AssTestemunhaPageWidget> {
             ),
           ],
           centerTitle: true,
-          elevation: 2.0,
+          elevation: 0.0,
+          scrolledUnderElevation: 0.0,
         ),
         body: Align(
           alignment: AlignmentDirectional(0.0, 0.0),
@@ -163,7 +165,7 @@ class _AssTestemunhaPageWidgetState extends State<AssTestemunhaPageWidget> {
                 Text(
                   'Assinatura Testemunha',
                   style: FlutterFlowTheme.of(context).titleMedium.override(
-                        font: GoogleFonts.readexPro(
+                        font: GoogleFonts.notoSans(
                           fontWeight: FontWeight.w500,
                           fontStyle: FlutterFlowTheme.of(context)
                               .titleMedium
@@ -363,7 +365,7 @@ class _AssTestemunhaPageWidgetState extends State<AssTestemunhaPageWidget> {
                                 style: FlutterFlowTheme.of(context)
                                     .bodyMedium
                                     .override(
-                                      font: GoogleFonts.readexPro(
+                                      font: GoogleFonts.notoSans(
                                         fontWeight: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .fontWeight,
@@ -398,7 +400,7 @@ class _AssTestemunhaPageWidgetState extends State<AssTestemunhaPageWidget> {
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .fontWeight,
@@ -438,7 +440,7 @@ class _AssTestemunhaPageWidgetState extends State<AssTestemunhaPageWidget> {
                       color: FlutterFlowTheme.of(context).primary,
                       textStyle:
                           FlutterFlowTheme.of(context).titleSmall.override(
-                                font: GoogleFonts.readexPro(
+                                font: GoogleFonts.notoSans(
                                   fontWeight: FlutterFlowTheme.of(context)
                                       .titleSmall
                                       .fontWeight,

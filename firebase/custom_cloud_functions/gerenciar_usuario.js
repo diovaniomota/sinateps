@@ -1,89 +1,83 @@
 const functions = require("firebase-functions");
-
 const admin = require("firebase-admin");
-
-// To avoid deployment errors, do not call admin.initializeApp() in your code
 
 exports.gerenciarUsuario = functions
   .region("southamerica-east1")
   .https.onCall(async (data, context) => {
-    // Verifica a autenticação do contexto; se o usuário não estiver autenticado, retorna
+    if (!context.auth || !context.auth.uid) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Usuário não autenticado.",
+      );
+    }
 
-    if (!context.auth.uid) return;
+    const actor = await admin.firestore().collection("user").doc(context.auth.uid).get();
+    const adminClaim = context.auth.token && context.auth.token.admin === true;
+    if (!adminClaim && !(actor.exists && actor.data().isAdmin === true)) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Apenas um administrador pode fazer isso.",
+      );
+    }
 
-    // Obtém informações do usuário (UID, nome, e-mail, senha) dos dados enviados
+    const { uid, displayName, email, password } = data || {};
+    const emailLimpo = email ? String(email).trim() : "";
+    const senha = password ? String(password) : "";
 
-    const { uid, displayName, email, password } = data;
+    if (emailLimpo && !/^[\w.-]+@([\w-]+\.)+[\w-]{2,}$/.test(emailLimpo)) {
+      throw new functions.https.HttpsError("invalid-argument", "E-mail inválido.");
+    }
+    if (senha && senha.length < 8) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "A senha precisa ter pelo menos 8 caracteres.",
+      );
+    }
 
     try {
-      // Se o UID já existir (ou seja, o usuário já existe), atualize suas informações
-
-      if (uid !== null) {
-        // Crie um objeto para atualizar as informações no Firebase Authentication
-
+      if (uid) {
         const updateUserObject = {};
-
-        // Se um novo e-mail for fornecido, atualize o e-mail
-
-        if (email) updateUserObject.email = email;
-
-        // Se uma nova senha for fornecida, atualize a senha
-
-        if (password) updateUserObject.password = password;
-
-        // Atualize as informações do usuário no Firebase Authentication
-
-        await admin.auth().updateUser(uid, updateUserObject);
-
-        // Crie um objeto para atualizar o documento do usuário no Firestore
+        if (emailLimpo) updateUserObject.email = emailLimpo;
+        if (senha) updateUserObject.password = senha;
+        if (Object.keys(updateUserObject).length > 0) {
+          await admin.auth().updateUser(uid, updateUserObject);
+        }
 
         const userDocUpdate = {};
-
-        // Se um novo nome for fornecido, atualize o nome no Firestore
-
-        if (displayName) userDocUpdate.display_name = displayName;
-
-        // Se um novo e-mail for fornecido, atualize o e-mail no Firestore
-
-        if (email) userDocUpdate.email = email;
-
-        // Obtém uma referência ao documento do usuário no Firestore
-
-        const userRef = admin.firestore().collection("user").doc(uid);
-
-        // Atualize o documento do usuário no Firestore com as informações atualizadas
-
-        await userRef.update(userDocUpdate);
-      } else {
-        // Se o UID não existir (ou seja, o usuário não existe), crie um novo usuário
-
-        const user = await admin.auth().createUser({ email, password });
-
-        // Crie um documento para o usuário no Firestore com as informações do novo usuário
-
-        const userDoc = {
-          uid: user.uid,
-
-          email: user.email,
-
-          display_name: displayName,
-
-          created_time: admin.firestore.FieldValue.serverTimestamp(),
-        };
-
-        // Obtém uma referência ao documento do usuário no Firestore
-
-        const userRef = admin.firestore().collection("user").doc(user.uid);
-
-        // Defina o documento do usuário no Firestore
-
-        await userRef.set(userDoc);
+        if (displayName) userDocUpdate.display_name = String(displayName).slice(0, 120);
+        if (emailLimpo) userDocUpdate.email = emailLimpo;
+        if (Object.keys(userDocUpdate).length > 0) {
+          await admin.firestore().collection("user").doc(uid).update(userDocUpdate);
+        }
+        return { success: true };
       }
+
+      if (!emailLimpo || !senha) {
+        throw new functions.https.HttpsError(
+          "invalid-argument",
+          "E-mail e senha são obrigatórios.",
+        );
+      }
+
+      const user = await admin.auth().createUser({
+        email: emailLimpo,
+        password: senha,
+        displayName: displayName ? String(displayName).slice(0, 120) : undefined,
+      });
+      await admin.firestore().collection("user").doc(user.uid).set({
+        uid: user.uid,
+        email: user.email,
+        display_name: displayName ? String(displayName).slice(0, 120) : "",
+        created_time: admin.firestore.FieldValue.serverTimestamp(),
+        isAdmin: false,
+      });
+      return { success: true, uid: user.uid };
     } catch (error) {
-      // Se ocorrer um erro, retorne um erro HTTP interno
-
-      console.warn("Stack", error.stack);
-
-      throw new functions.https.HttpsError("internal", error.message);
+      if (error instanceof functions.https.HttpsError) throw error;
+      console.error("Falha ao gerenciar usuário", error);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Falha ao gerenciar o usuário.",
+      );
     }
   });

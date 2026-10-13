@@ -83,7 +83,7 @@ class _VerContratoPageLinkWidgetState extends State<VerContratoPageLinkWidget> {
             content: Text(
               'Ocorreu um erro ao gerar token do PDF.',
               style: FlutterFlowTheme.of(context).bodyMedium.override(
-                    font: GoogleFonts.readexPro(
+                    font: GoogleFonts.notoSans(
                       fontWeight:
                           FlutterFlowTheme.of(context).bodyMedium.fontWeight,
                       fontStyle:
@@ -126,7 +126,8 @@ class _VerContratoPageLinkWidgetState extends State<VerContratoPageLinkWidget> {
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
+          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+          surfaceTintColor: Colors.transparent,
           automaticallyImplyLeading: false,
           leading: FlutterFlowIconButton(
             borderColor: Colors.transparent,
@@ -135,7 +136,7 @@ class _VerContratoPageLinkWidgetState extends State<VerContratoPageLinkWidget> {
             buttonSize: 60.0,
             icon: FaIcon(
               FontAwesomeIcons.angleLeft,
-              color: FlutterFlowTheme.of(context).info,
+              color: FlutterFlowTheme.of(context).primaryText,
               size: 30.0,
             ),
             onPressed: () async {
@@ -155,10 +156,10 @@ class _VerContratoPageLinkWidgetState extends State<VerContratoPageLinkWidget> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
                 child: Image.asset(
-                  'assets/images/Design_sem_nome_(37).png',
+                  'assets/images/sinatep_logo_color.png',
                   width: 200.0,
                   height: 50.0,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                   alignment: Alignment(0.0, 0.0),
                 ),
               ),
@@ -178,7 +179,7 @@ class _VerContratoPageLinkWidgetState extends State<VerContratoPageLinkWidget> {
                       buttonSize: 40.0,
                       icon: FaIcon(
                         FontAwesomeIcons.share,
-                        color: FlutterFlowTheme.of(context).info,
+                        color: FlutterFlowTheme.of(context).primaryText,
                         size: 24.0,
                       ),
                       onPressed: () async {
@@ -194,7 +195,8 @@ class _VerContratoPageLinkWidgetState extends State<VerContratoPageLinkWidget> {
             ),
           ],
           centerTitle: true,
-          elevation: 2.0,
+          elevation: 0.0,
+          scrolledUnderElevation: 0.0,
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -204,7 +206,7 @@ class _VerContratoPageLinkWidgetState extends State<VerContratoPageLinkWidget> {
               Text(
                 'Contrato',
                 style: FlutterFlowTheme.of(context).titleMedium.override(
-                      font: GoogleFonts.readexPro(
+                      font: GoogleFonts.notoSans(
                         fontWeight: FontWeight.w500,
                         fontStyle:
                             FlutterFlowTheme.of(context).titleMedium.fontStyle,
@@ -241,7 +243,7 @@ class _VerContratoPageLinkWidgetState extends State<VerContratoPageLinkWidget> {
                           'Sem PDF',
                           style:
                               FlutterFlowTheme.of(context).bodyMedium.override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .fontWeight,
@@ -269,7 +271,7 @@ class _VerContratoPageLinkWidgetState extends State<VerContratoPageLinkWidget> {
                   'Deslize para o lado para acessar a próxima página.',
                   textAlign: TextAlign.center,
                   style: FlutterFlowTheme.of(context).bodySmall.override(
-                        font: GoogleFonts.readexPro(
+                        font: GoogleFonts.notoSans(
                           fontWeight:
                               FlutterFlowTheme.of(context).bodySmall.fontWeight,
                           fontStyle:
@@ -310,7 +312,7 @@ class _VerContratoPageLinkWidgetState extends State<VerContratoPageLinkWidget> {
                       EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 0.0),
                   color: FlutterFlowTheme.of(context).tertiary,
                   textStyle: FlutterFlowTheme.of(context).titleSmall.override(
-                        font: GoogleFonts.readexPro(
+                        font: GoogleFonts.notoSans(
                           fontWeight: FlutterFlowTheme.of(context)
                               .titleSmall
                               .fontWeight,
@@ -357,7 +359,7 @@ class _VerContratoPageLinkWidgetState extends State<VerContratoPageLinkWidget> {
                       EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 0.0),
                   color: FlutterFlowTheme.of(context).primary,
                   textStyle: FlutterFlowTheme.of(context).titleSmall.override(
-                        font: GoogleFonts.readexPro(
+                        font: GoogleFonts.notoSans(
                           fontWeight: FlutterFlowTheme.of(context)
                               .titleSmall
                               .fontWeight,
@@ -414,7 +416,7 @@ class _VerContratoPageLinkWidgetState extends State<VerContratoPageLinkWidget> {
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
-                                  font: GoogleFonts.readexPro(
+                                  font: GoogleFonts.notoSans(
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .bodyMedium
                                         .fontWeight,
@@ -465,7 +467,7 @@ class _VerContratoPageLinkWidgetState extends State<VerContratoPageLinkWidget> {
                     FlutterFlowTheme.of(context).error,
                   ),
                   textStyle: FlutterFlowTheme.of(context).titleSmall.override(
-                        font: GoogleFonts.readexPro(
+                        font: GoogleFonts.notoSans(
                           fontWeight: FlutterFlowTheme.of(context)
                               .titleSmall
                               .fontWeight,

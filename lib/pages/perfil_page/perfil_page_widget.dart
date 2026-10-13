@@ -79,18 +79,6 @@ class _PerfilPageWidgetState extends State<PerfilPageWidget> {
     context.safePop();
   }
 
-  String _initials(String value) {
-    final parts =
-        value.trim().split(RegExp(r'\s+')).where((part) => part.isNotEmpty);
-    if (parts.isEmpty) {
-      return 'SP';
-    }
-    final list = parts.toList();
-    final first = list.first.substring(0, 1).toUpperCase();
-    final second = list.length > 1 ? list[1].substring(0, 1).toUpperCase() : '';
-    return '$first$second';
-  }
-
   InputDecoration _inputDecoration(
     BuildContext context, {
     required String label,
@@ -106,7 +94,7 @@ class _PerfilPageWidgetState extends State<PerfilPageWidget> {
       fillColor: theme.secondaryBackground,
       prefixIcon: Icon(icon, color: theme.secondaryText, size: 20.0),
       labelStyle: theme.labelMedium.override(
-        font: GoogleFonts.manrope(
+        font: GoogleFonts.notoSans(
           fontWeight: FontWeight.w700,
           fontStyle: theme.labelMedium.fontStyle,
         ),
@@ -114,7 +102,7 @@ class _PerfilPageWidgetState extends State<PerfilPageWidget> {
         letterSpacing: 0.0,
       ),
       hintStyle: theme.bodyMedium.override(
-        font: GoogleFonts.manrope(
+        font: GoogleFonts.notoSans(
           fontWeight: FontWeight.w600,
           fontStyle: theme.bodyMedium.fontStyle,
         ),
@@ -123,19 +111,19 @@ class _PerfilPageWidgetState extends State<PerfilPageWidget> {
       ),
       enabledBorder: OutlineInputBorder(
         borderSide: BorderSide(color: theme.alternate, width: 1.0),
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(14.0),
       ),
       focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(color: theme.primary, width: 1.4),
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(14.0),
       ),
       errorBorder: OutlineInputBorder(
         borderSide: BorderSide(color: theme.error, width: 1.0),
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(14.0),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderSide: BorderSide(color: theme.error, width: 1.4),
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(14.0),
       ),
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 18.0, vertical: 18.0),
@@ -152,32 +140,6 @@ class _PerfilPageWidgetState extends State<PerfilPageWidget> {
         ? _model.emailTextController.text.trim()
         : currentUserEmail;
 
-    Widget infoChip(IconData icon, String label) => Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(999.0),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 9.0),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: theme.info, size: 16.0),
-              const SizedBox(width: 8.0),
-              Text(
-                label,
-                style: theme.labelMedium.override(
-                  font: GoogleFonts.manrope(
-                    fontWeight: FontWeight.w800,
-                    fontStyle: theme.labelMedium.fontStyle,
-                  ),
-                  color: theme.info,
-                  letterSpacing: 0.0,
-                ),
-              ),
-            ],
-          ),
-        );
-
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -188,31 +150,17 @@ class _PerfilPageWidgetState extends State<PerfilPageWidget> {
         backgroundColor: theme.primaryBackground,
         appBar: AppBar(
           backgroundColor: theme.secondaryBackground,
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0.0,
           automaticallyImplyLeading: false,
-          leading: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: FlutterFlowIconButton(
-              borderColor: theme.alternate,
-              borderRadius: 18.0,
-              borderWidth: 1.0,
-              fillColor: theme.secondaryBackground,
-              buttonSize: 48.0,
-              icon: Icon(
-                Icons.arrow_back_rounded,
-                color: theme.primaryText,
-                size: 24.0,
-              ),
-              onPressed: () async => context.safePop(),
-            ),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: theme.primaryText),
+            onPressed: () => context.safePop(),
           ),
-          title: ClipRRect(
-            borderRadius: BorderRadius.circular(10.0),
-            child: Image.asset(
-              'assets/images/Design_sem_nome_(37).png',
-              width: 148.0,
-              height: 44.0,
-              fit: BoxFit.contain,
-            ),
+          title: Image.asset(
+            'assets/images/sinatep_logo_color.png',
+            height: 28.0,
+            fit: BoxFit.contain,
           ),
           actions: [
             Padding(
@@ -239,13 +187,7 @@ class _PerfilPageWidgetState extends State<PerfilPageWidget> {
         body: Container(
           width: double.infinity,
           height: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFF5F8FC), Color(0xFFEAF2FB)],
-              begin: AlignmentDirectional(0.0, -1.0),
-              end: AlignmentDirectional(0.0, 1.0),
-            ),
-          ),
+          color: theme.primaryBackground,
           child: AuthUserStreamWidget(
             builder: (context) => SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20.0, 14.0, 20.0, 28.0),
@@ -259,156 +201,45 @@ class _PerfilPageWidgetState extends State<PerfilPageWidget> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [theme.primary, const Color(0xFF4E88BC)],
-                              begin: const AlignmentDirectional(-1.0, -1.0),
-                              end: const AlignmentDirectional(1.0, 1.0),
-                            ),
-                            borderRadius: BorderRadius.circular(30.0),
-                            boxShadow: const [
-                              BoxShadow(
-                                blurRadius: 24.0,
-                                color: Color(0x1E2A5D8F),
-                                offset: Offset(0.0, 16.0),
-                              ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(22.0),
+                          color: theme.secondaryBackground,
+                          padding: const EdgeInsets.fromLTRB(16.0, 14.0, 16.0, 14.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 62.0,
-                                    height: 62.0,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.16),
-                                      borderRadius: BorderRadius.circular(22.0),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      _initials(nome),
-                                      style: theme.headlineSmall.override(
-                                        font: GoogleFonts.sora(
-                                          fontWeight: FontWeight.w700,
-                                          fontStyle:
-                                              theme.headlineSmall.fontStyle,
-                                        ),
-                                        color: theme.info,
-                                        letterSpacing: -0.3,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14.0),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Meu perfil',
-                                          style: theme.headlineSmall.override(
-                                            font: GoogleFonts.sora(
-                                              fontWeight: FontWeight.w700,
-                                              fontStyle:
-                                                  theme.headlineSmall.fontStyle,
-                                            ),
-                                            color: theme.info,
-                                            letterSpacing: -0.3,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6.0),
-                                        Text(
-                                          'Atualize seus dados com uma leitura mais clara e uma navegação mais tranquila.',
-                                          style: theme.bodyMedium.override(
-                                            font: GoogleFonts.manrope(
-                                              fontWeight: FontWeight.w600,
-                                              fontStyle:
-                                                  theme.bodyMedium.fontStyle,
-                                            ),
-                                            color: Colors.white
-                                                .withValues(alpha: 0.86),
-                                            letterSpacing: 0.0,
-                                            lineHeight: 1.4,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                              Text(nome, style: theme.headlineSmall),
+                              const SizedBox(height: 2.0),
+                              Text(
+                                email,
+                                style: theme.bodyMedium.override(
+                                  color: theme.secondaryText,
+                                ),
                               ),
-                              const SizedBox(height: 18.0),
-                              Wrap(
-                                spacing: 10.0,
-                                runSpacing: 10.0,
-                                children: [
-                                  infoChip(Icons.person_outline_rounded, nome),
-                                  infoChip(
-                                    currentUserEmailVerified
-                                        ? Icons.verified_outlined
-                                        : Icons.mark_email_unread_outlined,
-                                    currentUserEmailVerified
-                                        ? 'E-mail verificado'
-                                        : 'Verificação pendente',
-                                  ),
-                                  infoChip(
-                                    valueOrDefault<bool>(
-                                            currentUserDocument?.isAdmin, false)
-                                        ? Icons.workspace_premium_outlined
-                                        : Icons.badge_outlined,
-                                    valueOrDefault<bool>(
-                                            currentUserDocument?.isAdmin, false)
-                                        ? 'Administrador'
-                                        : 'Conta ativa',
-                                  ),
-                                ],
+                              const SizedBox(height: 2.0),
+                              Text(
+                                valueOrDefault<bool>(
+                                        currentUserDocument?.isAdmin, false)
+                                    ? 'Administrador'
+                                    : 'Equipe',
+                                style: theme.labelMedium.override(
+                                  color: theme.primary,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 18.0),
+                        const SizedBox(height: 12.0),
                         Container(
                           decoration: BoxDecoration(
                             color: theme.secondaryBackground,
-                            borderRadius: BorderRadius.circular(30.0),
                             border: Border.all(color: theme.alternate),
-                            boxShadow: const [
-                              BoxShadow(
-                                blurRadius: 24.0,
-                                color: Color(0x100F2237),
-                                offset: Offset(0.0, 14.0),
-                              ),
-                            ],
                           ),
-                          padding: const EdgeInsets.all(22.0),
+                          padding: const EdgeInsets.all(16.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Dados da conta',
-                                style: theme.titleLarge.override(
-                                  font: GoogleFonts.sora(
-                                    fontWeight: FontWeight.w700,
-                                    fontStyle: theme.titleLarge.fontStyle,
-                                  ),
-                                  letterSpacing: -0.3,
-                                ),
-                              ),
-                              const SizedBox(height: 6.0),
-                              Text(
-                                'Mantenha seu nome e e-mail atualizados para facilitar o acesso e a recuperação da conta.',
-                                style: theme.bodyMedium.override(
-                                  font: GoogleFonts.manrope(
-                                    fontWeight: FontWeight.w600,
-                                    fontStyle: theme.bodyMedium.fontStyle,
-                                  ),
-                                  color: theme.secondaryText,
-                                  letterSpacing: 0.0,
-                                  lineHeight: 1.35,
-                                ),
+                                style: theme.titleMedium,
                               ),
                               const SizedBox(height: 18.0),
                               TextFormField(
@@ -423,7 +254,7 @@ class _PerfilPageWidgetState extends State<PerfilPageWidget> {
                                   icon: Icons.person_outline_rounded,
                                 ),
                                 style: theme.bodyLarge.override(
-                                  font: GoogleFonts.manrope(
+                                  font: GoogleFonts.notoSans(
                                     fontWeight: FontWeight.w700,
                                     fontStyle: theme.bodyLarge.fontStyle,
                                   ),
@@ -457,7 +288,7 @@ class _PerfilPageWidgetState extends State<PerfilPageWidget> {
                                   icon: Icons.mail_outline_rounded,
                                 ),
                                 style: theme.bodyLarge.override(
-                                  font: GoogleFonts.manrope(
+                                  font: GoogleFonts.notoSans(
                                     fontWeight: FontWeight.w700,
                                     fontStyle: theme.bodyLarge.fontStyle,
                                   ),
@@ -484,70 +315,35 @@ class _PerfilPageWidgetState extends State<PerfilPageWidget> {
                           child: Container(
                             decoration: BoxDecoration(
                               color: theme.secondaryBackground,
-                              borderRadius: BorderRadius.circular(30.0),
                               border: Border.all(color: theme.alternate),
                             ),
-                            padding: const EdgeInsets.all(20.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 14.0,
+                            ),
                             child: Row(
                               children: [
-                                Container(
-                                  width: 52.0,
-                                  height: 52.0,
-                                  decoration: BoxDecoration(
-                                    color: theme.accent4,
-                                    borderRadius: BorderRadius.circular(18.0),
-                                  ),
-                                  child: Icon(
-                                    Icons.lock_reset_rounded,
-                                    color: theme.primary,
-                                    size: 24.0,
-                                  ),
-                                ),
-                                const SizedBox(width: 14.0),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Segurança da conta',
-                                        style: theme.titleMedium.override(
-                                          font: GoogleFonts.sora(
-                                            fontWeight: FontWeight.w700,
-                                            fontStyle:
-                                                theme.titleMedium.fontStyle,
-                                          ),
-                                          letterSpacing: -0.2,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6.0),
-                                      Text(
-                                        'Redefina sua senha quando precisar e mantenha o acesso protegido.',
-                                        style: theme.bodyMedium.override(
-                                          font: GoogleFonts.manrope(
-                                            fontWeight: FontWeight.w600,
-                                            fontStyle:
-                                                theme.bodyMedium.fontStyle,
-                                          ),
-                                          color: theme.secondaryText,
-                                          letterSpacing: 0.0,
-                                          lineHeight: 1.35,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                Icon(
+                                  Icons.lock_outline,
+                                  color: theme.primary,
+                                  size: 20.0,
                                 ),
                                 const SizedBox(width: 12.0),
+                                Expanded(
+                                  child: Text(
+                                    'Redefinir senha',
+                                    style: theme.titleSmall,
+                                  ),
+                                ),
                                 Icon(
-                                  Icons.arrow_forward_ios_rounded,
+                                  Icons.chevron_right,
                                   color: theme.secondaryText,
-                                  size: 18.0,
                                 ),
                               ],
                             ),
                           ),
                         ),
-                        const SizedBox(height: 22.0),
+                        const SizedBox(height: 12.0),
                         SizedBox(
                           height: 56.0,
                           child: ElevatedButton.icon(
@@ -557,14 +353,14 @@ class _PerfilPageWidgetState extends State<PerfilPageWidget> {
                               foregroundColor: theme.info,
                               elevation: 0.0,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20.0),
+                                borderRadius: BorderRadius.circular(14.0),
                               ),
                             ),
                             icon: const Icon(Icons.check_rounded, size: 20.0),
                             label: Text(
                               'Salvar alterações',
                               style: theme.titleSmall.override(
-                                font: GoogleFonts.manrope(
+                                font: GoogleFonts.notoSans(
                                   fontWeight: FontWeight.w800,
                                   fontStyle: theme.titleSmall.fontStyle,
                                 ),
@@ -580,7 +376,7 @@ class _PerfilPageWidgetState extends State<PerfilPageWidget> {
                             'E-mail atual: $email',
                             textAlign: TextAlign.center,
                             style: theme.bodySmall.override(
-                              font: GoogleFonts.manrope(
+                              font: GoogleFonts.notoSans(
                                 fontWeight: FontWeight.w700,
                                 fontStyle: theme.bodySmall.fontStyle,
                               ),

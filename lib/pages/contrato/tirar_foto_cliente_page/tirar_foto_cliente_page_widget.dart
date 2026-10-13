@@ -8,6 +8,7 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/upload_data.dart';
 import '/flutter_flow/custom_functions.dart' as functions;
 import '/index.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -84,7 +85,7 @@ class _TirarFotoClientePageWidgetState
             content: Text(
               'Ocorreu um erro ao gerar token do PDF.',
               style: FlutterFlowTheme.of(context).bodyMedium.override(
-                    font: GoogleFonts.readexPro(
+                    font: GoogleFonts.notoSans(
                       fontWeight:
                           FlutterFlowTheme.of(context).bodyMedium.fontWeight,
                       fontStyle:
@@ -127,7 +128,8 @@ class _TirarFotoClientePageWidgetState
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
+          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+          surfaceTintColor: Colors.transparent,
           automaticallyImplyLeading: false,
           leading: FlutterFlowIconButton(
             borderColor: Colors.transparent,
@@ -136,7 +138,7 @@ class _TirarFotoClientePageWidgetState
             buttonSize: 60.0,
             icon: FaIcon(
               FontAwesomeIcons.angleLeft,
-              color: FlutterFlowTheme.of(context).info,
+              color: FlutterFlowTheme.of(context).primaryText,
               size: 30.0,
             ),
             onPressed: () async {
@@ -156,10 +158,10 @@ class _TirarFotoClientePageWidgetState
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
                 child: Image.asset(
-                  'assets/images/Design_sem_nome_(37).png',
+                  'assets/images/sinatep_logo_color.png',
                   width: 200.0,
                   height: 50.0,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                   alignment: Alignment(0.0, 0.0),
                 ),
               ),
@@ -167,7 +169,8 @@ class _TirarFotoClientePageWidgetState
           ),
           actions: [],
           centerTitle: true,
-          elevation: 2.0,
+          elevation: 0.0,
+          scrolledUnderElevation: 0.0,
         ),
         body: Padding(
           padding: EdgeInsets.all(24.0),
@@ -186,18 +189,11 @@ class _TirarFotoClientePageWidgetState
                         child: Container(
                           width: 150.0,
                           height: 150.0,
+                          alignment: Alignment.center,
+                          clipBehavior: Clip.antiAlias,
                           decoration: BoxDecoration(
                             color: FlutterFlowTheme.of(context)
                                 .secondaryBackground,
-                            image: DecorationImage(
-                              fit: BoxFit.cover,
-                              image: Image.network(
-                                valueOrDefault<String>(
-                                  _model.uploadedFileUrl_uploadDataQld,
-                                  'https://images.vexels.com/content/137047/preview/user-profile-blue-icon-32113c.png',
-                                ),
-                              ).image,
-                            ),
                             boxShadow: [
                               BoxShadow(
                                 blurRadius: 4.0,
@@ -210,6 +206,25 @@ class _TirarFotoClientePageWidgetState
                             ],
                             shape: BoxShape.circle,
                           ),
+                          child: _model.uploadedFileUrl_uploadDataQld.isEmpty
+                              ? Icon(
+                                  Icons.person_rounded,
+                                  size: 72.0,
+                                  color: FlutterFlowTheme.of(context).primary,
+                                )
+                              : CachedNetworkImage(
+                                  imageUrl:
+                                      _model.uploadedFileUrl_uploadDataQld,
+                                  width: 150.0,
+                                  height: 150.0,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (context, url, error) => Icon(
+                                    Icons.person_rounded,
+                                    size: 72.0,
+                                    color:
+                                        FlutterFlowTheme.of(context).primary,
+                                  ),
+                                ),
                         ),
                       ),
                       Align(
@@ -323,7 +338,7 @@ class _TirarFotoClientePageWidgetState
                       color: FlutterFlowTheme.of(context).primary,
                       textStyle:
                           FlutterFlowTheme.of(context).titleSmall.override(
-                                font: GoogleFonts.readexPro(
+                                font: GoogleFonts.notoSans(
                                   fontWeight: FlutterFlowTheme.of(context)
                                       .titleSmall
                                       .fontWeight,

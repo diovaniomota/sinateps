@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/api_requests/api_calls.dart';
 import '/backend/backend.dart';
 import '/backend/custom_cloud_functions/custom_cloud_function_response_manager.dart';
+import '/custom_code/contrato_validacao.dart';
 import '/flutter_flow/flutter_flow_drop_down.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -12,7 +15,7 @@ import '/flutter_flow/custom_functions.dart' as functions;
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:provider/provider.dart';
@@ -45,6 +48,8 @@ class _RegistrarContratoPageWidgetState
   final _stepTwoKey = GlobalKey();
   final _stepThreeKey = GlobalKey();
   int _currentStep = 1;
+  Timer? _rascunhoTimer;
+  static const _rascunhoKey = 'sinatep_contrato_rascunho_v1';
 
   void _updateCurrentStep() {
     if (!mounted) return;
@@ -72,7 +77,35 @@ class _RegistrarContratoPageWidgetState
     }
   }
 
+  String? _erroDaEtapa(int etapa) {
+    if (etapa == 1) {
+      return erroContratante(
+        contratante: _model.contratanteTextController.text,
+        documento: _model.documentoTextController.text,
+        telefones: _model.telefonesTextController.text,
+        email: _model.emailTextController.text,
+      );
+    }
+    if (etapa == 2) {
+      return erroAluno(_model.alunoTextController.text);
+    }
+    return null;
+  }
+
+  void _avisar(String mensagem) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(mensagem)),
+    );
+  }
+
   Future<void> _goToStep(int step) async {
+    for (var etapa = 1; etapa < step; etapa++) {
+      final erro = _erroDaEtapa(etapa);
+      if (erro != null) {
+        _avisar(erro);
+        return;
+      }
+    }
     final targetKey = switch (step) {
       2 => _stepTwoKey,
       3 => _stepThreeKey,
@@ -123,7 +156,7 @@ class _RegistrarContratoPageWidgetState
               child: Text(
                 'Esse processo pode levar alguns minutos. Não feche o aplicativo nem saia da página até a conclusão para evitar erros durante a geração do contrato.',
                 style: theme.bodyMedium.override(
-                  font: GoogleFonts.manrope(
+                  font: GoogleFonts.notoSans(
                     fontWeight: FontWeight.w700,
                     fontStyle: theme.bodyMedium.fontStyle,
                   ),
@@ -178,7 +211,7 @@ class _RegistrarContratoPageWidgetState
                         : Text(
                             number,
                             style: theme.labelMedium.override(
-                              font: GoogleFonts.manrope(
+                              font: GoogleFonts.notoSans(
                                 fontWeight: FontWeight.w800,
                               ),
                               color:
@@ -206,7 +239,7 @@ class _RegistrarContratoPageWidgetState
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.labelMedium.override(
-                font: GoogleFonts.manrope(fontWeight: FontWeight.w700),
+                font: GoogleFonts.notoSans(fontWeight: FontWeight.w700),
                 color: active || completed
                     ? theme.primaryText
                     : theme.secondaryText,
@@ -230,88 +263,25 @@ class _RegistrarContratoPageWidgetState
     final theme = FlutterFlowTheme.of(context);
     return Padding(
       key: key,
-      padding: const EdgeInsets.only(top: 10.0, bottom: 4.0),
-      child: Row(
+      padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 42.0,
-            height: 42.0,
-            decoration: BoxDecoration(
-              color: theme.primary,
-              borderRadius: BorderRadius.circular(13.0),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(icon, color: Colors.white, size: 21.0),
-                Positioned(
-                  right: 3.0,
-                  bottom: 2.0,
-                  child: Container(
-                    width: 15.0,
-                    height: 15.0,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: theme.primary, width: 1.5),
-                    ),
-                    child: Center(
-                      child: Text(
-                        number,
-                        style: const TextStyle(
-                          color: Color(0xFF19618F),
-                          fontSize: 8.0,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              Icon(icon, size: 18.0, color: theme.primary),
+              const SizedBox(width: 8.0),
+              Text(
+                '$number. $title',
+                style: theme.titleMedium,
+              ),
+            ],
           ),
-          const SizedBox(width: 14.0),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'ETAPA $number',
-                  style: theme.labelMedium.override(
-                    font: GoogleFonts.manrope(
-                      fontWeight: FontWeight.w800,
-                      fontStyle: theme.labelMedium.fontStyle,
-                    ),
-                    color: theme.primary,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  title,
-                  style: theme.titleLarge.override(
-                    font: GoogleFonts.sora(
-                      fontWeight: FontWeight.w700,
-                      fontStyle: theme.titleLarge.fontStyle,
-                    ),
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(height: 6.0),
-                Text(
-                  subtitle,
-                  style: theme.bodyMedium.override(
-                    font: GoogleFonts.manrope(
-                      fontWeight: FontWeight.w600,
-                      fontStyle: theme.bodyMedium.fontStyle,
-                    ),
-                    color: theme.secondaryText,
-                    letterSpacing: 0.0,
-                    lineHeight: 1.3,
-                  ),
-                ),
-              ],
+          const SizedBox(height: 2.0),
+          Text(
+            subtitle,
+            style: theme.bodySmall.override(
+              color: theme.secondaryText,
             ),
           ),
         ],
@@ -332,14 +302,7 @@ class _RegistrarContratoPageWidgetState
     _model.emailTextController ??=
         TextEditingController(text: widget.contrato?.email);
     _model.emailFocusNode ??= FocusNode();
-    _model.emailTextControllerValidator = (context, value) {
-      if (value != null && value.isNotEmpty) {
-        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-          return 'Insira um email válido.';
-        }
-      }
-      return null;
-    };
+    _model.emailTextControllerValidator = (context, value) => null;
 
     _model.documentoTextController ??=
         TextEditingController(text: widget.contrato?.documento);
@@ -397,7 +360,7 @@ class _RegistrarContratoPageWidgetState
     ));
     _model.telefonesFocusNode ??= FocusNode();
 
-    _model.telefonesMask = MaskTextInputFormatter(mask: '+55 (##) # ####-####');
+    _model.telefonesMask = MaskTextInputFormatter(mask: '(##) #####-####');
     _model.alunoTextController ??=
         TextEditingController(text: widget.contrato?.aluno);
     _model.alunoFocusNode ??= FocusNode();
@@ -449,10 +412,186 @@ class _RegistrarContratoPageWidgetState
     _model.descontoTextController ??=
         TextEditingController(text: widget.contrato?.descontoRS);
     _model.descontoFocusNode ??= FocusNode();
+
+    _model.contratanteTextControllerValidator = (context, value) => null;
+    _model.documentoTextControllerValidator = (context, value) => null;
+    _model.telefonesTextControllerValidator = (context, value) => null;
+    _model.emailTextControllerValidator = (context, value) => null;
+    _model.alunoTextControllerValidator = (context, value) => null;
+
+    for (final controller in [
+      _model.contratanteTextController,
+      _model.documentoTextController,
+      _model.emailTextController,
+      _model.telefonesTextController,
+      _model.cidadeTextController,
+      _model.alunoTextController,
+      _model.enderecoTextController,
+    ]) {
+      controller?.addListener(_agendarRascunho);
+    }
+    if (widget.contrato == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _restaurarRascunho());
+    }
+  }
+
+  void _agendarRascunho() {
+    if (widget.contrato != null) return;
+    _rascunhoTimer?.cancel();
+    _rascunhoTimer = Timer(const Duration(milliseconds: 700), _salvarRascunho);
+  }
+
+  Map<String, String> _mapaRascunho() {
+    String texto(TextEditingController? controller) => controller?.text ?? '';
+    return {
+      'contratante': texto(_model.contratanteTextController),
+      'documento': texto(_model.documentoTextController),
+      'email': texto(_model.emailTextController),
+      'rg': texto(_model.rgTextController),
+      'dn': texto(_model.dnTextController),
+      'filiacao': texto(_model.filiacaoTextController),
+      'naturalidade': texto(_model.naturalidadeTextController),
+      'cep': texto(_model.cepTextController),
+      'endereco': texto(_model.enderecoTextController),
+      'numero': texto(_model.numeroTextController),
+      'bairro': texto(_model.bairroTextController),
+      'cidade': texto(_model.cidadeTextController),
+      'uf': texto(_model.ufTextController),
+      'telefones': texto(_model.telefonesTextController),
+      'aluno': texto(_model.alunoTextController),
+      'alunoDN': texto(_model.alunoDNTextController),
+      'alunoDocumento': texto(_model.alunoDocumentoTextController),
+      'alunoNaturalidade': texto(_model.alunoNaturalidadeTextController),
+      'alunoTelefone': texto(_model.alunoTelefoneTextController),
+      'outro': texto(_model.outroTextController),
+      'indicacao': texto(_model.indicacaoTextController),
+      'horas': texto(_model.horasTextController),
+      'contratada': texto(_model.contratadaTextController),
+      'desconto': texto(_model.descontoTextController),
+      'inicioPrevisto': texto(_model.inicioPrevistoTextController),
+      'primeiraParcela': texto(_model.primeiraParcelaTextController),
+      'sexo': _model.sexoValue ?? '',
+      'opcaoCurso': _model.opcaoCursoValue ?? '',
+    };
+  }
+
+  Future<void> _salvarRascunho() async {
+    if (!mounted || widget.contrato != null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_rascunhoKey, jsonEncode(_mapaRascunho()));
+  }
+
+  void _preencher(TextEditingController? controller, String? valor) {
+    if (controller == null || valor == null || valor.isEmpty) return;
+    if (controller.text.isEmpty) controller.text = valor;
+  }
+
+  Future<void> _restaurarRascunho() async {
+    if (!mounted || widget.contrato != null) return;
+    final prefs = await SharedPreferences.getInstance();
+    final bruto = prefs.getString(_rascunhoKey);
+    if (bruto == null || bruto.isEmpty) return;
+    final mapa = jsonDecode(bruto);
+    if (mapa is! Map) return;
+    String? ler(String chave) => mapa[chave]?.toString();
+    _preencher(_model.contratanteTextController, ler('contratante'));
+    _preencher(_model.documentoTextController, ler('documento'));
+    _preencher(_model.emailTextController, ler('email'));
+    _preencher(_model.rgTextController, ler('rg'));
+    _preencher(_model.dnTextController, ler('dn'));
+    _preencher(_model.filiacaoTextController, ler('filiacao'));
+    _preencher(_model.naturalidadeTextController, ler('naturalidade'));
+    _preencher(_model.cepTextController, ler('cep'));
+    _preencher(_model.enderecoTextController, ler('endereco'));
+    _preencher(_model.numeroTextController, ler('numero'));
+    _preencher(_model.bairroTextController, ler('bairro'));
+    _preencher(_model.cidadeTextController, ler('cidade'));
+    _preencher(_model.ufTextController, ler('uf'));
+    _preencher(_model.telefonesTextController, ler('telefones'));
+    _preencher(_model.alunoTextController, ler('aluno'));
+    _preencher(_model.alunoDNTextController, ler('alunoDN'));
+    _preencher(_model.alunoDocumentoTextController, ler('alunoDocumento'));
+    _preencher(
+        _model.alunoNaturalidadeTextController, ler('alunoNaturalidade'));
+    _preencher(_model.alunoTelefoneTextController, ler('alunoTelefone'));
+    _preencher(_model.outroTextController, ler('outro'));
+    _preencher(_model.indicacaoTextController, ler('indicacao'));
+    _preencher(_model.horasTextController, ler('horas'));
+    _preencher(_model.contratadaTextController, ler('contratada'));
+    _preencher(_model.descontoTextController, ler('desconto'));
+    _preencher(_model.inicioPrevistoTextController, ler('inicioPrevisto'));
+    _preencher(_model.primeiraParcelaTextController, ler('primeiraParcela'));
+    if ((_model.sexoValue ?? '').isEmpty && (ler('sexo') ?? '').isNotEmpty) {
+      _model.sexoValue = ler('sexo');
+    }
+    if ((_model.opcaoCursoValue ?? '').isEmpty &&
+        (ler('opcaoCurso') ?? '').isNotEmpty) {
+      _model.opcaoCursoValue = ler('opcaoCurso');
+    }
+    if (mounted) safeSetState(() {});
+  }
+
+  Future<void> _limparRascunho() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_rascunhoKey);
+  }
+
+  Future<int> _reservarNumero() async {
+    try {
+      final result = await FirebaseFunctions.instanceFor(
+              region: 'southamerica-east1')
+          .httpsCallable('reservarNumeroContrato')
+          .call();
+      final data = result.data;
+      if (data is Map && data['numero'] is num) {
+        return (data['numero'] as num).toInt();
+      }
+    } on FirebaseFunctionsException {
+      // A função entra no ar junto com as regras novas.
+    }
+    final adminUser = currentUserDocument?.isAdmin == true;
+    return await queryContratoRecordCount(
+          queryBuilder: (contrato) => adminUser
+              ? contrato
+              : contrato.where('criador', isEqualTo: currentUserReference),
+        ) +
+        1;
+  }
+
+  Future<ContratoRecord?> _cpfExistente() async {
+    final cpf = _model.documentoTextController.text.trim();
+    if (!cpfValido(cpf)) return null;
+    final adminUser = currentUserDocument?.isAdmin == true;
+    final lista = await queryContratoRecordOnce(
+      queryBuilder: (contrato) {
+        var query = contrato.where('documento', isEqualTo: cpf);
+        if (!adminUser) {
+          query = query.where('criador', isEqualTo: currentUserReference);
+        }
+        return query;
+      },
+      limit: 5,
+    );
+    for (final item in lista) {
+      if (widget.contrato == null ||
+          item.reference.path != widget.contrato!.reference.path) {
+        return item;
+      }
+    }
+    return null;
+  }
+
+  Map<String, dynamic> _camposDoFormulario() {
+    return camposBusca(
+      contratante: _model.contratanteTextController.text,
+      documento: _model.documentoTextController.text,
+      cidade: _model.cidadeTextController.text,
+    );
   }
 
   @override
   void dispose() {
+    _rascunhoTimer?.cancel();
     _scrollController.dispose();
     _model.dispose();
 
@@ -471,32 +610,20 @@ class _RegistrarContratoPageWidgetState
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: const Color(0xFFF4F7FA),
+        backgroundColor: theme.primaryBackground,
         appBar: AppBar(
-          backgroundColor: const Color(0xFFF4F7FA),
+          backgroundColor: theme.primaryBackground,
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0.0,
           automaticallyImplyLeading: false,
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 12.0, top: 7.0, bottom: 7.0),
-            child: FlutterFlowIconButton(
-              borderColor: Colors.transparent,
-              borderRadius: 14.0,
-              borderWidth: 0.0,
-              fillColor: Colors.white,
-              buttonSize: 44.0,
-              icon: FaIcon(
-                FontAwesomeIcons.angleLeft,
-                color: theme.primaryText,
-                size: 19.0,
-              ),
-              onPressed: () async {
-                context.pop();
-              },
-            ),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: theme.primaryText),
+            onPressed: () => context.pop(),
           ),
           title: Text(
             widget.contrato == null ? 'Novo contrato' : 'Editar contrato',
             style: theme.titleMedium.override(
-              font: GoogleFonts.sora(fontWeight: FontWeight.w700),
+              font: GoogleFonts.barlow(fontWeight: FontWeight.w700),
               color: theme.primaryText,
               letterSpacing: -0.2,
             ),
@@ -504,13 +631,12 @@ class _RegistrarContratoPageWidgetState
           actions: const [],
           centerTitle: false,
           elevation: 0.0,
-          surfaceTintColor: Colors.transparent,
         ),
         body: Container(
           width: double.infinity,
           height: double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0xFFF4F7FA),
+            color: theme.primaryBackground,
           ),
           child: RepaintBoundary(
             child: SingleChildScrollView(
@@ -525,78 +651,30 @@ class _RegistrarContratoPageWidgetState
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24.0),
-                          border: Border.all(color: const Color(0xFFE4EAF1)),
+                          borderRadius: BorderRadius.circular(16.0),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x0F1B2836),
+                              blurRadius: 16.0,
+                              offset: Offset(0, 6),
+                            ),
+                          ],
                         ),
-                        padding: const EdgeInsets.all(20.0),
+                        padding: const EdgeInsets.all(16.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 48.0,
-                                  height: 48.0,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE7F1F8),
-                                    borderRadius: BorderRadius.circular(15.0),
-                                  ),
-                                  child: Icon(
-                                    Icons.description_outlined,
-                                    color: theme.primary,
-                                    size: 24.0,
-                                  ),
-                                ),
-                                const Spacer(),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 11.0,
-                                    vertical: 7.0,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEAF7EF),
-                                    borderRadius: BorderRadius.circular(99.0),
-                                  ),
-                                  child: Text(
-                                    widget.contrato == null
-                                        ? 'NOVO CADASTRO'
-                                        : 'EM EDIÇÃO',
-                                    style: theme.labelSmall.override(
-                                      font: GoogleFonts.manrope(
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                      color: const Color(0xFF247348),
-                                      letterSpacing: 0.7,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16.0),
                             Text(
                               widget.contrato == null
-                                  ? 'Vamos criar um novo contrato'
-                                  : 'Revise os dados do contrato',
-                              style: theme.headlineSmall.override(
-                                font: GoogleFonts.sora(
-                                  fontWeight: FontWeight.w700,
-                                  fontStyle: theme.headlineSmall.fontStyle,
-                                ),
-                                color: theme.primaryText,
-                                letterSpacing: -0.5,
-                              ),
+                                  ? 'Novo contrato'
+                                  : 'Contrato',
+                              style: theme.headlineSmall,
                             ),
-                            const SizedBox(height: 7.0),
+                            const SizedBox(height: 4.0),
                             Text(
-                              'Preencha as três etapas abaixo. Você poderá revisar tudo antes de gerar o documento.',
+                              'Contratante, aluno e pagamento.',
                               style: theme.bodyMedium.override(
-                                font: GoogleFonts.manrope(
-                                  fontWeight: FontWeight.w600,
-                                  fontStyle: theme.bodyMedium.fontStyle,
-                                ),
                                 color: theme.secondaryText,
-                                letterSpacing: 0.0,
-                                lineHeight: 1.4,
                               ),
                             ),
                             const SizedBox(height: 22.0),
@@ -638,13 +716,12 @@ class _RegistrarContratoPageWidgetState
                       Container(
                         decoration: BoxDecoration(
                           color: theme.secondaryBackground,
-                          borderRadius: BorderRadius.circular(24.0),
-                          border: Border.all(color: const Color(0xFFE4EAF1)),
+                          borderRadius: BorderRadius.circular(16.0),
                           boxShadow: const [
                             BoxShadow(
-                              blurRadius: 24.0,
-                              color: Color(0x0A0F2237),
-                              offset: Offset(0.0, 8.0),
+                              color: Color(0x0F1B2836),
+                              blurRadius: 16.0,
+                              offset: Offset(0, 6),
                             ),
                           ],
                         ),
@@ -686,7 +763,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -709,7 +786,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -774,7 +851,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -821,7 +898,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -844,7 +921,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -909,7 +986,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -943,7 +1020,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -966,7 +1043,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -1031,7 +1108,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -1067,7 +1144,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -1091,7 +1168,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -1156,7 +1233,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -1192,7 +1269,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -1216,7 +1293,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -1281,7 +1358,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -1318,7 +1395,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -1341,7 +1418,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -1406,7 +1483,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -1454,7 +1531,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -1477,7 +1554,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -1542,7 +1619,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -1590,7 +1667,7 @@ class _RegistrarContratoPageWidgetState
                                   textStyle: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -1662,7 +1739,7 @@ class _RegistrarContratoPageWidgetState
                                                     .labelMedium
                                                     .override(
                                                       font:
-                                                          GoogleFonts.readexPro(
+                                                          GoogleFonts.notoSans(
                                                         fontWeight:
                                                             FlutterFlowTheme.of(
                                                                     context)
@@ -1691,7 +1768,7 @@ class _RegistrarContratoPageWidgetState
                                                     .labelMedium
                                                     .override(
                                                       font:
-                                                          GoogleFonts.readexPro(
+                                                          GoogleFonts.notoSans(
                                                         fontWeight:
                                                             FlutterFlowTheme.of(
                                                                     context)
@@ -1778,7 +1855,7 @@ class _RegistrarContratoPageWidgetState
                                                       context)
                                                   .bodyMedium
                                                   .override(
-                                                    font: GoogleFonts.readexPro(
+                                                    font: GoogleFonts.notoSans(
                                                       fontWeight:
                                                           FlutterFlowTheme.of(
                                                                   context)
@@ -1992,7 +2069,7 @@ class _RegistrarContratoPageWidgetState
                                             style: FlutterFlowTheme.of(context)
                                                 .bodyMedium
                                                 .override(
-                                                  font: GoogleFonts.manrope(
+                                                  font: GoogleFonts.notoSans(
                                                     fontWeight: FontWeight.w700,
                                                     fontStyle:
                                                         FlutterFlowTheme.of(
@@ -2035,7 +2112,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -2058,7 +2135,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -2123,7 +2200,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -2170,7 +2247,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -2193,7 +2270,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -2258,7 +2335,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -2307,7 +2384,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -2330,7 +2407,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -2395,7 +2472,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -2443,7 +2520,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -2466,7 +2543,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -2531,7 +2608,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -2580,7 +2657,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -2603,7 +2680,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -2668,7 +2745,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -2706,7 +2783,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -2729,7 +2806,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -2794,7 +2871,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -2812,14 +2889,6 @@ class _RegistrarContratoPageWidgetState
                                             .bodyMedium
                                             .fontStyle,
                                       ),
-                                  maxLength: 20,
-                                  maxLengthEnforcement:
-                                      MaxLengthEnforcement.enforced,
-                                  buildCounter: (context,
-                                          {required currentLength,
-                                          required isFocused,
-                                          maxLength}) =>
-                                      null,
                                   keyboardType: TextInputType.phone,
                                   validator: _model
                                       .telefonesTextControllerValidator
@@ -2849,7 +2918,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -2872,7 +2941,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -2937,7 +3006,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -2983,7 +3052,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -3007,7 +3076,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -3072,7 +3141,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -3110,7 +3179,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -3133,7 +3202,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -3198,7 +3267,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -3249,7 +3318,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -3272,7 +3341,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -3337,7 +3406,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -3388,7 +3457,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -3411,7 +3480,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -3476,7 +3545,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -3522,7 +3591,7 @@ class _RegistrarContratoPageWidgetState
                                   textStyle: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -3575,7 +3644,7 @@ class _RegistrarContratoPageWidgetState
                                       labelStyle: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .override(
-                                            font: GoogleFonts.readexPro(
+                                            font: GoogleFonts.notoSans(
                                               fontWeight:
                                                   FlutterFlowTheme.of(context)
                                                       .labelMedium
@@ -3598,7 +3667,7 @@ class _RegistrarContratoPageWidgetState
                                       hintStyle: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .override(
-                                            font: GoogleFonts.readexPro(
+                                            font: GoogleFonts.notoSans(
                                               fontWeight:
                                                   FlutterFlowTheme.of(context)
                                                       .labelMedium
@@ -3667,7 +3736,7 @@ class _RegistrarContratoPageWidgetState
                                     style: FlutterFlowTheme.of(context)
                                         .bodyMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .bodyMedium
@@ -3721,7 +3790,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -3744,7 +3813,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -3809,7 +3878,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -3871,7 +3940,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -3894,7 +3963,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -3959,7 +4028,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -4008,7 +4077,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -4031,7 +4100,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -4096,7 +4165,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -4134,7 +4203,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -4157,7 +4226,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -4222,7 +4291,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -4291,7 +4360,7 @@ class _RegistrarContratoPageWidgetState
                                         textStyle: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
-                                              font: GoogleFonts.readexPro(
+                                              font: GoogleFonts.notoSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .bodyMedium
@@ -4365,7 +4434,7 @@ class _RegistrarContratoPageWidgetState
                                         textStyle: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
-                                              font: GoogleFonts.readexPro(
+                                              font: GoogleFonts.notoSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .bodyMedium
@@ -4424,7 +4493,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -4447,7 +4516,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -4512,7 +4581,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -4549,7 +4618,7 @@ class _RegistrarContratoPageWidgetState
                                     labelStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -4572,7 +4641,7 @@ class _RegistrarContratoPageWidgetState
                                     hintStyle: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.readexPro(
+                                          font: GoogleFonts.notoSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -4637,7 +4706,7 @@ class _RegistrarContratoPageWidgetState
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .override(
-                                        font: GoogleFonts.readexPro(
+                                        font: GoogleFonts.notoSans(
                                           fontWeight:
                                               FlutterFlowTheme.of(context)
                                                   .bodyMedium
@@ -4684,8 +4753,14 @@ class _RegistrarContratoPageWidgetState
                         padding: const EdgeInsets.all(18.0),
                         decoration: BoxDecoration(
                           color: theme.secondaryBackground,
-                          borderRadius: BorderRadius.circular(24.0),
-                          border: Border.all(color: theme.alternate),
+                          borderRadius: BorderRadius.circular(16.0),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x0F1B2836),
+                              blurRadius: 16.0,
+                              offset: Offset(0, 6),
+                            ),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -4693,7 +4768,7 @@ class _RegistrarContratoPageWidgetState
                             Text(
                               'Finalizar cadastro',
                               style: theme.titleLarge.override(
-                                font: GoogleFonts.sora(
+                                font: GoogleFonts.barlow(
                                   fontWeight: FontWeight.w700,
                                   fontStyle: theme.titleLarge.fontStyle,
                                 ),
@@ -4704,7 +4779,7 @@ class _RegistrarContratoPageWidgetState
                             Text(
                               'Revise as informações acima e gere o contrato em seguida.',
                               style: theme.bodyMedium.override(
-                                font: GoogleFonts.manrope(
+                                font: GoogleFonts.notoSans(
                                   fontWeight: FontWeight.w600,
                                   fontStyle: theme.bodyMedium.fontStyle,
                                 ),
@@ -4720,17 +4795,55 @@ class _RegistrarContratoPageWidgetState
                                     !_model.formKey.currentState!.validate()) {
                                   return;
                                 }
+                                final erroCurso = _erroDaEtapa(3);
+                                if (erroCurso != null) {
+                                  _avisar(erroCurso);
+                                  return;
+                                }
+                                ContratoRecord? duplicado;
+                                try {
+                                  duplicado = await _cpfExistente();
+                                } catch (_) {
+                                  duplicado = null;
+                                }
+                                if (duplicado != null) {
+                                  final existente = duplicado;
+                                  final seguir = await showDialog<bool>(
+                                    context: context,
+                                    builder: (dialogContext) => AlertDialog(
+                                      title: const Text('CPF já cadastrado'),
+                                      content: Text(
+                                        '${existente.contratante} já tem o contrato nº ${existente.numeroDoc}.',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(
+                                              dialogContext, false),
+                                          child: const Text('Voltar'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(
+                                              dialogContext, true),
+                                          child: const Text('Continuar'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (seguir != true || !context.mounted) {
+                                    return;
+                                  }
+                                }
                                 if (widget.contrato == null) {
                                   _model.txtCarregando = true;
                                   safeSetState(() {});
-                                  _model.count =
-                                      await queryContratoRecordCount();
+                                  _model.count = await _reservarNumero();
                                   _shouldSetState = true;
 
                                   var contratoRecordReference =
                                       ContratoRecord.collection.doc();
                                   await contratoRecordReference
-                                      .set(createContratoRecordData(
+                                      .set({
+                                    ...createContratoRecordData(
                                     criadoPor: currentUserDisplayName,
                                     criadoEm: getCurrentTimestamp,
                                     contratante:
@@ -4787,13 +4900,16 @@ class _RegistrarContratoPageWidgetState
                                           .languageCode,
                                     ),
                                     numeroDoc: valueOrDefault<int>(
-                                          _model.count,
-                                          0,
-                                        ) +
-                                        1,
+                                      _model.count,
+                                      0,
+                                    ),
+                                    contratoAssinado: false,
                                     dtCriacao: functions
                                         .funRetornaHoras(getCurrentTimestamp),
-                                  ));
+                                  ),
+                                    ..._camposDoFormulario(),
+                                  });
+                                  await _limparRascunho();
                                   _model.contratoDoc =
                                       ContratoRecord.getDocumentFromData(
                                           createContratoRecordData(
@@ -4869,10 +4985,9 @@ class _RegistrarContratoPageWidgetState
                                                       .languageCode,
                                             ),
                                             numeroDoc: valueOrDefault<int>(
-                                                  _model.count,
-                                                  0,
-                                                ) +
-                                                1,
+                                              _model.count,
+                                              0,
+                                            ),
                                             dtCriacao:
                                                 functions.funRetornaHoras(
                                                     getCurrentTimestamp),
@@ -4914,7 +5029,7 @@ class _RegistrarContratoPageWidgetState
                                           style: FlutterFlowTheme.of(context)
                                               .bodyMedium
                                               .override(
-                                                font: GoogleFonts.readexPro(
+                                                font: GoogleFonts.notoSans(
                                                   fontWeight:
                                                       FlutterFlowTheme.of(
                                                               context)
@@ -5028,7 +5143,8 @@ class _RegistrarContratoPageWidgetState
                                   safeSetState(() {});
 
                                   await widget.contrato!.reference
-                                      .update(createContratoRecordData(
+                                      .update({
+                                    ...createContratoRecordData(
                                     contratante:
                                         _model.contratanteTextController.text,
                                     documento:
@@ -5082,7 +5198,9 @@ class _RegistrarContratoPageWidgetState
                                     ),
                                     dtCriacao: functions
                                         .funRetornaHoras(getCurrentTimestamp),
-                                  ));
+                                  ),
+                                    ..._camposDoFormulario(),
+                                  });
                                   try {
                                     await FirebaseFunctions.instanceFor(
                                             region: 'southamerica-east1')
@@ -5115,7 +5233,7 @@ class _RegistrarContratoPageWidgetState
                                           style: FlutterFlowTheme.of(context)
                                               .bodyMedium
                                               .override(
-                                                font: GoogleFonts.readexPro(
+                                                font: GoogleFonts.notoSans(
                                                   fontWeight:
                                                       FlutterFlowTheme.of(
                                                               context)
@@ -5185,7 +5303,7 @@ class _RegistrarContratoPageWidgetState
                                           style: FlutterFlowTheme.of(context)
                                               .bodyMedium
                                               .override(
-                                                font: GoogleFonts.readexPro(
+                                                font: GoogleFonts.notoSans(
                                                   fontWeight:
                                                       FlutterFlowTheme.of(
                                                               context)
@@ -5248,7 +5366,7 @@ class _RegistrarContratoPageWidgetState
                                 hoverTextColor: theme.info,
                                 hoverElevation: 0.0,
                                 textStyle: theme.titleSmall.override(
-                                  font: GoogleFonts.manrope(
+                                  font: GoogleFonts.notoSans(
                                     fontWeight: FontWeight.w800,
                                     fontStyle: theme.titleSmall.fontStyle,
                                   ),

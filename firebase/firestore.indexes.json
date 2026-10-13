@@ -27,6 +27,88 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "contrato",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "contrato_assinado", "order": "ASCENDING" },
+        { "fieldPath": "criado_em", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "contrato",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "criador", "order": "ASCENDING" },
+        { "fieldPath": "contrato_assinado", "order": "ASCENDING" },
+        { "fieldPath": "criado_em", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "contrato",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "autentiqueStatus", "order": "ASCENDING" },
+        { "fieldPath": "criado_em", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "contrato",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "criador", "order": "ASCENDING" },
+        { "fieldPath": "autentiqueStatus", "order": "ASCENDING" },
+        { "fieldPath": "criado_em", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "contrato",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "documento", "order": "ASCENDING" },
+        { "fieldPath": "criado_em", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "contrato",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "criador", "order": "ASCENDING" },
+        { "fieldPath": "documento", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "contrato",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "numero_doc", "order": "ASCENDING" },
+        { "fieldPath": "criado_em", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "contrato",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "criador", "order": "ASCENDING" },
+        { "fieldPath": "numero_doc", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "contrato",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "criador", "order": "ASCENDING" },
+        { "fieldPath": "contratante", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "contrato",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "criador", "order": "ASCENDING" },
+        { "fieldPath": "cidade", "order": "ASCENDING" }
+      ]
     }
   ]
 }

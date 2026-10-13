@@ -80,7 +80,8 @@ class _UsuariosPageWidgetState extends State<UsuariosPageWidget>
           ),
         ),
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
+          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+          surfaceTintColor: Colors.transparent,
           automaticallyImplyLeading: false,
           leading: FlutterFlowIconButton(
             borderColor: Colors.transparent,
@@ -89,7 +90,7 @@ class _UsuariosPageWidgetState extends State<UsuariosPageWidget>
             buttonSize: 60.0,
             icon: Icon(
               Icons.menu_rounded,
-              color: FlutterFlowTheme.of(context).info,
+              color: FlutterFlowTheme.of(context).primaryText,
               size: 30.0,
             ),
             onPressed: () async {
@@ -101,10 +102,10 @@ class _UsuariosPageWidgetState extends State<UsuariosPageWidget>
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8.0),
               child: Image.asset(
-                'assets/images/Design_sem_nome_(37).png',
-                width: 200.0,
-                height: 50.0,
-                fit: BoxFit.cover,
+                'assets/images/sinatep_logo_color.png',
+                width: 160.0,
+                height: 36.0,
+                fit: BoxFit.contain,
                 alignment: Alignment(0.0, 0.0),
               ),
             ),
@@ -122,7 +123,7 @@ class _UsuariosPageWidgetState extends State<UsuariosPageWidget>
                   fillColor: FlutterFlowTheme.of(context).accent1,
                   icon: FaIcon(
                     FontAwesomeIcons.userPlus,
-                    color: FlutterFlowTheme.of(context).info,
+                    color: FlutterFlowTheme.of(context).primary,
                     size: 24.0,
                   ),
                   onPressed: () async {
@@ -133,7 +134,8 @@ class _UsuariosPageWidgetState extends State<UsuariosPageWidget>
             ),
           ],
           centerTitle: true,
-          elevation: 2.0,
+          elevation: 0.0,
+          scrolledUnderElevation: 0.0,
         ),
         body: Padding(
           padding: EdgeInsetsDirectional.fromSTEB(32.0, 0.0, 32.0, 0.0),
@@ -147,7 +149,7 @@ class _UsuariosPageWidgetState extends State<UsuariosPageWidget>
                   child: Text(
                     'Usuários',
                     style: FlutterFlowTheme.of(context).titleMedium.override(
-                          font: GoogleFonts.readexPro(
+                          font: GoogleFonts.notoSans(
                             fontWeight: FontWeight.w500,
                             fontStyle: FlutterFlowTheme.of(context)
                                 .titleMedium
@@ -236,7 +238,7 @@ class _UsuariosPageWidgetState extends State<UsuariosPageWidget>
                                             style: FlutterFlowTheme.of(context)
                                                 .bodyLarge
                                                 .override(
-                                                  font: GoogleFonts.readexPro(
+                                                  font: GoogleFonts.notoSans(
                                                     fontWeight: FontWeight.w500,
                                                     fontStyle:
                                                         FlutterFlowTheme.of(
@@ -264,7 +266,7 @@ class _UsuariosPageWidgetState extends State<UsuariosPageWidget>
                                           style: FlutterFlowTheme.of(context)
                                               .labelMedium
                                               .override(
-                                                font: GoogleFonts.readexPro(
+                                                font: GoogleFonts.notoSans(
                                                   fontWeight:
                                                       FlutterFlowTheme.of(
                                                               context)
@@ -295,7 +297,7 @@ class _UsuariosPageWidgetState extends State<UsuariosPageWidget>
                                       style: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .override(
-                                            font: GoogleFonts.readexPro(
+                                            font: GoogleFonts.notoSans(
                                               fontWeight:
                                                   FlutterFlowTheme.of(context)
                                                       .bodyMedium

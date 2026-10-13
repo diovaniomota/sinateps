@@ -48,8 +48,14 @@ exports.enviarContratoAutentique = onCall(async (request) => {
 
     const [fileBuffer] = await file.download();
 
-    // Autentique API configuration
-    const token = "d6f1b4406a7ac821b66eaa48f1cdb28363b1d461fd245e4dfeacb86a328223ab"; // Provided by user. Recommended: process.env.AUTENTIQUE_TOKEN
+    let token = process.env.AUTENTIQUE_TOKEN;
+    if (!token || !String(token).trim()) {
+      const configDoc = await admin.firestore().doc("config/autentique").get();
+      token = configDoc.exists ? configDoc.data().token : null;
+    }
+    if (!token || !String(token).trim()) {
+      throw new Error("Token da Autentique ausente.");
+    }
     const url = "https://api.autentique.com.br/v2/graphql";
 
     const operations = {

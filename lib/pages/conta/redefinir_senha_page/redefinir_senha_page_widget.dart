@@ -77,7 +77,8 @@ class _RedefinirSenhaPageWidgetState extends State<RedefinirSenhaPageWidget>
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).primary,
+          backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+          surfaceTintColor: Colors.transparent,
           automaticallyImplyLeading: false,
           leading: FlutterFlowIconButton(
             borderColor: Colors.transparent,
@@ -86,7 +87,7 @@ class _RedefinirSenhaPageWidgetState extends State<RedefinirSenhaPageWidget>
             buttonSize: 60.0,
             icon: FaIcon(
               FontAwesomeIcons.angleLeft,
-              color: FlutterFlowTheme.of(context).info,
+              color: FlutterFlowTheme.of(context).primaryText,
               size: 30.0,
             ),
             onPressed: () async {
@@ -98,17 +99,18 @@ class _RedefinirSenhaPageWidgetState extends State<RedefinirSenhaPageWidget>
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8.0),
               child: Image.asset(
-                'assets/images/Design_sem_nome_(37).png',
+                'assets/images/sinatep_logo_color.png',
                 width: 200.0,
                 height: 50.0,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
                 alignment: Alignment(0.0, 0.0),
               ),
             ),
           ),
           actions: [],
           centerTitle: true,
-          elevation: 4.0,
+          elevation: 0.0,
+          scrolledUnderElevation: 0.0,
         ),
         body: Padding(
           padding: EdgeInsets.all(32.0),
@@ -121,7 +123,7 @@ class _RedefinirSenhaPageWidgetState extends State<RedefinirSenhaPageWidget>
                   'Digite sua nova senha e confirme para salvar.',
                   textAlign: TextAlign.center,
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.readexPro(
+                        font: GoogleFonts.notoSans(
                           fontWeight: FlutterFlowTheme.of(context)
                               .bodyMedium
                               .fontWeight,
@@ -154,7 +156,7 @@ class _RedefinirSenhaPageWidgetState extends State<RedefinirSenhaPageWidget>
                           labelText: 'Nova Senha',
                           labelStyle:
                               FlutterFlowTheme.of(context).labelMedium.override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .fontWeight,
@@ -172,7 +174,7 @@ class _RedefinirSenhaPageWidgetState extends State<RedefinirSenhaPageWidget>
                                   ),
                           hintStyle:
                               FlutterFlowTheme.of(context).labelMedium.override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .fontWeight,
@@ -236,7 +238,7 @@ class _RedefinirSenhaPageWidgetState extends State<RedefinirSenhaPageWidget>
                           ),
                         ),
                         style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.readexPro(
+                              font: GoogleFonts.notoSans(
                                 fontWeight: FlutterFlowTheme.of(context)
                                     .bodyMedium
                                     .fontWeight,
@@ -268,7 +270,7 @@ class _RedefinirSenhaPageWidgetState extends State<RedefinirSenhaPageWidget>
                           labelText: 'Confirmar Senha',
                           labelStyle:
                               FlutterFlowTheme.of(context).labelMedium.override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .fontWeight,
@@ -286,7 +288,7 @@ class _RedefinirSenhaPageWidgetState extends State<RedefinirSenhaPageWidget>
                                   ),
                           hintStyle:
                               FlutterFlowTheme.of(context).labelMedium.override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .fontWeight,
@@ -350,7 +352,7 @@ class _RedefinirSenhaPageWidgetState extends State<RedefinirSenhaPageWidget>
                           ),
                         ),
                         style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.readexPro(
+                              font: GoogleFonts.notoSans(
                                 fontWeight: FlutterFlowTheme.of(context)
                                     .bodyMedium
                                     .fontWeight,
@@ -395,7 +397,7 @@ class _RedefinirSenhaPageWidgetState extends State<RedefinirSenhaPageWidget>
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .fontWeight,
@@ -427,7 +429,7 @@ class _RedefinirSenhaPageWidgetState extends State<RedefinirSenhaPageWidget>
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.readexPro(
+                                    font: GoogleFonts.notoSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .fontWeight,
@@ -462,7 +464,7 @@ class _RedefinirSenhaPageWidgetState extends State<RedefinirSenhaPageWidget>
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
-                                  font: GoogleFonts.readexPro(
+                                  font: GoogleFonts.notoSans(
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .bodyMedium
                                         .fontWeight,
@@ -502,7 +504,7 @@ class _RedefinirSenhaPageWidgetState extends State<RedefinirSenhaPageWidget>
                         EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 0.0),
                     color: FlutterFlowTheme.of(context).primary,
                     textStyle: FlutterFlowTheme.of(context).titleSmall.override(
-                          font: GoogleFonts.readexPro(
+                          font: GoogleFonts.notoSans(
                             fontWeight: FlutterFlowTheme.of(context)
                                 .titleSmall
                                 .fontWeight,

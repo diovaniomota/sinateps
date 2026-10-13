@@ -7,6 +7,19 @@ const axios = require("axios");
 const FormData = require("form-data");
 const fetch = require("node-fetch");
 const { randomUUID } = require("crypto");
+const { preencherContrato2026, LAYOUT_2026 } = require("./contrato_pdf_layout");
+const {
+  carimbarAssinaturas,
+  carimbarFoto,
+  escreverRastro,
+} = require("./pdf_pos_assinatura");
+const {
+  exigirUsuario,
+  exigirAdmin,
+  exigirAcessoContrato,
+  tokenAutentique,
+  falhaInterna,
+} = require("./acesso");
 
 admin.initializeApp();
 
@@ -29,17 +42,48 @@ exports.onUserDeleted = functionsV1
 
 // V2 HTTPS Functions
 
+function fotoPermitida(url) {
+  try {
+    const parsed = new URL(String(url));
+    return (
+      parsed.protocol === "https:" &&
+      (parsed.hostname === "firebasestorage.googleapis.com" ||
+        parsed.hostname === "storage.googleapis.com")
+    );
+  } catch (error) {
+    return false;
+  }
+}
+
+async function urlAssinadaDoPdf(pdfContrato) {
+  const novoToken = randomUUID();
+  await pdfContrato.setMetadata({
+    contentType: "application/pdf",
+    metadata: { firebaseStorageDownloadTokens: novoToken },
+  });
+  const bucketName = pdfContrato.bucket.name;
+  const caminho = encodeURIComponent(pdfContrato.name);
+  const signedUrl =
+    `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${caminho}?alt=media&token=${novoToken}`;
+  const expires = Date.now() + 1000 * 60 * 60 * 24 * 2;
+  return { signedUrl, expires };
+}
+
 exports.deletarPDF = onCall({
   memory: "256MiB",
   timeoutSeconds: 60
 }, async (request) => {
   const { auth, data } = request;
-  if (!auth || !auth.uid) return;
+  await exigirUsuario(auth);
 
   const { contratoId } = data || {};
   if (!contratoId) throw new HttpsError("invalid-argument", "contratoId é obrigatório.");
 
   try {
+    const contratoRef = admin.firestore().collection("contrato").doc(contratoId);
+    const contratoDoc = await contratoRef.get();
+    await exigirAcessoContrato(auth, contratoDoc);
+
     const bucket = admin.storage().bucket();
     const pdfContrato = bucket.file(`contratos/${contratoId}.pdf`);
     const [exists] = await pdfContrato.exists();
@@ -49,8 +93,7 @@ exports.deletarPDF = onCall({
     }
     return { success: true };
   } catch (error) {
-    console.error("Erro ao deletar PDF:", error);
-    throw new HttpsError("internal", error.message);
+    falhaInterna(error, "Falha ao excluir o PDF.");
   }
 });
 
@@ -69,6 +112,7 @@ exports.criarPDF = onCall({
     const contratoDoc = await contratoRef.get();
 
     if (!contratoDoc.exists) throw new HttpsError("not-found", "Contrato não encontrado.");
+    await exigirAcessoContrato(auth, contratoDoc);
 
     const info = contratoDoc.data();
     const bucket = admin.storage().bucket();
@@ -97,63 +141,14 @@ exports.criarPDF = onCall({
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const firstPage = pdfDoc.getPages()[0];
 
-    // Obter dimensões da página
-    const { width, height } = firstPage.getSize();
-    console.log(`PDF Page Size: ${width} x ${height}`);
-
-    // --- MODO CALIBRAÇÃO ---
-    // Ativa se o campo "calibrar" estiver presente nos dados
-    const CALIBRATION_MODE = info.calibrar === true || info.calibrar === "true";
-
-    if (CALIBRATION_MODE) {
-      const calibColor = rgb(1, 0, 0); // Vermelho para calibração
-      const calibFont = font;
-
-      // Desenhar linhas horizontais a cada 50 pixels com labels Y
-      for (let y = 0; y <= height; y += 50) {
-        // Linha horizontal
-        firstPage.drawLine({
-          start: { x: 0, y: y },
-          end: { x: width, y: y },
-          thickness: 0.5,
-          color: rgb(0.8, 0.8, 0.8),
-        });
-        // Label Y
-        firstPage.drawText(`Y=${y}`, { x: 5, y: y + 2, size: 7, font: calibFont, color: calibColor });
-      }
-
-      // Desenhar linhas verticais a cada 100 pixels com labels X
-      for (let x = 0; x <= width; x += 100) {
-        firstPage.drawLine({
-          start: { x: x, y: 0 },
-          end: { x: x, y: height },
-          thickness: 0.5,
-          color: rgb(0.8, 0.8, 0.8),
-        });
-        firstPage.drawText(`X=${x}`, { x: x + 2, y: 5, size: 7, font: calibFont, color: calibColor });
-      }
-
-      // Marcar pontos importantes com labels
-      const markers = [
-        { x: 50, y: 700, label: "TOPO" },
-        { x: 50, y: 600, label: "CONTRATANTE" },
-        { x: 50, y: 500, label: "ALUNO" },
-        { x: 50, y: 400, label: "CURSO" },
-        { x: 50, y: 300, label: "PAGAMENTO" },
-        { x: 50, y: 200, label: "PARCELA" },
-        { x: 50, y: 100, label: "RODAPE" },
-      ];
-
-      markers.forEach(m => {
-        firstPage.drawCircle({ x: m.x, y: m.y, size: 5, color: calibColor });
-        firstPage.drawText(`${m.label} (${m.x},${m.y})`, { x: m.x + 10, y: m.y, size: 8, font: calibFont, color: calibColor });
-      });
-    }
-
-    // --- FOTO CLIENTE (Opcional) ---
-    if (info.fotoCliente) {
+    const foto = LAYOUT_2026.foto;
+    if (info.fotoCliente && fotoPermitida(info.fotoCliente)) {
       try {
-        const imgResponse = await axios.get(info.fotoCliente, { responseType: "arraybuffer" });
+        const imgResponse = await axios.get(info.fotoCliente, {
+          responseType: "arraybuffer",
+          timeout: 8000,
+          maxRedirects: 0,
+        });
         const imgBuffer = imgResponse.data;
         const ct = imgResponse.headers["content-type"] || "";
         let image;
@@ -165,129 +160,20 @@ exports.criarPDF = onCall({
         }
 
         if (image) {
-          firstPage.drawImage(image, { x: 0, y: 98, width: 100, height: 100 });
+          firstPage.drawImage(image, foto);
         }
       } catch (e) {
         console.warn("Erro ao processar imagem (ignorado):", e.message);
       }
     }
 
-    // --- PREENCHIMENTO DOS DADOS ---
-    const fontSize = 10;
     const color = rgb(0, 0, 0);
-
     const draw = (text, x, y) => {
-      if (text !== undefined && text !== null && text !== '') {
-        firstPage.drawText(String(text), { x, y, size: fontSize, font, color });
+      if (text !== undefined && text !== null && text !== "") {
+        firstPage.drawText(String(text), { x, y, size: 10, font, color });
       }
     };
-
-    // ============================================
-    // COORDENADAS CALIBRADAS - PDF: 612 x 1008
-    // ============================================
-
-    // === CONTRATANTE ===
-    draw(info.contratante, 121, 762);  // Nome Contratante
-    draw(info.documento, 64, 746);     // CPF
-    draw(info.rg, 202, 747);           // RG
-    if (info.dn) {
-      const [d, m, y] = info.dn.split("/");
-      if (d) draw(d, 491, 744);        // DN Dia
-      if (m) draw(m, 513, 744);        // DN Mês
-      if (y) draw(y, 538, 744);        // DN Ano
-    }
-    draw(info.filiacao, 106, 734);      // Filiação
-    draw(info.naturalidade, 471, 734); // Naturalidade
-
-    if (info.sexo === "M") {
-      draw("X", 104, 715);             // Sexo M
-    } else if (info.sexo === "F") {
-      draw("X", 168, 719);             // Sexo F
-    }
-
-    draw(info.endereco, 180, 712);     // Endereço
-    draw(info.numero, 530, 715);       // Número
-    draw(info.bairro, 70, 702);        // Bairro
-    draw(info.cidade, 71, 688);        // Cidade
-    draw(info.cep, 356, 688);          // CEP
-    draw(info.uf, 498, 691);           // UF
-    draw(info.telefones, 81, 676);     // Telefones
-
-    // === ALUNO ===
-    draw(info.aluno, 105, 642);         // Nome Aluno
-    draw(info.alunoDocumento, 94, 629); // CPF/RG Aluno
-    if (info.alunoDN) {
-      const [d, m, y] = info.alunoDN.split("/");
-      if (d) draw(d, 474, 639);        // Aluno DN Dia
-      if (m) draw(m, 500, 639);        // Aluno DN Mês
-      if (y) draw(y, 526, 639);        // Aluno DN Ano
-    }
-    draw(info.alunoNaturalidade, 467, 627);  // Aluno Naturalidade
-    draw(info.alunoTelefone, 70, 614); // Aluno Telefone
-
-    // === OPÇÃO DE CURSO ===
-    const opcaoCursoRaw = info.opcaoCurso !== undefined && info.opcaoCurso !== null ? String(info.opcaoCurso).trim() : "";
-    const opcaoCursoKeyMatch = opcaoCursoRaw.match(/^[1-4]/);
-    const opcaoCursoKey = opcaoCursoKeyMatch ? opcaoCursoKeyMatch[0] : opcaoCursoRaw;
-
-    switch (opcaoCursoKey) {
-      case "1": draw("X", 38, 562); break;   // Curso 1
-      case "2": draw("X", 38, 552); break;   // Curso 2
-      case "3": draw("X", 183, 561); break;   // Curso 3
-      case "4": draw("X", 183, 552); break;   // Curso 4
-    }
-
-    if (opcaoCursoKey === "4" && info.outro) {
-      draw(info.outro, 257, 557);  // Outro/Qual
-    }
-
-    draw(info.indicacao, 100, 540);  // Indicação
-
-    // === DISPOSIÇÕES INICIAIS ===
-    if (info.horas) {
-      draw(info.horas, 510, 445);  // Carga Horária
-    }
-
-    if (info.inicioPrevisto) {
-      const parts = info.inicioPrevisto.split("/");
-      if (parts.length >= 1) draw(parts[0], 268, 434);  // Início Dia
-      if (parts.length >= 2) draw(parts[1], 295, 434);  // Início Mês
-    }
-    draw(info.contratada, 456, 433);  // Contratada
-
-    // === PAGAMENTO (Checkboxes) ===
-    switch (info.pagamento) {
-      case "36": draw("X", 76, 371); break;   // 36x
-      case "24": draw("X", 76, 356); break;   // 24x
-      case "18": draw("X", 76, 339); break;   // 18x
-      case "14": draw("X", 76, 323); break;   // 14x
-      case "8": draw("X", 292, 371); break;   // 8x
-      case "3": draw("X", 292, 354); break;   // 3x
-      case "12": draw("X", 292, 341); break;   // À vista/cartão
-    }
-
-    // === PRIMEIRA PARCELA E DESCONTO ===
-    if (info.primeiraParcela) {
-      const [d, m, y] = info.primeiraParcela.split("/");
-      if (d) draw(d, 184, 300);   // Parcela Dia
-      if (m) draw(m, 210, 300);   // Parcela Mês
-      if (y) draw(y, 228, 300);   // Parcela Ano
-    }
-
-    draw(info.descontoRS, 292, 281);  // Desconto R$
-
-    // === DATA FINAL (RODAPÉ) ===
-    const dataFinal = info.criado_str ? info.criado_str.split("/") : [];
-    if (dataFinal.length === 3) {
-      draw(dataFinal[0], 97, 210);    // Data Dia
-      draw(dataFinal[1], 160, 210);    // Data Mês
-      draw(dataFinal[2], 248, 211);   // Data Ano
-    } else {
-      const today = new Date();
-      draw(String(today.getDate()), 97, 210);
-      draw(String(today.getMonth() + 1), 160, 210);
-      draw(String(today.getFullYear()), 248, 211);
-    }
+    preencherContrato2026(draw, info);
 
     const modifiedPdfBytes = await pdfDoc.save();
     const pdfStoragePath = `contratos/${contratoId}.pdf`;
@@ -298,24 +184,17 @@ exports.criarPDF = onCall({
       metadata: { contentType: "application/pdf" },
     });
 
-    const token = randomUUID();
-    await pdfContrato.setMetadata({
-      contentType: "application/pdf",
-      metadata: { firebaseStorageDownloadTokens: token }
-    });
-    const signedUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(pdfStoragePath)}?alt=media&token=${token}`;
-
+    const { signedUrl, expires } = await urlAssinadaDoPdf(pdfContrato);
     await contratoRef.update({
       pdf: `gs://${bucket.name}/${pdfStoragePath}`,
       signedUrl,
-      signedEm: admin.firestore.Timestamp.fromDate(new Date("2500-01-01")),
+      signedEm: admin.firestore.Timestamp.fromMillis(expires),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     return { success: true, signedUrl, message: "PDF criado com sucesso!" };
   } catch (error) {
-    console.error("Erro CRITICO ao criar PDF:", error);
-    throw new HttpsError("internal", error.message || "Falha ao criar PDF");
+    falhaInterna(error, "Falha ao criar PDF.");
   }
 });
 
@@ -324,7 +203,7 @@ exports.atualizarToken = onCall({
   timeoutSeconds: 60
 }, async (request) => {
   const { auth, data } = request;
-  if (!auth || !auth.uid) return;
+  await exigirUsuario(auth);
 
   const { contratoId } = data || {};
   if (!contratoId) throw new HttpsError("invalid-argument", "contratoId é obrigatório.");
@@ -332,10 +211,7 @@ exports.atualizarToken = onCall({
   try {
     const contratoRef = admin.firestore().collection("contrato").doc(contratoId);
     const contratoDoc = await contratoRef.get();
-
-    if (!contratoDoc.exists) {
-      throw new HttpsError("not-found", "Contrato não encontrado.");
-    }
+    await exigirAcessoContrato(auth, contratoDoc);
 
     const bucket = admin.storage().bucket();
     const pdfContrato = bucket.file(`contratos/${contratoId}.pdf`);
@@ -345,27 +221,15 @@ exports.atualizarToken = onCall({
       throw new HttpsError("not-found", "Arquivo não existe.");
     }
 
-    const [metadata] = await pdfContrato.getMetadata();
-    let token = metadata.metadata && metadata.metadata.firebaseStorageDownloadTokens;
-    if (!token) {
-      token = randomUUID();
-      await pdfContrato.setMetadata({
-        metadata: { firebaseStorageDownloadTokens: token }
-      });
-    } else {
-      token = String(token).split(",")[0].trim();
-    }
-    const signedUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(`contratos/${contratoId}.pdf`)}?alt=media&token=${token}`;
-
+    const { signedUrl, expires } = await urlAssinadaDoPdf(pdfContrato);
     await contratoRef.update({
       signedUrl,
-      signedEm: admin.firestore.Timestamp.fromDate(new Date("2500-01-01"))
+      signedEm: admin.firestore.Timestamp.fromMillis(expires),
     });
 
     return signedUrl;
   } catch (error) {
-    console.warn("Stack", error.stack);
-    throw new HttpsError("internal", error.message);
+    falhaInterna(error, "Falha ao renovar o link do PDF.");
   }
 });
 
@@ -377,11 +241,75 @@ exports.escreverPDF = onCall({
   return { success: true, message: "Função obsoleta (integrada ao criarPDF)" };
 });
 
+async function pdfDoContrato(auth, contratoId) {
+  if (!contratoId) {
+    throw new HttpsError("invalid-argument", "contratoId é obrigatório.");
+  }
+  const contratoRef = admin.firestore().collection("contrato").doc(contratoId);
+  const contratoDoc = await contratoRef.get();
+  await exigirAcessoContrato(auth, contratoDoc);
+  const pdfContrato = admin.storage().bucket().file(`contratos/${contratoId}.pdf`);
+  const [exists] = await pdfContrato.exists();
+  if (!exists) {
+    throw new HttpsError("not-found", "Arquivo PDF não encontrado.");
+  }
+  const [bytes] = await pdfContrato.download();
+  const pdfDoc = await PDFDocument.load(bytes);
+  return { contratoDoc, pdfContrato, pdfDoc };
+}
+
 exports.assinarContrato = onCall({
-  memory: "256MiB",
-  timeoutSeconds: 60
+  memory: "512MiB",
+  timeoutSeconds: 120,
 }, async (request) => {
-  return { success: true, message: "Função obsoleta (assinatura via Autentique)" };
+  const { auth, data } = request;
+  try {
+    const { contratoDoc, pdfContrato, pdfDoc } = await pdfDoContrato(
+      auth,
+      data && data.contratoId,
+    );
+    await carimbarAssinaturas(pdfDoc, contratoDoc.data());
+    await pdfContrato.save(Buffer.from(await pdfDoc.save()));
+    return { success: true };
+  } catch (error) {
+    falhaInterna(error, "Falha ao carimbar a assinatura.");
+  }
+});
+
+exports.fotoCliente = onCall({
+  memory: "512MiB",
+  timeoutSeconds: 120,
+}, async (request) => {
+  const { auth, data } = request;
+  try {
+    const { contratoDoc, pdfContrato, pdfDoc } = await pdfDoContrato(
+      auth,
+      data && data.contratoId,
+    );
+    await carimbarFoto(pdfDoc, contratoDoc.data());
+    await pdfContrato.save(Buffer.from(await pdfDoc.save()));
+    return { success: true };
+  } catch (error) {
+    falhaInterna(error, "Falha ao inserir a foto no PDF.");
+  }
+});
+
+exports.escreveIp = onCall({
+  memory: "512MiB",
+  timeoutSeconds: 120,
+}, async (request) => {
+  const { auth, data } = request;
+  try {
+    const { contratoDoc, pdfContrato, pdfDoc } = await pdfDoContrato(
+      auth,
+      data && data.contratoId,
+    );
+    await escreverRastro(pdfDoc, contratoDoc.data());
+    await pdfContrato.save(Buffer.from(await pdfDoc.save()));
+    return { success: true };
+  } catch (error) {
+    falhaInterna(error, "Falha ao registrar o rastro no PDF.");
+  }
 });
 
 exports.enviarContratoAutentique = onCall({
@@ -402,6 +330,7 @@ exports.enviarContratoAutentique = onCall({
     const contratoDoc = await contratoRef.get();
 
     if (!contratoDoc.exists) throw new HttpsError("not-found", "Contrato não encontrado.");
+    await exigirAcessoContrato(auth, contratoDoc);
 
     const info = contratoDoc.data();
     const bucket = admin.storage().bucket();
@@ -413,26 +342,7 @@ exports.enviarContratoAutentique = onCall({
 
     const [fileBuffer] = await file.download();
 
-    const configRef = admin.firestore().doc("config/autentique");
-    const doc = await configRef.get();
-
-    let token;
-    if (doc.exists && doc.data()?.token) {
-      token = doc.data().token;
-    } else {
-      // Token de fallback (migração)
-      token = "d6f1b4406a7ac821b66eaa48f1cdb28363b1d461fd245e4dfeacb86a328223ab";
-      console.log("Migrando token Autentique para o Firestore...");
-      try {
-        await configRef.set({ token }, { merge: true });
-      } catch (e) {
-        console.warn("Falha ao salvar token no Firestore (ignorado):", e);
-      }
-    }
-
-    if (!token) {
-      throw new HttpsError("internal", "Configuração inválida: token Autentique ausente.");
-    }
+    const token = await tokenAutentique();
 
     const url = "https://api.autentique.com.br/v2/graphql";
 
@@ -464,8 +374,7 @@ exports.enviarContratoAutentique = onCall({
       throw new HttpsError("invalid-argument", "É necessário informar ao menos um meio de contato (Email ou WhatsApp).");
     }
 
-    console.log("Phone Source:", phoneSource);
-    console.log("Phone Formatted:", phone);
+
 
     // Função auxiliar para criar o payload
     const createPayload = (usePhone) => {
@@ -484,7 +393,6 @@ exports.enviarContratoAutentique = onCall({
 
       const signers = [signer];
 
-      console.log(`Payload (usePhone=${usePhone}):`, JSON.stringify(signers));
       return {
         query: `
           mutation CreateDocument($document: DocumentInput!, $signers: [SignerInput!]!, $file: Upload!) {
@@ -496,7 +404,7 @@ exports.enviarContratoAutentique = onCall({
                 public_id
                 name
                 email
-                phone
+                created_at
                 action { name }
                 link { short_link }
               }
@@ -537,7 +445,7 @@ exports.enviarContratoAutentique = onCall({
               publicId: signature.public_id || null,
               name: signature.name || null,
               email: signature.email || null,
-              phone: signature.phone || null,
+              createdAt: signature.created_at || null,
               shortLink: signature.link?.short_link || null,
             })),
           }
@@ -597,9 +505,6 @@ exports.enviarContratoAutentique = onCall({
           requestedDeliveryMethod,
           deliveryMethodUsed,
           fallbackUsed,
-          emailAluno: emailClean || null,
-          whatsappAluno: phone,
-          attempts,
         },
       );
     }
@@ -628,7 +533,98 @@ exports.enviarContratoAutentique = onCall({
       throw error;
     }
 
-    const errorMessage = error?.message || "Erro desconhecido ao enviar contrato.";
-    throw new HttpsError("internal", `Falha ao enviar contrato: ${errorMessage}`);
+    falhaInterna(error, "Falha ao enviar contrato.");
+  }
+});
+
+exports.gerenciarUsuario = onCall({
+  memory: "256MiB",
+  timeoutSeconds: 60,
+}, async (request) => {
+  const { auth, data } = request;
+  await exigirAdmin(auth);
+
+  const { uid, displayName, email, password } = data || {};
+  const emailLimpo = email ? String(email).trim() : "";
+  const senha = password ? String(password) : "";
+
+  if (emailLimpo && !/^[\w.-]+@([\w-]+\.)+[\w-]{2,}$/.test(emailLimpo)) {
+    throw new HttpsError("invalid-argument", "E-mail inválido.");
+  }
+  if (senha && senha.length < 8) {
+    throw new HttpsError("invalid-argument", "A senha precisa ter pelo menos 8 caracteres.");
+  }
+
+  try {
+    if (uid) {
+      const updateUserObject = {};
+      if (emailLimpo) updateUserObject.email = emailLimpo;
+      if (senha) updateUserObject.password = senha;
+      if (Object.keys(updateUserObject).length > 0) {
+        await admin.auth().updateUser(uid, updateUserObject);
+      }
+
+      const userDocUpdate = {};
+      if (displayName) userDocUpdate.display_name = String(displayName).slice(0, 120);
+      if (emailLimpo) userDocUpdate.email = emailLimpo;
+      if (Object.keys(userDocUpdate).length > 0) {
+        await admin.firestore().collection("user").doc(uid).update(userDocUpdate);
+      }
+      console.info("Usuário atualizado", { actor: auth.uid, alvo: uid });
+      return { success: true };
+    }
+
+    if (!emailLimpo || !senha) {
+      throw new HttpsError("invalid-argument", "E-mail e senha são obrigatórios.");
+    }
+
+    const user = await admin.auth().createUser({
+      email: emailLimpo,
+      password: senha,
+      displayName: displayName ? String(displayName).slice(0, 120) : undefined,
+    });
+    await admin.firestore().collection("user").doc(user.uid).set({
+      uid: user.uid,
+      email: user.email,
+      display_name: displayName ? String(displayName).slice(0, 120) : "",
+      created_time: admin.firestore.FieldValue.serverTimestamp(),
+      isAdmin: false,
+    });
+    console.info("Usuário criado", { actor: auth.uid, alvo: user.uid });
+    return { success: true, uid: user.uid };
+  } catch (error) {
+    falhaInterna(error, "Falha ao gerenciar o usuário.");
+  }
+});
+
+exports.reservarNumeroContrato = onCall({
+  memory: "256MiB",
+  timeoutSeconds: 30,
+}, async (request) => {
+  const { auth } = request;
+  await exigirUsuario(auth);
+
+  const ref = admin.firestore().doc("config/contador");
+  try {
+    const existente = await ref.get();
+    if (!existente.exists) {
+      const countSnap = await admin.firestore().collection("contrato").count().get();
+      try {
+        await ref.create({ numero: countSnap.data().count });
+      } catch (error) {
+        if (error.code !== 6 && error.code !== "already-exists") throw error;
+      }
+    }
+
+    const numero = await admin.firestore().runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const atual = snap.exists ? Number(snap.data().numero) || 0 : 0;
+      const proximo = atual + 1;
+      tx.set(ref, { numero: proximo }, { merge: true });
+      return proximo;
+    });
+    return { numero };
+  } catch (error) {
+    falhaInterna(error, "Falha ao reservar o número do contrato.");
   }
 });

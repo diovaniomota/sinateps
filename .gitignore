@@ -54,6 +54,9 @@ app.*.map.json
 *.jks
 *.keystore
 *.key
+**/key.properties
+**/*upload-cert*.pem
+**/*upload_certificate*.pem
 
 # iOS/XCode related
 /ios/Flutter/App.framework

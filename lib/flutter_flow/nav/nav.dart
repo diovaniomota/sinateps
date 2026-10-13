@@ -95,7 +95,9 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: ContratosPageWidget.routeName,
           path: ContratosPageWidget.routePath,
           requireAuth: true,
-          builder: (context, params) => ContratosPageWidget(),
+          builder: (context, params) => ContratosPageWidget(
+            filtroInicial: params.getParam('filtro', ParamType.String) ?? 'todos',
+          ),
         ),
         FFRoute(
           name: RegistrarContratoPageWidget.routeName,
@@ -159,7 +161,8 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: ContratosAssinadosPageWidget.routeName,
           path: ContratosAssinadosPageWidget.routePath,
           requireAuth: true,
-          builder: (context, params) => ContratosAssinadosPageWidget(),
+          builder: (context, params) =>
+              const ContratosPageWidget(filtroInicial: 'assinados'),
         ),
         FFRoute(
           name: PerfilPageWidget.routeName,
@@ -426,11 +429,11 @@ class FFRoute {
               : builder(context, ffParams);
           final child = appStateNotifier.loading
               ? Container(
-                  color: FlutterFlowTheme.of(context).primary,
+                  color: FlutterFlowTheme.of(context).primaryBackground,
                   child: Center(
                     child: Image.asset(
-                      'assets/images/Design_sem_nome_(37).png',
-                      width: MediaQuery.sizeOf(context).width * 0.5,
+                      'assets/images/sinatep_logo_color.png',
+                      width: MediaQuery.sizeOf(context).width * 0.46,
                       fit: BoxFit.contain,
                     ),
                   ),
