@@ -237,7 +237,7 @@ class _LoginPageWidgetState extends State<LoginPageWidget> {
                               ),
                             ),
                             Text(
-                              'Versão 1.2.10',
+                              'Versão 1.2.11',
                               textAlign: TextAlign.center,
                               style: theme.labelSmall.override(
                                 color: theme.secondaryText,

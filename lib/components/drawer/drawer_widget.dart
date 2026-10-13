@@ -143,7 +143,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 12.0),
               child: Text(
-                'Versão 1.2.10',
+                'Versão 1.2.11',
                 style: theme.labelSmall.override(color: theme.secondaryText),
               ),
             ),
